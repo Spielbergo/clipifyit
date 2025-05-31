@@ -1,11 +1,13 @@
 .main_nav__nav {
     position: fixed;
     top: 0;
+    left: 0;
     width: 100%;
     z-index: 100;
     height: 75px;
     transition: 0.5s ease-in-out;
-    background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 10%, transparent);
+    /* background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 10%, transparent); */
+    background-color: #222;
   }
   
   .main_nav__container {
@@ -125,7 +127,8 @@
   @media screen and (min-width: 767px) {
     .main_nav__container {
       max-width: 1280px;
-      padding: 1px 0 10px;
+      height: 59px;
+      /* padding: 1px 0 10px; */
       margin: auto;
     }
   

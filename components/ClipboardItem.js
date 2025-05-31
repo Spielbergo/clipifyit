@@ -1,10 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaEdit, FaCheck, FaTimes, FaCopy } from 'react-icons/fa';
 
-export default function ClipboardItem({ index, text, isSelected, onToggleSelect, onRemove, onCopy, onSave }) {
+export default function ClipboardItem({ index, text, isSelected, onToggleSelect, onRemove, onCopy, onSave, ...props }) {
     const [isEditing, setIsEditing] = useState(false);
     const [editedText, setEditedText] = useState(text);
     const [isCopied, setIsCopied] = useState(false);
+
+    useEffect(() => {
+        setEditedText(text);
+    }, [text]);
 
     const handleSave = () => {
         setIsEditing(false);

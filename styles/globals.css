@@ -1,4 +1,20 @@
+:root {
+  --primary-color: #6599a6;
+  --secondary-color: #f1f0f0;
+  --primary-bg-color: #333;
+  --text-color: #333;
+  --dark-bg-color: #333;
+  --dark-text-color: #eee;
+}
+
 body {   
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* vertical centering */
+  align-items: center;     /* horizontal centering */
+  padding-top: 60px;       /* adjust if your navbar is 60px tall */
+  box-sizing: border-box;
   margin: 0;
   font-family: Arial, sans-serif;
   color: #333;
@@ -42,21 +58,28 @@ textarea:focus {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  height: 85vh; 
 }
 
 .app-wrapper {
-    width: 93%;
-    max-width: 1265px;
-    padding: 0 15px;
-    margin: auto;
+  width: 100%;
+  max-width: 1365px;
+  padding: 0 15px;
+  margin: 50px auto 50px;
 }
 
 .controls-container {
+  position: sticky;
+  top: 87px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  background: #fff;
+  z-index: 20;
+}
+
+.dark-mode .controls-container {
+  background-color: #333;;
 }
 
 .app-container {
@@ -64,7 +87,8 @@ textarea:focus {
   flex-direction: column;
   align-items: center;
   max-width: 800px;
-  margin: 175px auto;
+  margin: 0 auto; /* remove the large top margin */
+  width: 100%;
 }
 
 table {
@@ -96,8 +120,15 @@ th, td {
 }
 
 th {
-  background-color: #d3cece;
+  color: #fff;
+  background-color: #6599a6;
+  /* background-color: #d3cece; */
   font-weight: bold;
+}
+
+.dark-mode th {
+  background-color: #555;
+  color: #eee;
 }
 
 td:first-child {
@@ -111,23 +142,25 @@ td {
 }
 
 td button {
-  margin-right: -1px; /* Add spacing between buttons */
+  margin-right: -1px;
+  background-color: rgb(164, 163, 163);
 }
 
 td button:last-child {
-  margin-right: 0; /* Remove margin for the last button */
+  margin-right: 0;
 }
 
 td:nth-child(2) {
   display: -webkit-box;
   -webkit-line-clamp: 5;
   -webkit-box-orient: vertical;
-  /* margin-bottom: 30px; */
+  margin-bottom: 30px;
   width: 100%;
-  max-height: 5em;
+  /* max-height: 5em; */
   text-align: left;
   overflow: hidden;
   text-overflow: ellipsis;  
+  white-space: pre-wrap; 
 }
 
 tr:nth-child(even) {

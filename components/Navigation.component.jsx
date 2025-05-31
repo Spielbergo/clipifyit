@@ -16,7 +16,7 @@ import Socials from './SocialIcons.component';
 
 import styles from './navigation.module.css';
 
-// import NavLogoWhite from '../public/logos/logo-light.png';
+import NavLogoWhite from '../public/logos/logo-light-text.png';
 
 const Navigation = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -60,7 +60,7 @@ const Navigation = () => {
     <nav ref={navRef} className={`${styles.main_nav__nav} ${scrolled ? styles.main_nav__scrolled : ''}`}>
       <div className={`${styles.main_nav__container} ${scrolled ? styles.main_container__scrolled : ''}`}>
         <div>
-          {/* <Link href="/">
+          <Link href="/">
             <Image
               src={NavLogoWhite}
               className={styles.main_nav__logo}
@@ -70,8 +70,7 @@ const Navigation = () => {
               height="50"
               priority
             />
-          </Link> */}
-          <h1>Clipify It</h1>
+          </Link>
         </div>
 
         <div className={styles.main_nav__links_container}>
