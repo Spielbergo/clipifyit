@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import ClipboardList from '../components/ClipboardList';
 import Controls from '../components/Controls';
-import styles from '../styles/globals.css';
 
 export default function Home() {
     const [clipboardItems, setClipboardItems] = useState([]);
