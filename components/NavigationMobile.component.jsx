@@ -18,7 +18,7 @@ import { BsXCircle } from 'react-icons/bs';
 
 import styles from './navigation-mobile.module.css';
 
-// import NavLogoWhite from '../public/logos/logo-light.png';
+import NavLogoWhite from '../public/logos/logo-light-text.png';
 
 const Navigation = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -69,19 +69,18 @@ const Navigation = () => {
     <nav ref={navRef} className={`${styles.main_nav__nav} ${scrolled ? styles.main_nav__scrolled : ''} ${mobileToggleOpen ? styles.main_nav__container_grey : ''}`}>
       <div className={`${styles.main_nav__container} ${scrolled ? styles.main_container__scrolled : ''}`}>
         <div>
-          {/* <Link href="/">
+          <Link href="/">
             <Image
               src={NavLogoWhite}
               className={styles.main_nav__logo}
-              alt="Web Cheddar logo"
-              aria-label="Web Cheddar logo"
+              alt="Clipify It logo"
+              aria-label="Clipify It logo"
               width="150"
               height="50"
               priority
             />
             
-          </Link> */}
-          <h1>Clipify It</h1>
+          </Link>
         </div>
 
         <div className={styles.main_nav__links_container}>
