@@ -1,0 +1,249 @@
+.main_nav__nav {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 100;
+  height: 75px;
+  transition: .5s ease-in-out;
+  background-image: linear-gradient(180deg, rgba(0, 0, 0, .7) 10%, transparent);
+}
+
+.main_nav__container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+}
+
+.main_nav__scrolled {
+  background-image: none;
+  /* background-color: var(--primary-bg-color); */
+  background-color: #222;
+  box-shadow: 0 1px 1px hsla(0, 87%, 49%, 0.075), 0 2px 2px hsl(0deg 0% 0% / 0.075), 0 4px 4px hsl(0deg 0% 0% / 0.075), 0 8px 8px hsl(0deg 0% 0% / 0.075), 0 16px 16px hsl(0deg 0% 0% / 0.075);
+}
+
+.main_nav__logo {
+  width: 100%;
+  object-fit: contain;
+}
+
+.main_nav__navLinks {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 163%;
+  width: 100%;
+  padding: 0;
+  z-index: 100;
+  visibility: hidden;
+  list-style: none;
+  transition: max-height 0.3s ease-in-out;
+}
+
+.main_nav__navLinks_visible {
+  top: 103%;
+  right: 0;
+  background: var(--primary-bg-color);
+  padding: 45px 0 25px 25px;
+  text-align: center;
+  visibility: visible;
+  transition: .3s ease-in-out;
+}
+
+.main_nav__container_grey {
+  background-color: var(--primary-bg-color);
+}
+
+.main_nav__links_container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.main_nav__navLinks li {
+  display: flex;
+  align-items: flex-start;
+  padding: 15px;
+  margin: 5px 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  cursor: pointer;
+  background-color: transparent;
+  border: none;
+}
+
+.main_nav__navLinks span {
+  width: 100%;
+  border-bottom: 0 !important;
+  text-align: left;
+}
+
+.main_nav__navLinks a {
+  position: relative;
+  width: 100%;
+  color: #fff;
+  text-align: left;
+  text-decoration: none;
+}
+
+.main_nav__subLinks__parent a,
+.main_nav__subLinks__parent span {
+  display: block;
+  /* padding: 5px 40px; */
+}
+
+.main_nav__subLinks__parent span.active,
+.main_nav__navLinks a.active {
+  color: var(--primary-color);
+}
+
+.main_nav__subLinks__parent span::after,
+.main_nav__navLinks a::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  display: block;
+  background: var(--primary-color);
+  transition: width 0.4s ease, left 0.4s ease;
+  left: 50%;
+  bottom: -5px;
+}
+
+.main_nav__subLinks__parent span::after,
+.main_nav__navLinks a:hover::after {
+  width: 100%;
+  left: 0;
+}
+
+.main_nav__subLinks__parent span:hover,
+.main_nav__navLinks a:hover {
+  color: #fff;
+}
+
+.main_nav__navLinks span ul {
+  padding-top: 40px;
+  border-top: 1px solid #fff;
+}
+
+.main_nav__navLinks span li {
+  padding-top: 0;
+}
+
+/* Hide sublinks by default */
+.main_nav__subLinks {
+  position: relative;
+  top: 20px;
+  max-height: 0;
+  overflow: hidden;
+  background: #444;
+  text-align: center;
+  transition: max-height 0.8s ease-in-out;
+}
+
+.main_nav__sublinks_visible {
+  max-height: 500px;
+  overflow: scroll;
+}
+
+.main_nav__back_button span {
+  margin-left: 10px;
+}
+
+.main_nav__back_button svg {
+  color: var(--primary-color);
+}
+
+.main_nav__subLinks__parent span,
+.main_nav__subLinks__parent li {
+  border-bottom: 2px solid #000;
+}
+
+.main_nav__subLinks__parent li:last-child {
+  border-bottom: none;
+}
+
+.main_nav__subLinks__parent span,
+.main_nav__subLinks a {
+  position: relative;
+  color: #fff;
+  text-decoration: none;
+  overflow: hidden;
+}
+
+.main_nav__subLinks__parent span::before,
+.main_nav__subLinks a::before {
+  content: attr(data-hover);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--primary-color);
+  transition: transform 0.9s ease;
+  transform: translateX(-100%); /* Start off-screen */
+  white-space: nowrap;
+}
+
+.main_nav__subLinks__parent span:hover::before,
+.main_nav__subLinks a:hover::before {
+  transform: translateX(0); /* Slide in on hover */
+}
+
+.main_nav__subLinks__parent span:hover,
+.main_nav__subLinks a:hover {
+  color: var(--primary-color); /* Keeps the text color primary after hover */
+}
+
+.main_nav__social_icons li:hover {
+  color: var(--primary-color);
+  cursor: pointer;
+}
+
+.main_nav__social_icons {
+  display: flex;
+  list-style: none;
+  align-items: center;
+}
+
+.main_nav__social_icons li {
+  margin: 0 15px;
+}
+
+.main_nav__social_icons_false {
+  display: none;
+}
+
+.main_nav__social_icons button {
+  display: none;
+}
+
+.main_nav__mobile_links {
+  display: flex;
+  /* justify-content: center; */
+}
+
+.hamburger {
+  display: inline-block;
+  cursor: pointer;
+}
+
+.bar {
+  width: 25px;
+  height: 3px;
+  background-color: #fff;
+  margin: 6px 0;
+  transition: 0.4s;
+}
+
+.bar1_open {
+  transform: rotate(-45deg) translate(-6px, 4px);
+}
+
+.bar2_open {
+  opacity: 0;
+}
+
+.bar3_open {
+  transform: rotate(45deg) translate(-8px, -7px);
+}
