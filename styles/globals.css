@@ -126,6 +126,11 @@ th {
   font-weight: bold;
 }
 
+th:nth-child(2) {
+  width: 100%;
+  min-width: 400px;
+}
+
 .dark-mode th {
   background-color: #555;
   color: #eee;
