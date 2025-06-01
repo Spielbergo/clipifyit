@@ -166,6 +166,7 @@ td button:last-child {
 
 td:nth-child(2) {
   display: -webkit-box;
+  line-clamp: 5;
   -webkit-line-clamp: 5;
   -webkit-box-orient: vertical;
   margin-bottom: 30px;
