@@ -153,7 +153,7 @@ export default function ClipboardList({ clipboardItems, setClipboardItems }) {
                         <th>Text</th>
                         <th>Edit</th>
                         <th>Copy</th>
-                        <th>Remove</th>
+                        <th>Clear</th>
                         {/* <th>Move</th> */}
                     </tr>
                 </thead>
