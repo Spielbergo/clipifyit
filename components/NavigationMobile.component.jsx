@@ -18,6 +18,7 @@ import { BsXCircle } from 'react-icons/bs';
 
 import styles from './navigation-mobile.module.css';
 
+import DarkModeToggle from '../components/DarkModeToggle';
 import NavLogoWhite from '../public/logos/logo-light-text.png';
 
 const Navigation = () => {
@@ -111,6 +112,9 @@ const Navigation = () => {
                 Get a Quote
               </Button>
             </li> */}
+            <li>
+              <DarkModeToggle />
+            </li>
             <li className={styles.main_nav__toggle} onClick={handleMobileToggle}>
               <div className={styles.hamburger}>
                 <div className={`${styles.bar} ${mobileToggleOpen ? styles.bar1_open : ''}`}></div>

@@ -1,12 +1,18 @@
+.main_nav__social_icons button svg {
+  color: #fff;
+}
+
 .main_nav__nav {
   position: fixed;
   top: 0;
   right: 0;
   width: 100%;
+  height: 103px;
   z-index: 100;
-  height: 75px;
+  height: 100px;
   transition: .5s ease-in-out;
-  background-image: linear-gradient(180deg, rgba(0, 0, 0, .7) 10%, transparent);
+  /* background-image: linear-gradient(180deg, rgba(0, 0, 0, .7) 10%, transparent); */
+  background-color: #000;
 }
 
 .main_nav__container {
@@ -42,7 +48,7 @@
 }
 
 .main_nav__navLinks_visible {
-  top: 103%;
+  top: 87%;
   right: 0;
   background: var(--primary-bg-color);
   padding: 45px 0 25px 25px;
@@ -215,9 +221,9 @@
   display: none;
 }
 
-.main_nav__social_icons button {
+/* .main_nav__social_icons button {
   display: none;
-}
+} */
 
 .main_nav__mobile_links {
   display: flex;
