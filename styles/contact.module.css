@@ -1,0 +1,140 @@
+.contactPage {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* background: linear-gradient(120deg, #eaf6fa 0%, #f9fafc 100%); */
+  padding: 2rem 1rem;
+}
+
+.contactCard {
+  background: #fff;
+  border-radius: 1.2rem;
+  box-shadow: 0 4px 32px rgba(101,153,166,0.10);
+  padding: 2.5rem 1.5rem;
+  max-width: 420px;
+  width: 100%;
+  animation: fadeInUp 0.7s cubic-bezier(.23,1.01,.32,1) both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.heading {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 0.5rem;
+  text-align: center;
+  letter-spacing: 0.01em;
+}
+
+.subheading {
+  color: #6599a6;
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  animation: fadeIn 0.7s both;
+}
+
+.inputTextarea {
+    width: 92%;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.inputGroup label {
+  font-weight: 500;
+  color: #444;
+}
+
+.inputGroup input,
+.inputGroup textarea {
+  padding: 0.7em 1em;
+  border: 1.5px solid #e0e7ef;
+  border-radius: 0.7em;
+  font-size: 1rem;
+  background: #f9fafc;
+  transition: border 0.2s;
+}
+
+.inputGroup input:focus,
+.inputGroup textarea:focus {
+  border-color: #6599a6;
+  outline: none;
+}
+
+.submitButton {
+  background: #6599a6;
+  color: #fff;
+  border: none;
+  border-radius: 2em;
+  padding: 0.8em 2em;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s;
+  margin-top: 0.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.submitButton:disabled {
+  background: #b5c9d1;
+  cursor: not-allowed;
+}
+
+.successMsg {
+  margin-top: 1.2rem;
+  color: #2e7d32;
+  font-weight: 600;
+  text-align: center;
+  animation: fadeIn 0.5s both;
+}
+
+.loader {
+  display: inline-block;
+  width: 1.2em;
+  height: 1.2em;
+  border: 2.5px solid #fff;
+  border-top: 2.5px solid #6599a6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 500px) {
+  .contactCard {
+    padding: 1.2rem 0.5rem;
+  }
+  .heading {
+    font-size: 1.3rem;
+  }
+}

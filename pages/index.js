@@ -1,101 +1,51 @@
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import ClipboardList from '../components/ClipboardList';
-import Controls from '../components/Controls';
+import Link from 'next/link';
 
 export default function Home() {
-    const [clipboardItems, setClipboardItems] = useState([]);
-    const [clearedItems, setClearedItems] = useState([]);
-    const [showErrorMessage, setShowErrorMessage] = useState(false);
-    const router = useRouter();
-
-    // Load clipboard items from localStorage on mount
-    useEffect(() => {
-        const storedItems = JSON.parse(localStorage.getItem('clipboardItems')) || [];
-        setClipboardItems(storedItems);
-    }, []);
-
-    // Save clipboard items to localStorage whenever they change
-    useEffect(() => {
-        localStorage.setItem('clipboardItems', JSON.stringify(clipboardItems));
-    }, [clipboardItems]);
-
-    const handleAddItem = (text) => {
-        if (clipboardItems.includes(text)) {
-            return true; // Indicate that the item is a duplicate
-        }
-        setClipboardItems([text, ...clipboardItems]);
-        return false; // Indicate that the item was successfully added
-    };
-
-    const showErrorNotification = (message) => {
-        setShowErrorMessage(message); // Set the error message
-        setTimeout(() => {
-            setShowErrorMessage(false); // Clear the error message after 2 seconds
-        }, 2000);
-    };
-
-    const handleClearAll = () => {
-        setClearedItems([...clipboardItems]);
-        setClipboardItems([]);
-    };
-
-    const handleRedoClear = () => {
-        setClipboardItems([...clearedItems]);
-        setClearedItems([]);
-    };
-
-    const handlePopOut = (size) => {
-        let width, height;
-    
-        switch (size) {
-            case 'small':
-                width = 400;
-                height = 300;
-                break;
-            case 'large':
-                width = 1200;
-                height = 800;
-                break;
-            case 'medium':
-            default:
-                width = 800;
-                height = 600;
-                break;
-        }
-    
-        const left = (window.screen.width - width) / 2;
-        const top = (window.screen.height - height) / 2;
-    
-        const popOutUrl = `${window.location.origin}/popout`;
-        window.open(
-            popOutUrl,
-            '_blank',
-            `width=${width},height=${height},left=${left},top=${top},resizable,scrollbars`
-        );
-    };
-
     return (
-        <div className="app-main">
-            <div className="app-wrapper">
-                <Controls
-                    onAddItem={handleAddItem}
-                    onClearAll={handleClearAll}
-                    onRedoClear={handleRedoClear}
-                    onHandlePopOut={handlePopOut}
-                    isPopOut={false}
-                    showErrorNotification={showErrorNotification}
-                />
-                <ClipboardList
-                    clipboardItems={clipboardItems}
-                    setClipboardItems={setClipboardItems}
-                />
-                {showErrorMessage && (
-                    <div className="error-message" style={{ color: 'red', marginTop: '10px' }}>
-                        {showErrorMessage}
-                    </div>
-                )}
-            </div>
+        <div>
+            {/* Hero Section */}
+            <section style={{ padding: '60px 0', textAlign: 'center' }}>
+                <h1 style={{ fontSize: '3rem', marginBottom: '20px' }}>Clipify It</h1>
+                <p style={{ fontSize: '1.5rem', marginBottom: '30px' }}>
+                    The ultimate clipboard manager for productivity.
+                </p>
+                <Link href="/app">
+                    <button style={{ fontSize: '1.2rem', padding: '16px 32px', background: '#6599a6', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                        Open App
+                    </button>
+                </Link>
+            </section>
+
+            {/* Features Section */}
+            <section style={{ maxWidth: 900, margin: '40px auto', padding: '0 16px' }}>
+                <h2>Features - Free Forever</h2>
+                <ul style={{ fontSize: '1.1rem', lineHeight: 2 }}>
+                    <li>📝 Save and organize your clipboard history</li>
+                    <li>📅 Saved locally in your browser</li>
+                    <li>🔍 Search and filter clipboard items</li>
+                    <li>📋 One-click copy and paste</li>
+                    <li>🖊️ Edit and manage items</li>
+                    <li>🗑️ Clear and restore clipboard history</li>
+                    <li>🌙 Dark mode support</li>
+                    <li>✨ And more in the Pro version!</li>
+                </ul>
+                <Link href="/app">
+                    <button style={{ marginTop: 24, fontSize: '1rem', padding: '12px 24px', background: '#6599a6', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                        Try Clipify It Now
+                    </button>
+                </Link>
+            </section>
+
+            {/* Pro Version Section */}
+            <section style={{ padding: '40px 0', textAlign: 'center' }}>
+                <h2>Upgrade to Pro</h2>
+                <p>Unlock unlimited history, cloud sync, and more!</p>
+                <Link href="/app">
+                    <button style={{ fontSize: '1rem', padding: '12px 24px', background: '#007BFF', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                        Go Pro
+                    </button>
+                </Link>
+            </section>
         </div>
     );
 }

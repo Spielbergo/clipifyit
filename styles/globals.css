@@ -25,6 +25,10 @@ p {
   margin: 0; 
 }
 
+ul { 
+  list-style: none;
+}
+
 textarea {
   width: 100%;
   min-height: 50px;
@@ -36,10 +40,6 @@ textarea {
   resize: vertical; /* Allow vertical resizing */
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: border-color 0.3s ease;
-}
-
-ul { 
-  list-style: none;
 }
 
 .dark-mode textarea {
@@ -114,12 +114,12 @@ table {
 
 .item-checkbox {
   display: grid;
-grid-template-columns: 1em auto;
-/* gap: 0.5em; */
-font-family: system-ui, sans-serif;
-font-size: 2rem;
-font-weight: bold;
-line-height: 1.1;
+  grid-template-columns: 1em auto;
+  /* gap: 0.5em; */
+  font-family: system-ui, sans-serif;
+  font-size: 2rem;
+  font-weight: bold;
+  line-height: 1.1;
 }
 
 th, td {
@@ -237,11 +237,11 @@ button:active {
 }
 
 .hand-cursor {
-  cursor: grab; /* Hand cursor */
+  cursor: grab;
 }
 
 .fist-cursor {
-  cursor: grabbing; /* Fist cursor */
+  cursor: grabbing;
 }
 
 .move-cell {
@@ -302,7 +302,7 @@ button:active {
   color: white;
 }
 
-.switch {
+/* .switch {
   position: absolute;
   right: 25px;
   top: 25px;
@@ -353,9 +353,9 @@ input:checked + .slider:before {
 
 .slider.round:before {
   border-radius: 50%;
-}
+} */
 
-/* Responsive Design */
+/* Media Queries */
 @media screen and (min-width: 767px) {
   .window-controls{
       display: block;

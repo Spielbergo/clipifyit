@@ -1,5 +1,6 @@
 import '../styles/globals.css';
 import { useEffect, useState } from 'react';
+import { AuthProvider } from '../contexts/AuthContext';
 
 import Navigation from '../components/Navigation.component';
 import NavigationMobile from '../components/NavigationMobile.component';
@@ -24,10 +25,10 @@ export default function App({ Component, pageProps }) {
     }, []);
 
     return (
-        <>
+        <AuthProvider>
             {isMobile ? <NavigationMobile /> : <Navigation />}
             {/* Render the current page */}
             <Component {...pageProps} />
-        </>
+        </AuthProvider>
     );
 }

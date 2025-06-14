@@ -22,14 +22,16 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
             const text = await navigator.clipboard.readText();
             if (text) {
                 if (onAddItem) {
-                    const isDuplicate = onAddItem(text); // Check for duplicates
-                    if (isDuplicate) {
-                        setErrorMessage("Duplicate content cannot be added!"); // Set the error message
+                    // Always check for duplicates by comparing text, regardless of data shape
+                    const result = await onAddItem(text);
+                    // If onAddItem returns true, it's a duplicate
+                    if (result === true) {
+                        setErrorMessage("Duplicate content cannot be added!");
                         const errorElement = document.querySelector('.no-selection-message');
                         if (errorElement) {
-                            errorElement.style.display = 'block'; // Show the error message
+                            errorElement.style.display = 'block';
                             setTimeout(() => {
-                                errorElement.style.display = 'none'; // Hide the error message after 2 seconds
+                                errorElement.style.display = 'none';
                             }, 2000);
                         }
                         return;
@@ -106,7 +108,6 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
                 {!isPopOut && (
                     <button onClick={() => onHandlePopOut(popOutSize)}>Pop Out</button>
                 )}
-                
             </div>
             <button onClick={handlePaste}>Paste from Clipboard</button>
             <div className="no-selection-message">{errorMessage}</div>

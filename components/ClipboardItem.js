@@ -1,7 +1,16 @@
 import { useState, useEffect } from 'react';
 import { FaEdit, FaCheck, FaTimes, FaCopy } from 'react-icons/fa';
 
-export default function ClipboardItem({ index, text, isSelected, onToggleSelect, onRemove, onCopy, onSave, ...props }) {
+export default function ClipboardItem({
+    index,
+    text,
+    isSelected,
+    onToggleSelect,
+    onRemove,
+    onCopy,
+    onSave,
+    ...props
+}) {
     const [isEditing, setIsEditing] = useState(false);
     const [editedText, setEditedText] = useState(text);
     const [isCopied, setIsCopied] = useState(false);
@@ -12,11 +21,13 @@ export default function ClipboardItem({ index, text, isSelected, onToggleSelect,
 
     const handleSave = () => {
         setIsEditing(false);
-        onSave(index, editedText); // Call the onSave function to update the parent state
+        if (onSave) {
+            onSave(index, editedText);
+        }
     };
 
     const handleCancel = () => {
-        setEditedText(text); // Reset to the original text
+        setEditedText(text);
         setIsEditing(false);
     };
 
@@ -26,7 +37,7 @@ export default function ClipboardItem({ index, text, isSelected, onToggleSelect,
                 .then(() => {
                     setIsCopied(true);
                     setTimeout(() => setIsCopied(false), 2000);
-                    onCopy(text);
+                    if (onCopy) onCopy(text);
                 })
                 .catch((err) => console.error('Failed to copy text: ', err));
         } else {
@@ -43,14 +54,15 @@ export default function ClipboardItem({ index, text, isSelected, onToggleSelect,
                     onChange={onToggleSelect}
                 />
             </td>
-            <td contentEditable={isEditing} suppressContentEditableWarning>
+            <td>
                 {isEditing ? (
                     <textarea
                         value={editedText}
                         onChange={(e) => setEditedText(e.target.value)}
+                        style={{ width: '100%' }}
                     />
                 ) : (
-                    text
+                    <span style={{ whiteSpace: 'pre-wrap' }}>{text}</span>
                 )}
             </td>
             <td>

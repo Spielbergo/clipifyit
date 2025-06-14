@@ -8,6 +8,11 @@ export const navigation = [
         link: '/',
     },
     {
+        id: "app",
+        anchor: 'App',
+        link: '/app',
+    },
+    {
         id: "prices",
         anchor: 'Prices',
         link: '/prices',
@@ -25,7 +30,7 @@ export const navigation = [
     {
         id: "login",
         anchor: 'Login',
-        link: '/login',
+        link: '/pro',
     },
 ];
 
