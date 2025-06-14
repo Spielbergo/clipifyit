@@ -4,7 +4,7 @@ import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from
 import {
   collection, addDoc, getDocs, doc, deleteDoc, setDoc, query, orderBy
 } from 'firebase/firestore';
-import LoginOptions from '../LoginOptions';
+import LoginOptions from '../LogInOptions';
 
 import ClipboardList from '../ClipboardList';
 import Controls from '../Controls';
