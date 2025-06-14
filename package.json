@@ -9,11 +9,21 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "aws-amplify": "^6.15.0",
     "dotenv": "^16.5.0",
     "firebase": "^11.9.1",
     "next": "15.3.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0"
+  },
+  "devDependencies": {
+    "@aws-amplify/backend": "^1.16.1",
+    "@aws-amplify/backend-cli": "^1.8.0",
+    "aws-cdk-lib": "^2.189.1",
+    "constructs": "^10.4.2",
+    "esbuild": "^0.25.5",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
   }
 }
