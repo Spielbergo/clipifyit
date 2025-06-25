@@ -48,7 +48,7 @@ const Navigation = () => {
     const handleClickOutside = (event) => {
       if (navRef.current && !navRef.current.contains(event.target) && mobileToggleOpen) {
         setMobileToggleOpen(false);
-        setActiveSubmenu(null);
+        // setActiveSubmenu(null);
       }
     };
 
@@ -67,7 +67,7 @@ const Navigation = () => {
 
   const handleCloseMobileNav = () => {
     setMobileToggleOpen(false);
-    setActiveSubmenu(null);
+    // setActiveSubmenu(null);
   };
 
   const navItems = JSON.parse(JSON.stringify(navigation));

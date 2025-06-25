@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 
+import styles from './controls.module.css';
+
 export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandlePopOut, isPopOut, showErrorNotification }) {
     const [popOutSize, setPopOutSize] = useState('medium');
     const [showRedoButton, setShowRedoButton] = useState(false); // Track visibility of the "Redo" button
@@ -90,7 +92,7 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
                     </button>
                 )}
             </div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+            <div className={styles.popout__container} >
                 <select
                     value={popOutSize}
                     onChange={(e) => {

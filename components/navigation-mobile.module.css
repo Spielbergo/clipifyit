@@ -71,7 +71,7 @@
   display: flex;
   align-items: flex-start;
   padding: 15px;
-  margin: 5px 0;
+  margin: 5px auto 0;
   font-size: 1.3rem;
   font-weight: 600;
   cursor: pointer;
@@ -87,7 +87,7 @@
 
 .main_nav__navLinks a {
   position: relative;
-  width: 100%;
+  /* width: 100%; */
   color: #fff;
   text-align: left;
   text-decoration: none;
@@ -130,6 +130,7 @@
 
 .main_nav__navLinks span ul {
   padding-top: 40px;
+  padding-left: 0;
   border-top: 1px solid #fff;
 }
 

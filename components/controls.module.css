@@ -1,0 +1,11 @@
+.popout__container {
+    display: none;
+    align-items: center;
+    gap: 10px;
+}
+
+@media screen and (min-width: 1025px) {
+    .popout__container {
+        display: inline-flex;
+    }
+}

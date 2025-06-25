@@ -4,7 +4,7 @@ import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from
 import {
   collection, addDoc, getDocs, doc, deleteDoc, setDoc, query, orderBy
 } from 'firebase/firestore';
-import LoginOptions from '../LogInOptions';
+import LogInOptions from '../LogInOptions';
 
 import ClipboardList from '../ClipboardList';
 import Controls from '../Controls';
@@ -128,7 +128,7 @@ export default function ProApp() {
         return (
             <div style={{ textAlign: 'center', marginTop: 80 }}>
                 <h2>Sign in to use Clipify It Pro</h2>
-                <LoginOptions />
+                <LogInOptions />
             </div>
         );
     }

@@ -126,7 +126,7 @@
   
   @media screen and (min-width: 767px) {
     .main_nav__container {
-      max-width: 1280px;
+      max-width: var(--app-width);
       height: 59px;
       /* padding: 1px 0 10px; */
       margin: auto;
