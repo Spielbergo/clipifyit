@@ -7,7 +7,7 @@ import {
   createUserWithEmailAndPassword,
 } from 'firebase/auth';
 
-export default function LoginOptions() {
+export default function LogInOptions() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
