@@ -67,7 +67,7 @@ textarea:focus {
   max-width: var(--app-width);
   padding-left: 12px;
   padding-right: 12px;
-  margin: 0 auto;
+  margin: 50px auto;
   box-sizing: border-box;
 }
 
