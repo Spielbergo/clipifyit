@@ -30,6 +30,9 @@
 }
 
 .main_nav__logo {
+  position: relative;
+  left: 80px;
+  top: -6px;
   width: 100%;
   object-fit: contain;
 }

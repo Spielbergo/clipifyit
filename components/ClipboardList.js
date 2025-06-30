@@ -174,7 +174,7 @@ export default function ClipboardList({
     };
 
     return (
-        <div>
+        <div className="table-wrapper">
             <table>
                 <thead>
                     <tr>

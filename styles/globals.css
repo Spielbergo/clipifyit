@@ -20,6 +20,7 @@ body {
   font-family: Arial, sans-serif;
   color: #333;
   background-color: #f9f9f9;
+  /* overflow-x: hidden; */
 }
 
 p {
@@ -57,31 +58,38 @@ textarea:focus {
 
 .app-main {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  flex-direction: row;
+  min-height: 100vh;
 }
 
 .app-wrapper {
-  width: 100vw;
-  min-width: 0;
-  max-width: var(--app-width);
-  padding-left: 12px;
-  padding-right: 12px;
-  margin: 50px auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;                     /* Fill all available space */
+  max-width: var(--app-width);     /* But never exceed your design width */
+  min-width: 478px;                /* Don't get too small on mobile */
+  margin: 50px auto 0 auto;        /* Center horizontally */
+  padding: 0 15px;
   box-sizing: border-box;
 }
 
 .controls-container {
   position: sticky;
-  top: 100px;
+  top: 95px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
   padding: 8px 0 5px;
-  margin-bottom: 50px;
+  /* margin-bottom: 50px; */
   background: #fff;
   border-radius: 5px;
   z-index: 20;
+}
+
+.table-wrapper {
+  width: 100%;
 }
 
 .dark-mode .controls-container {
@@ -181,6 +189,7 @@ td:nth-child(2) {
   overflow: hidden;
   text-overflow: ellipsis;  
   white-space: pre-wrap; 
+  word-break: break-word;
 }
 
 tr:nth-child(even) {
@@ -305,6 +314,122 @@ button:active {
   color: white;
 }
 
+/* Sidebar */
+/* Sidebar base styles */
+.projects-sidebar {
+  width: 270px;
+  min-width: 270px;
+  max-width: 270px;
+  background: #222;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 200;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: transform 0.3s;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+}
+
+.project-title {
+  flex: 1;
+  cursor: pointer;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  max-width: 140px; /* Adjust as needed for your sidebar width */
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.dark-mode .projects-sidebar button {
+  background: transparent;
+}
+
+/* Desktop: always visible, fixed */
+@media (min-width: 900px) {
+  .projects-sidebar {
+    transform: translateX(0);
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 200;
+    padding-top: 50px;
+  }
+  .expand-sidebar-btn { display: none; }
+  .sidebar-overlay { display: none; }
+}
+
+/* Mobile: hidden by default, slides in when expanded */
+@media (max-width: 1281px) {
+  .projects-sidebar {
+    width: 100%;
+    max-width: 300px;
+    transform: translateX(-100%);
+    position: fixed;
+    z-index: 200;
+  }
+  .projects-sidebar.expanded {
+    transform: translateX(0);
+  }
+  .expand-sidebar-btn {
+    display: block;
+    position: fixed;
+    top: 26px;
+    left: 10px;
+    z-index: 210;
+    background: #6599a6;
+    background: transparent;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 14px;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  .dark-mode .expand-sidebar-btn  {
+    background: transparent
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.25);
+    z-index: 199;
+    transition: opacity 0.3s;
+  }
+
+  .sidebar-overlay.hidden {
+    display: none;
+  }
+}
+
+/* Modal Styling */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.modal {
+  background: #222;
+  padding: 32px 24px 20px 24px;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  min-width: 300px;
+  max-width: 90vw;
+}
+
 /* .switch {
   position: absolute;
   right: 25px;
@@ -387,5 +512,17 @@ input:checked + .slider:before {
 
   td:nth-child(5) {
       padding-right: 10px;
+  }
+}
+
+@media screen and (min-width: 1281px) {
+  .app-wrapper {
+    width: 100%;
+    margin: 50px auto;
+    min-width: var(--app-width);
+  }
+
+  .controls-container {
+    top: 75px;
   }
 }
