@@ -45,6 +45,41 @@ export default function ClipboardItem({
         }
     };
 
+    function linkify(text) {
+        const urlRegex = /((https?:\/\/|www\.)[^\s]+)/g;
+        const parts = [];
+        let lastIndex = 0;
+        let match;
+        let key = 0;
+
+        while ((match = urlRegex.exec(text)) !== null) {
+            // Add text before the link
+            if (match.index > lastIndex) {
+            parts.push(text.substring(lastIndex, match.index));
+            }
+            // Add the link
+            let url = match[0];
+            let href = url.startsWith('http') ? url : `https://${url}`;
+            parts.push(
+            <a
+                key={key++}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: '#1976d2', wordBreak: 'break-all' }}
+            >
+                {url}
+            </a>
+            );
+            lastIndex = match.index + url.length;
+        }
+        // Add any remaining text
+        if (lastIndex < text.length) {
+            parts.push(text.substring(lastIndex));
+        }
+        return parts;
+    }
+
     return (
         <>
             <td>
@@ -62,7 +97,7 @@ export default function ClipboardItem({
                         style={{ width: '100%' }}
                     />
                 ) : (
-                    <span style={{ whiteSpace: 'pre-wrap' }}>{text}</span>
+                    <span style={{ whiteSpace: 'pre-wrap' }}>{linkify(text)}</span>
                 )}
             </td>
             <td>

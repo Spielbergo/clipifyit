@@ -126,6 +126,7 @@ export default function ProjectsSidebar({
             display: 'flex',
             alignItems: 'center',
             background: 'transparant',
+            color: '#eee',
             padding: '6px 12px',
             borderRadius: 4,
             marginBottom: 2,
@@ -163,8 +164,10 @@ export default function ProjectsSidebar({
             className={project.id === selectedProjectId ? 'selected' : ''}
             style={{
               display: 'flex',
+              justifyContent: 'space-between',
               alignItems: 'center',
               background: project.id === selectedProjectId ? '#333' : 'transparent',
+              color: '#eee',
               padding: '6px 12px',
               borderRadius: 4,
               marginBottom: 2,

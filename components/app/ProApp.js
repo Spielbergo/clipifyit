@@ -9,6 +9,8 @@ import LogInOptions from '../LogInOptions';
 import ClipboardList from '../ClipboardList';
 import Controls from '../Controls';
 import ProjectsSidebar from '../ProjectsSidebar';
+import ExpandSidebar from '../ExpandSidebar';
+import DeleteProjectModal from '../DeleteProjectModal';
 
 export default function ProApp() {
     const [clipboardItems, setClipboardItems] = useState([]);
@@ -255,7 +257,6 @@ export default function ProApp() {
                         fontWeight: 600,
                         fontSize: 24,
                         textAlign: 'left',
-                        color: '#333',
                         width: '100%'
                     }}
                     >
@@ -285,17 +286,11 @@ export default function ProApp() {
                     </div>
                 )}
             </div>
-            {projectToDelete && (
-            <div className="modal-overlay">
-                <div className="modal">
-                <p>Are you sure you want to delete this project?</p>
-                <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 20 }}>
-                    <button onClick={cancelDeleteProject}>Cancel</button>
-                    <button onClick={confirmDeleteProject} style={{ background: '#c00', color: '#fff' }}>Delete</button>
-                </div>
-                </div>
-            </div>
-            )}
+            <DeleteProjectModal
+                open={!!projectToDelete}
+                onCancel={cancelDeleteProject}
+                onConfirm={confirmDeleteProject}
+            />
         </div>
     );
 }
