@@ -80,6 +80,22 @@ export default function ClipboardItem({
         return parts;
     }
 
+    function isColor(str) {
+        // Hex
+        if (/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(str.trim())) return true;
+        // rgb/rgba
+        if (/^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+(,\s*(0|1|0?\.\d+))?\s*\)$/i.test(str.trim())) return true;
+        // hsl/hsla
+        if (/^hsla?\(\s*\d+\s*,\s*\d+%?\s*,\s*\d+%?(,\s*(0|1|0?\.\d+))?\s*\)$/i.test(str.trim())) return true;
+        // Named colors (basic set)
+        if (
+            [
+            'red','blue','green','yellow','orange','purple','pink','black','white','gray','grey','brown','cyan','magenta','lime','maroon','navy','olive','teal','aqua','fuchsia','silver','gold'
+            ].includes(str.trim().toLowerCase())
+        ) return true;
+        return false;
+    }
+
     return (
         <>
             <td>
@@ -89,7 +105,13 @@ export default function ClipboardItem({
                     onChange={onToggleSelect}
                 />
             </td>
-            <td>
+            <td
+                style={
+                    !isEditing && isColor(text)
+                    ? { color: text.trim(), fontWeight: '500' }
+                    : {}
+                }
+            >
                 {isEditing ? (
                     <textarea
                         value={editedText}

@@ -8,6 +8,8 @@ import ProjectsSidebar from '../ProjectsSidebar';
 import ExpandSidebar from '../ExpandSidebar';
 import DeleteProjectModal from '../DeleteProjectModal';
 
+import { useFolders } from '../../hooks/useFolders';
+
 export default function ProApp() {
     const [clipboardItems, setClipboardItems] = useState([]);
     const [clearedItems, setClearedItems] = useState([]);
@@ -20,6 +22,19 @@ export default function ProApp() {
     const [selectedProjectId, setSelectedProjectId] = useState('');
     const [creatingProject, setCreatingProject] = useState(false);
     const [projectToDelete, setProjectToDelete] = useState(null);
+
+    const {
+        folders,
+        selectedFolderId,
+        setSelectedFolderId,
+        renamingFolderId,
+        setRenamingFolderId,
+        renameFolderValue,
+        setRenameFolderValue,
+        addFolder,
+        renameFolder,
+        deleteFolder,
+    } = useFolders(user, selectedProjectId);
 
     // Listen for auth state changes
     useEffect(() => {
@@ -43,25 +58,38 @@ export default function ProApp() {
         }
         setLoading(true);
         const fetchItems = async () => {
-            const { data, error } = await supabase
+            let query = supabase
                 .from('clipboard_items')
                 .select('*')
                 .eq('project_id', selectedProjectId)
                 .order('created_at', { ascending: false });
+
+            if (selectedFolderId) {
+                query = query.eq('folder_id', selectedFolderId);
+            } else {
+                query = query.is('folder_id', null);
+            }
+
+            const { data, error } = await query;
             setClipboardItems(data || []);
             setLoading(false);
         };
         fetchItems();
-    }, [user, selectedProjectId]);
+    }, [user, selectedProjectId, selectedFolderId]);
 
     // Add item to the selected project's clipboard
     const handleAddItem = async (text) => {
         if (!user || !selectedProjectId) return;
-        // Prevent duplicates
         if (clipboardItems.some(item => item.text === text)) return true;
         const { data, error } = await supabase
             .from('clipboard_items')
-            .insert([{ project_id: selectedProjectId, text, created_at: new Date() }])
+            .insert([{
+                project_id: selectedProjectId,
+                folder_id: selectedFolderId || null, // <--- Add this line
+                text,
+                created_at: new Date(),
+                user_id: user.id
+            }])
             .select();
         if (!error && data) setClipboardItems([...(data || []), ...clipboardItems]);
         return false;
@@ -246,6 +274,16 @@ export default function ProApp() {
                 onClose={isMobile ? () => setSidebarExpanded(false) : undefined}
                 creatingProject={creatingProject}
                 onSaveNewProject={handleSaveNewProject}
+                folders={folders}
+                selectedFolderId={selectedFolderId}
+                onSelectFolder={setSelectedFolderId}
+                onAddFolder={addFolder}
+                onRenameFolder={renameFolder}
+                onDeleteFolder={deleteFolder}
+                renamingFolderId={renamingFolderId}
+                setRenamingFolderId={setRenamingFolderId}
+                renameFolderValue={renameFolderValue}
+                setRenameFolderValue={setRenameFolderValue}
             />
             {/* Expand button for mobile */}
             {isMobile && !sidebarExpanded && (
@@ -272,6 +310,12 @@ export default function ProApp() {
                     }}
                     >
                     {projects.find(p => p.id === selectedProjectId)?.name || 'No Project Selected'}
+                    {selectedFolderId && (
+                        <>
+                        <span style={{ color: '#888', fontWeight: 400 }}> &nbsp;/&nbsp; </span>
+                        {folders.find(f => f.id === selectedFolderId)?.name || 'Folder'}
+                        </>
+                    )}
                 </h2>
                 <Controls
                     onAddItem={handleAddItem}

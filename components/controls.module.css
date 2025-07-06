@@ -4,6 +4,20 @@
     gap: 10px;
 }
 
+.modal_buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.modal_buttons button:nth-child(2) {
+    background-color: var(--primary-color);
+}
+
+.modal_buttons button:hover {
+    background-color: var(--primary-color-hover);
+}
+
 @media screen and (min-width: 1025px) {
     .popout__container {
         display: inline-flex;

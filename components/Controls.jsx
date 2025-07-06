@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 
+import Modal from './Modal.component';
+
 import styles from './controls.module.css';
 
 export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandlePopOut, isPopOut, showErrorNotification }) {
@@ -7,6 +9,8 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
     const [showRedoButton, setShowRedoButton] = useState(false); // Track visibility of the "Redo" button
     const [isRedoDisabled, setIsRedoDisabled] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const [showCustomModal, setShowCustomModal] = useState(false);
+    const [customText, setCustomText] = useState('');
 
     const handleClearAll = () => {
         onClearAll(); // Call the parent-provided clear all function
@@ -42,6 +46,14 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
             }
         } catch (error) {
             console.error("Error pasting clipboard content:", error);
+        }
+    };
+
+    const handleAddCustom = async () => {
+        if (customText.trim()) {
+            await onAddItem(customText.trim());
+            setCustomText('');
+            setShowCustomModal(false);
         }
     };
 
@@ -111,8 +123,37 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
                     <button onClick={() => onHandlePopOut(popOutSize)}>Pop Out</button>
                 )}
             </div>
-            <button onClick={handlePaste}>Paste from Clipboard</button>
+            <div>
+                <button style={{ marginRight: 8 }} onClick={() => setShowCustomModal(true)}>
+                    Paste Custom Text
+                </button>
+                <button onClick={handlePaste}>Paste from Clipboard</button>
+            </div>
             <div className="no-selection-message">{errorMessage}</div>
+
+            <Modal open={showCustomModal} onClose={() => setShowCustomModal(false)}>
+                <h3 style={{ marginBottom: 12 }}>Paste Custom Text</h3>
+                <textarea
+                    value={customText}
+                    onChange={e => setCustomText(e.target.value)}
+                    rows={4}
+                    style={{
+                        width: '97%',
+                        borderRadius: 4,
+                        border: '1px solid #555',
+                        padding: 8,
+                        marginBottom: 12,
+                        background: '#333',
+                        color: '#fff'
+                    }}
+                    placeholder="Type or paste your text here..."
+                    autoFocus
+                />
+                <div className={styles.modal_buttons}>
+                    <button onClick={() => setShowCustomModal(false)}>Cancel</button>
+                    <button onClick={handleAddCustom} disabled={!customText.trim()}>Add</button>
+                </div>
+            </Modal>
         </div>
     );
 }
