@@ -2,8 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 
 import { useAuth } from '../contexts/AuthContext';
-import { signOut } from 'firebase/auth';
-import { auth } from '../lib/firebase';
 
 import Image from 'next/image';
 import Link from 'next/link';
@@ -13,6 +11,7 @@ import Link from 'next/link';
 import { navigation } from '../data';
 import services from '../data/services';
 
+import LogoutButton from './LogoutButton.component';
 import Socials from './SocialIcons.component';
 // import ContactForm from './ContactForm.component';
 // import Button from './Button.component';
@@ -36,8 +35,8 @@ const Navigation = () => {
   // const { openModal } = useModal();
 
   const handleLogout = async () => {
-      await signOut(auth);
-      setDropdownOpen(false);
+    await supabase.auth.signOut();
+    setDropdownOpen(false);
   };
 
   useEffect(() => {
@@ -169,7 +168,7 @@ const Navigation = () => {
                   position: 'absolute',
                   right: 0,
                   top: '120%',
-                  background: '#fff',
+                  background: '#222',
                   color: '#333',
                   border: '1px solid #ccc',
                   borderRadius: 8,
@@ -188,7 +187,7 @@ const Navigation = () => {
                       display: 'block',
                       padding: '12px 20px',
                       textDecoration: 'none',
-                      color: '#333',
+                      color: '#ccc',
                       borderBottom: '1px solid #eee',
                       fontSize: 15,
                     }}
@@ -197,22 +196,7 @@ const Navigation = () => {
                   </a>
                 </li>
                 <li>
-                  <button
-                    onClick={handleLogout}
-                    style={{
-                      display: 'block',
-                      width: '100%',
-                      padding: '12px 20px',
-                      background: 'none',
-                      border: 'none',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      color: '#d32f2f',
-                      fontSize: 15,
-                    }}
-                  >
-                    Logout
-                  </button>
+                  <LogoutButton onAfterLogout={() => setDropdownOpen(false)} />
                 </li>
               </ul>
             )}

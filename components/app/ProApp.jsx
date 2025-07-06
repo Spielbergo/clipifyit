@@ -1,9 +1,5 @@
 import { useState, useEffect } from 'react';
-import { auth, db } from '../../lib/firebase';
-import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'firebase/auth';
-import {
-  collection, addDoc, getDocs, doc, deleteDoc, setDoc, query, orderBy
-} from 'firebase/firestore';
+import { supabase } from '../../lib/supabase';
 import LogInOptions from '../LogInOptions';
 
 import ClipboardList from '../ClipboardList';
@@ -27,8 +23,16 @@ export default function ProApp() {
 
     // Listen for auth state changes
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, setUser);
-        return () => unsubscribe();
+        const session = supabase.auth.session?.() || supabase.auth.getSession?.();
+        if (session && session.user) setUser(session.user);
+
+        const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+        });
+
+        return () => {
+            listener?.unsubscribe?.();
+        };
     }, []);
 
     // Load clipboard items for the selected project
@@ -39,12 +43,12 @@ export default function ProApp() {
         }
         setLoading(true);
         const fetchItems = async () => {
-            const q = query(
-                collection(db, 'users', user.uid, 'projects', selectedProjectId, 'clipboardItems'),
-                orderBy('createdAt', 'desc')
-            );
-            const snapshot = await getDocs(q);
-            setClipboardItems(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            const { data, error } = await supabase
+                .from('clipboard_items')
+                .select('*')
+                .eq('project_id', selectedProjectId)
+                .order('created_at', { ascending: false });
+            setClipboardItems(data || []);
             setLoading(false);
         };
         fetchItems();
@@ -55,34 +59,31 @@ export default function ProApp() {
         if (!user || !selectedProjectId) return;
         // Prevent duplicates
         if (clipboardItems.some(item => item.text === text)) return true;
-        await addDoc(
-            collection(db, 'users', user.uid, 'projects', selectedProjectId, 'clipboardItems'),
-            { text, createdAt: Date.now() }
-        );
-        // Reload items
-        const q = query(
-            collection(db, 'users', user.uid, 'projects', selectedProjectId, 'clipboardItems'),
-            orderBy('createdAt', 'desc')
-        );
-        const snapshot = await getDocs(q);
-        setClipboardItems(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const { data, error } = await supabase
+            .from('clipboard_items')
+            .insert([{ project_id: selectedProjectId, text, created_at: new Date() }])
+            .select();
+        if (!error && data) setClipboardItems([...(data || []), ...clipboardItems]);
         return false;
     };
 
     // Remove item from the selected project's clipboard
     const handleRemoveItem = async (id) => {
         if (!user || !selectedProjectId) return;
-        await deleteDoc(doc(db, 'users', user.uid, 'projects', selectedProjectId, 'clipboardItems', id));
+        await supabase
+            .from('clipboard_items')
+            .delete()
+            .eq('id', id);
         setClipboardItems(clipboardItems.filter(item => item.id !== id));
     };
 
     // Edit item in the selected project's clipboard
     const handleSaveItem = async (id, newText) => {
         if (!user || !selectedProjectId) return;
-        await setDoc(
-            doc(db, 'users', user.uid, 'projects', selectedProjectId, 'clipboardItems', id),
-            { text: newText, createdAt: Date.now() }
-        );
+        await supabase
+            .from('clipboard_items')
+            .update({ text: newText })
+            .eq('id', id);
         setClipboardItems(clipboardItems.map(item => item.id === id ? { ...item, text: newText } : item));
     };
 
@@ -90,23 +91,23 @@ export default function ProApp() {
     const handleClearAll = async () => {
         if (!user || !selectedProjectId) return;
         setClearedItems([...clipboardItems]);
+        const ids = clipboardItems.map(item => item.id);
         await Promise.all(
-            clipboardItems.map(item =>
-                deleteDoc(doc(db, 'users', user.uid, 'projects', selectedProjectId, 'clipboardItems', item.id))
+            ids.map(id =>
+                supabase.from('clipboard_items').delete().eq('id', id)
             )
         );
         setClipboardItems([]);
     };
 
-    // Redo clear (restore clearedItems to Firestore)
+    // Redo clear (restore clearedItems to Supabase)
     const handleRedoClear = async () => {
         if (!user || !selectedProjectId || clearedItems.length === 0) return;
         await Promise.all(
             clearedItems.map(item =>
-                setDoc(
-                    doc(db, 'users', user.uid, 'projects', selectedProjectId, 'clipboardItems', item.id),
-                    { text: item.text, createdAt: item.createdAt || Date.now() }
-                )
+                supabase.from('clipboard_items').insert([
+                    { id: item.id, project_id: selectedProjectId, text: item.text, created_at: item.createdAt || new Date() }
+                ])
             )
         );
         setClipboardItems([...clearedItems]);
@@ -122,15 +123,21 @@ export default function ProApp() {
         }
     }, []);
 
-    // Load projects from Firestore
+    // Load projects from Supabase
     useEffect(() => {
         if (!user) return;
-        const q = query(collection(db, 'users', user.uid, 'projects'));
-        getDocs(q).then(snapshot => {
-            const projs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setProjects(projs);
-            if (!selectedProjectId && projs.length > 0) setSelectedProjectId(projs[0].id);
-        });
+        const fetchProjects = async () => {
+            const { data, error } = await supabase
+                .from('projects')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
+            if (!error) {
+                setProjects(data || []);
+                if (!selectedProjectId && data && data.length > 0) setSelectedProjectId(data[0].id);
+            }
+        };
+        fetchProjects();
     }, [user]);
 
     // Create a new project
@@ -143,14 +150,16 @@ export default function ProApp() {
             setCreatingProject(false);
             return;
         }
-        const docRef = await addDoc(collection(db, 'users', user.uid, 'projects'), {
-                name: name.trim(),
-                createdAt: Date.now()
-            });
-            setProjects([...projects, { id: docRef.id, name: name.trim(), createdAt: Date.now() }]);
-            setSelectedProjectId(docRef.id);
-            setCreatingProject(false);
-        };
+        const { data, error } = await supabase
+            .from('projects')
+            .insert([{ user_id: user.id, name: name.trim(), created_at: new Date() }])
+            .select();
+        if (!error && data && data.length > 0) {
+            setProjects([...projects, ...data]);
+            setSelectedProjectId(data[0].id);
+        }
+        setCreatingProject(false);
+    };
 
     // Delete a project
     const handleDeleteProject = (id) => {
@@ -159,7 +168,10 @@ export default function ProApp() {
 
     const confirmDeleteProject = async () => {
         if (!user || !projectToDelete) return;
-        await deleteDoc(doc(db, 'users', user.uid, 'projects', projectToDelete));
+        await supabase
+            .from('projects')
+            .delete()
+            .eq('id', projectToDelete);
         setProjects(projects.filter(p => p.id !== projectToDelete));
         if (selectedProjectId === projectToDelete) setSelectedProjectId(projects[0]?.id || '');
         setProjectToDelete(null);
@@ -172,7 +184,10 @@ export default function ProApp() {
     // Rename a project
     const handleRenameProject = async (id, newName) => {
         if (!user || !id || !newName) return;
-        await setDoc(doc(db, 'users', user.uid, 'projects', id), { name: newName }, { merge: true });
+        await supabase
+            .from('projects')
+            .update({ name: newName })
+            .eq('id', id);
         setProjects(projects.map(p => p.id === id ? { ...p, name: newName } : p));
     };
 
@@ -194,10 +209,6 @@ export default function ProApp() {
             `width=${width},height=${height},left=${left},top=${top},resizable,scrollbars`
         );
     };
-
-    // const handleLogout = async () => {
-    //     await signOut(auth);
-    // };
 
     const showErrorNotification = (message) => {
         setShowErrorMessage(message);

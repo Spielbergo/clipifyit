@@ -4,13 +4,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { useAuth } from '../contexts/AuthContext';
-import { signOut } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { supabase } from '../lib/supabase';
 
 import { navigation } from '../data';
 import services from '../data/services';
 
-
+import LogoutButton from '../components/LogoutButton.component';
 import DarkModeToggle from '../components/DarkModeToggle';
 import Socials from './SocialIcons.component';
 // import ContactForm from './ContactForm.component';
@@ -44,7 +43,7 @@ const Navigation = () => {
   }, [dropdownOpen]);
 
   const handleLogout = async () => {
-    await signOut(auth);
+    await supabase.auth.signOut();
     setDropdownOpen(false);
   };
 
@@ -212,22 +211,7 @@ const Navigation = () => {
                       </a>
                     </li>
                     <li>
-                      <button
-                        onClick={handleLogout}
-                        style={{
-                          display: 'block',
-                          width: '100%',
-                          padding: '12px 20px',
-                          background: 'none',
-                          border: 'none',
-                          textAlign: 'left',
-                          cursor: 'pointer',
-                          color: '#d32f2f',
-                          fontSize: 15,
-                        }}
-                      >
-                        Logout
-                      </button>
+                      <LogoutButton onAfterLogout={() => setDropdownOpen(false)} />
                     </li>
                   </ul>
                 )}
