@@ -30,7 +30,7 @@ export const navigation = [
     {
         id: "login",
         anchor: 'Login',
-        link: '/pro',
+        link: '/login',
     },
 ];
 

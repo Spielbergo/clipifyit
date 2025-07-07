@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
+import CTASection from '../components/CTASection.component';
+import Testimonials from '../components/Testimonials.component';
 import Footer from '../components/Footer.component';
 
 import styles from '../styles/home.module.css';
@@ -152,54 +154,10 @@ export default function Home() {
         </section>
 
         {/* Testimonials Section */}
-        <section className={styles.testimonials}>
-            <h2 className={styles.sectionTitle}>
-                What Users Are Saying
-            </h2>
-            <div className={styles.testimonialGrid}>
-                <div className={styles.testimonialCard}>
-                <span className={styles.quoteIcon}>“</span>
-                <div className={styles.testimonialText}>
-                    Clipify It has completely changed how I work. I never lose anything I copy, and searching old clips is instant!
-                </div>
-                <div className={styles.testimonialUser}>— Alex P.</div>
-                </div>
-                <div className={styles.testimonialCard}>
-                <span className={styles.quoteIcon}>“</span>
-                <div className={styles.testimonialText}>
-                    The Pro version is a no-brainer. Cloud sync and unlimited history for less than a coffee a month!
-                </div>
-                <div className={styles.testimonialUser}>— Jamie L.</div>
-                </div>
-                <div className={styles.testimonialCard}>
-                <span className={styles.quoteIcon}>“</span>
-                <div className={styles.testimonialText}>
-                    I love how simple and fast Clipify It is. Organizing my clipboard has never been easier.
-                </div>
-                <div className={styles.testimonialUser}>— Morgan S.</div>
-                </div>
-            </div>
-        </section>
+        <Testimonials />
 
         {/* Call to Action Section */}
-        <section className={styles.ctaSection}>
-            <div className={styles.ctaContent}>
-                <h2 className={styles.ctaTitle}>
-                Ready to supercharge your clipboard?
-                </h2>
-                <p className={styles.ctaSubtitle}>
-                Try Clipify It free, or unlock Pro for just <span className={styles.proPrice}>$0.99/mo</span>!
-                </p>
-                <div className={styles.ctaButtons}>
-                <Link href="/app">
-                    <button className={styles.ctaBtnPrimary}>Try Free</button>
-                </Link>
-                <Link href="/signup">
-                    <button className={styles.ctaBtnSecondary}>Upgrade to Pro</button>
-                </Link>
-                </div>
-            </div>
-        </section>
+        <CTASection />
 
         {/* Footer */}
         <Footer />

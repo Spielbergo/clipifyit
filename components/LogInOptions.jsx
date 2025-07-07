@@ -4,16 +4,23 @@ import { supabase } from '../lib/supabase';
 export default function LogInOptions() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState('');
 
-const handleEmailLogin = async (e) => {
+  const handleEmailLogin = async (e) => {
     e.preventDefault();
     setError('');
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({ email, password });
+        // Sign up with email and password
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { display_name: name } }
+        });
         if (error) throw error;
+        // Insert into profiles table if you want to store more info
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -56,6 +63,16 @@ const handleEmailLogin = async (e) => {
         Sign in with Google
       </button>
       <form onSubmit={handleEmailLogin} style={{ marginBottom: 8 }}>
+        {isSignUp && (
+          <input
+            type="text"
+            placeholder="Name"
+            value={name}
+            required
+            onChange={e => setName(e.target.value)}
+            style={{ width: '100%', marginBottom: 8, padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
+          />
+        )}
         <input
           type="email"
           placeholder="Email"

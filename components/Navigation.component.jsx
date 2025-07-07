@@ -31,6 +31,17 @@ const Navigation = () => {
   const dropdownRef = useRef(null);
   // const { openModal } = useModal();
 
+  let planLabel = null;
+  if (router.pathname === "/app") {
+    if (user && user.plan === "proplus") {
+      planLabel = <span className={styles.planLabel + " " + styles.proPlus}>PRO+</span>;
+    } else if (user) {
+      planLabel = <span className={styles.planLabel + " " + styles.pro}>PRO</span>;
+    } else {
+      planLabel = <span className={styles.planLabel + " " + styles.free}>FREE</span>;
+    }
+  }
+
   useEffect(() => {
     if (!dropdownOpen) return;
     const handleClickOutside = (event) => {
@@ -81,7 +92,7 @@ const Navigation = () => {
   return (
     <nav ref={navRef} className={`${styles.main_nav__nav} ${scrolled ? styles.main_nav__scrolled : ''}`}>
       <div className={`${styles.main_nav__container} ${scrolled ? styles.main_container__scrolled : ''}`}>
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
           <Link href="/">
             <Image
               src={NavLogoWhite}
@@ -93,6 +104,7 @@ const Navigation = () => {
               priority
             />
           </Link>
+          {planLabel}
         </div>
 
         <div className={styles.main_nav__links_container}>
@@ -197,7 +209,7 @@ const Navigation = () => {
                   >
                     <li>
                       <a
-                        href="/profile"
+                        href="/dashboard"
                         style={{
                           display: 'block',
                           padding: '12px 20px',
@@ -207,7 +219,7 @@ const Navigation = () => {
                           fontSize: 15,
                         }}
                       >
-                        Profile
+                        Dashboard
                       </a>
                     </li>
                     <li>

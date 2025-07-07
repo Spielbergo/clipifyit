@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 
 import HeroSection from "../components/HeroSection.component";
+import CTASection from "../components/CTASection.component";
 import Footer from '../components/Footer.component';
 
 import styles from "../styles/faq.module.css";
@@ -56,8 +57,6 @@ function FAQItem({ question, answer, idx }) {
   );
 }
 
-
-
 export default function FAQPage() {
   return (
     <>
@@ -83,7 +82,10 @@ export default function FAQPage() {
                 ))}
                 </div>
             </section>
-    
+                
+            {/* Call to Action Section */}
+            <CTASection />
+
             {/* Footer */}
             <Footer />
         </main>

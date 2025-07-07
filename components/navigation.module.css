@@ -28,6 +28,38 @@
     width: 100%;
     object-fit: contain;
   }
+
+  /* Plan Label */
+  .planLabel {
+    margin-left: 16px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 4px 16px;
+    border-radius: 16px;
+    vertical-align: middle;
+    display: inline-block;
+    user-select: none;
+    box-shadow: 0 2px 8px #0001;
+  }
+
+  .planLabel.free {
+    background: #e3f2fd;
+    color: #1976d2;
+    border: 1.5px solid #4fc3f7;
+  }
+
+  .planLabel.pro {
+    background: linear-gradient(90deg, #1976d2 0%, #4fc3f7 100%);
+    color: #fff;
+    border: none;
+  }
+
+  .planLabel.proPlus {
+    background: linear-gradient(90deg, #8e24aa 0%, #4fc3f7 100%);
+    color: #fff;
+    border: none;
+  }
   
   .main_nav__links_container {
     display: flex;

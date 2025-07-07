@@ -1,0 +1,114 @@
+.testimonials {
+  background: linear-gradient(120deg, #232b36 0%, #2d3a4a 100%);
+  padding: 80px 0 60px 0;
+  text-align: center;
+}
+
+.testimonials .sectionTitle {
+  color: #ddd;
+}
+
+.testimonialGrid {
+  display: flex;
+  justify-content: center;
+  gap: 36px;
+  flex-wrap: wrap;
+  margin-top: 32px;
+}
+
+.testimonialCard {
+  background: linear-gradient(120deg, #263043 80%, #232b36 100%);
+  border-radius: 18px;
+  box-shadow: 0 4px 32px #0008;
+  padding: 44px 32px 32px 32px;
+  width: 340px;
+  max-width: 92vw;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  animation: fadeInUp 1s;
+  position: relative;
+  transition: transform 0.22s, box-shadow 0.22s;
+  overflow: hidden;
+  color: #e3f2fd;
+}
+
+.testimonialCard:hover {
+  transform: translateY(-8px) scale(1.04);
+  box-shadow: 0 12px 48px #4fc3f799;
+  background: linear-gradient(120deg, #2d3a4a 60%, #263043 100%);
+}
+
+.quoteIcon {
+  font-size: 3.5rem;
+  font-family: serif;
+  font-weight: bold;
+  line-height: 1;
+  background: linear-gradient(90deg, #4fc3f7, #1976d2, #b3e5fc);
+  background-size: 200% 200%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 10px;
+  animation: quoteGradient 3s linear infinite alternate;
+  align-self: flex-start;
+}
+
+@keyframes quoteGradient {
+  0% { background-position: 0% 50%;}
+  100% { background-position: 100% 50%;}
+}
+
+/* Add a subtle animated border on hover */
+.testimonialCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  pointer-events: none;
+  border: 2px solid transparent;
+  transition: border 0.3s;
+}
+.testimonialCard:hover::after {
+  border: 2px solid #4fc3f7;
+  animation: borderPulse 1.2s infinite alternate;
+}
+
+@keyframes borderPulse {
+  0% { border-color: #4fc3f7; }
+  100% { border-color: #1976d2; }
+}
+
+/*Add a fade-in stagger for each card */
+.testimonialCard:nth-child(1) { animation-delay: 0.1s; }
+.testimonialCard:nth-child(2) { animation-delay: 0.3s; }
+.testimonialCard:nth-child(3) { animation-delay: 0.5s; }
+
+.testimonialText {
+  font-size: 1.18rem;
+  color: #e3f2fd;
+  font-style: italic;
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.testimonialUser {
+  font-size: 1rem;
+  color: #4fc3f7;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+@media (max-width: 900px) {
+  .testimonialGrid {
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+  .testimonialCard {
+    width: 95vw;
+    max-width: 98vw;
+  }
+}
