@@ -17,11 +17,11 @@ export const navigation = [
         anchor: 'Prices',
         link: '/prices',
     },
-    // {
-    //     id: "tools",
-    //     anchor: 'Tools',
-    //     link: '/devtools',
-    // },
+    {
+        id: "faq",
+        anchor: 'FAQ',
+        link: '/faq',
+    },
     {
         id: "contact",
         anchor: 'Contact',

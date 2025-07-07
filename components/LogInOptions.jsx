@@ -26,7 +26,10 @@ const handleEmailLogin = async (e) => {
   const handleGoogleLogin = async () => {
     setError('');
     try {
-      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { prompt: 'select_account' }
+      });
       if (error) throw error;
     } catch (err) {
       setError(err.message);

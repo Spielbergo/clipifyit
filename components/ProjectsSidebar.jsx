@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
+import SortBar from './SortBar.component';
+import SearchBar from './SearchBar.component';
 import DeleteFolderModal from './DeleteFolderModal';
+
+import styles from './projects-sidebar.module.css';
 
 // Recursive folder tree component
 function FolderTree({
@@ -67,7 +71,7 @@ function FolderTree({
                     height="16"
                     viewBox="0 0 20 20"
                     fill="none"
-                    style={{ marginRight: 4, opacity: 0.7 }}
+                    style={{ marginRight: 8, opacity: 0.7, marginBottom: "-2.5px" }}
                   >
                     <path
                       d="M2 5a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5z"
@@ -134,21 +138,61 @@ export default function ProjectsSidebar({
   const [renameFolderValue, setRenameFolderValue] = useState('');
 
   // Sorting logic
-  let sortedProjects = [...projects];
+  let sortedProjects = React.useMemo(() => {
+    if (sortMode === 'alpha') {
+      return [...projects].sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortMode === 'descAlpha') {
+      return [...projects].sort((a, b) => b.name.localeCompare(a.name));
+    } else if (sortMode === 'oldest') {
+      return [...projects].sort((a, b) => a.createdAt - b.createdAt);
+    } else if (sortMode === 'latest') {
+      return [...projects].sort((a, b) => b.createdAt - a.createdAt);
+    }
+    return [...projects];
+  }, [projects, sortMode]);
 
-  if (sortMode === 'alpha') {
-    sortedProjects.sort((a, b) => a.name.localeCompare(b.name));
-  } else if (sortMode === 'descAlpha') {
-    sortedProjects.sort((a, b) => b.name.localeCompare(a.name));
-  } else if (sortMode === 'oldest') {
-    sortedProjects.sort((a, b) => a.createdAt - b.createdAt);
-  } else if (sortMode === 'latest') {
-    sortedProjects.sort((a, b) => b.createdAt - a.createdAt);
+  const filteredProjects = sortedProjects.filter(project => {
+    const projectMatches = project.name.toLowerCase().includes(search.toLowerCase());
+    const folderMatches = folders.some(
+      f => f.project_id === project.id && f.name.toLowerCase().includes(search.toLowerCase())
+    );
+    return projectMatches || folderMatches;
+  });
+
+  const flatSearchResults = search
+    ? [
+        ...sortedProjects
+          .filter(project =>
+            project.name.toLowerCase().includes(search.toLowerCase())
+          )
+          .map(project => ({ type: 'project', item: project })),
+        ...folders
+          .filter(folder =>
+            folder.name.toLowerCase().includes(search.toLowerCase())
+          )
+          .map(folder => ({ type: 'folder', item: folder })),
+      ]
+    : [];
+
+  function isDescendantFolder(folders, parentId, childId) {
+    let current = folders.find(f => f.id === childId);
+    while (current && current.parent_id) {
+      if (current.parent_id === parentId) return true;
+      current = folders.find(f => f.id === current.parent_id);
+    }
+    return false;
   }
 
-  const filteredProjects = sortedProjects.filter(project =>
-    project.name.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    if (!selectedFolderId) return;
+    const folder = folders.find(f => f.id === selectedFolderId);
+    if (!folder) return;
+    // Expand the parent project
+    setCollapsedProjects(prev => ({
+      ...prev,
+      [folder.project_id]: false
+    }));
+  }, [selectedFolderId, folders]);
 
   const toggleProjectFolders = (projectId) => {
     setCollapsedProjects(prev => ({
@@ -169,60 +213,14 @@ export default function ProjectsSidebar({
           )}
         </div>
         {/* Sort Toggle */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, margin: '0 0 8px 0' }}>
-          <button
-            style={{ fontWeight: sortMode === 'alpha' || sortMode === 'descAlpha' ? 700 : 400 }}
-            onClick={() => setSortMode(sortMode === 'alpha' ? 'descAlpha' : 'alpha')}
-            title={sortMode === 'alpha' ? "Sort Z-A" : "Sort A-Z"}
-          >
-            {sortMode === 'alpha' ? 'A-Z' : 'Z-A'}
-          </button>
-          <button
-            style={{ fontWeight: sortMode === 'oldest' ? 700 : 400 }}
-            onClick={() => setSortMode('oldest')}
-            title="Sort by oldest"
-          >Oldest</button>
-          <button
-            style={{ fontWeight: sortMode === 'latest' ? 700 : 400 }}
-            onClick={() => setSortMode('latest')}
-            title="Sort by latest"
-          >Latest</button>
-        </div>
+        <SortBar sortMode={sortMode} setSortMode={setSortMode} />
 
         {/* Search Bar */}
-        <div style={{ position: 'relative', margin: '0 0 12px 0', padding: '0 13px' }}>
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search projects..."
-            style={{
-              width: '100%',
-              padding: '8px 36px 8px 12px',
-              color: '#eee',
-              borderRadius: '20px',
-              border: '1px solid #666',
-              outline: 'none',
-              fontSize: '15px',
-              background: '#333',
-              boxSizing: 'border-box'
-            }}
-          />
-          <span style={{
-            position: 'absolute',
-            right: 26,
-            top: '55%',
-            transform: 'translateY(-50%)',
-            pointerEvents: 'none',
-            color: '#888'
-          }}>
-            {/* SVG search icon */}
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <circle cx="9" cy="9" r="7" stroke="#888" strokeWidth="2"/>
-              <line x1="14.2" y1="14.2" x2="18" y2="18" stroke="#888" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </span>
-        </div>
+        <SearchBar
+          value={search}
+          onChange={setSearch}
+          onClear={() => setSearch('')}
+        />
 
         {/* New Project Button */}
         <button
@@ -244,6 +242,95 @@ export default function ProjectsSidebar({
           + New Project
         </button>
         <ul style={{ padding: '0 15px', margin: 0 }}>
+          {search ? (
+            flatSearchResults.length === 0 ? (
+              <li style={{ color: '#aaa', padding: 12 }}>No results</li>
+            ) : (
+              flatSearchResults.map(result =>
+                result.type === 'project' ? (
+                  <li
+                    key={`project-${result.item.id}`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      background: '#333',
+                      color: '#eee',
+                      padding: '10px 12px',
+                      borderRadius: 4,
+                      marginBottom: 2,
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => {
+                      setSearch('');
+                      onSelect && onSelect(result.item.id);
+                    }}
+                  >
+                    <span style={{ fontWeight: 600, marginRight: 8 }}>
+                      {/* Folder ICon */}
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        style={{ marginRight: 8, opacity: 0.7, marginBottom: "-2.5px" }}
+                      >
+                        <path
+                          d="M2 5a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5z"
+                          stroke="#ddd"
+                          strokeWidth="1.2"
+                          fill="none"
+                        />
+                      </svg>
+                    </span>
+                    {result.item.name}
+                    <span style={{ marginLeft: 8, fontSize: 12, color: '#aaa' }}>(Project)</span>
+                  </li>
+                ) : (
+                  <li
+                    key={`folder-${result.item.id}`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      background: '#222',
+                      color: '#b3e5fc',
+                      padding: '10px 12px',
+                      borderRadius: 4,
+                      marginBottom: 2,
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => {
+                      setSearch('');
+                      onSelect && onSelect(result.item.project_id);
+                      onSelectFolder && onSelectFolder(result.item.id);
+                    }}
+                  >
+                    <span style={{ fontWeight: 600, marginRight: 8 }}>
+                      {/* Folder Icon */}
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        style={{ marginRight: 8, opacity: 0.7, marginBottom: "-2.5px" }}
+                      >
+                        <path
+                          d="M2 5a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5z"
+                          stroke="#ddd"
+                          strokeWidth="1.2"
+                          fill="none"
+                        />
+                      </svg>
+                    </span>
+                    {result.item.name}
+                    <span style={{ marginLeft: 8, fontSize: 12, color: '#aaa' }}>
+                      (in {projects.find(p => p.id === result.item.project_id)?.name || 'Project'})
+                    </span>
+                  </li>
+                )
+              )
+            )
+          ) : (
+          <>
           {creatingProject && (
             <li style={{
               display: 'flex',
@@ -282,111 +369,148 @@ export default function ProjectsSidebar({
             </li>
           )}
           {filteredProjects.map(project => (
-            <li
-              key={project.id}
-              className={project.id === selectedProjectId ? 'selected' : ''}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                background: project.id === selectedProjectId ? '#333' : 'transparent',
-                color: '#eee',
-                padding: '6px 12px',
-                borderRadius: 4,
-                marginBottom: 2,
-              }}
-            >
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      {renamingId === project.id ? (
-        <form
-          style={{ flex: 1, display: 'flex', alignItems: 'center' }}
-          onSubmit={e => {
-            e.preventDefault();
-            if (renameValue.trim()) {
-              onRename(project.id, renameValue.trim());
-            }
-            setRenamingId(null);
-          }}
-        >
-          <input
-            value={renameValue}
-            onChange={e => setRenameValue(e.target.value)}
-            autoFocus
-            style={{ flex: 1, marginRight: 6, borderRadius: 4, border: '1px solid #ccc', padding: 4 }}
-            onBlur={() => setRenamingId(null)}
-          />
-          <button type="submit" style={{ marginRight: 4 }}>Save</button>
-        </form>
-      ) : (
-        <>
-          <span
-            className="project-title"
-            title={project.name}
-            onClick={() => {
-              onSelect && onSelect(project.id);
-              toggleProjectFolders(project.id);
-            }}
-            style={{ cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center' }}
-          >
-            <span style={{ marginRight: 6, fontSize: 9, color: '#ccc' }}>
-              {collapsedProjects[project.id] ? '▶' : '▼'}
-            </span>
-            {project.name}
-          </span>
-          <div>
-            <button
-              style={{
-                fontSize: 13,
-                padding: '2px 8px',
-                borderRadius: 4,
-                background: '#444',
-                color: '#fff',
-                border: 'none',
-                marginBottom: 4,
-                cursor: 'pointer'
-              }}
-              onClick={() => onAddFolder(null)}
-            >
-              +
-            </button>
-            <button
-              title="Rename"
-              style={{ marginRight: 4 }}
-              onClick={() => {
-                setRenamingId(project.id);
-                setRenameValue(project.name);
-              }}
-            >✎</button>
-            <button
-              title="Delete"
-              onClick={() => onDelete && onDelete(project.id)}
-            >🗑</button>
-            
-          </div>
-        </>
-      )}
-    </div>
-    {/* Folders for this project */}
-    {project.id === selectedProjectId && !collapsedProjects[project.id] && (
-      <div style={{ marginTop: 4 }}>
-        <FolderTree
-          folders={folders}
-          parentId={null}
-          selectedFolderId={selectedFolderId}
-          onSelectFolder={onSelectFolder}
-          onAddFolder={onAddFolder}
-          onRenameFolder={onRenameFolder}
-          onDeleteFolder={onDeleteFolder}
-          renamingFolderId={renamingFolderId}
-          setRenamingFolderId={setRenamingFolderId}
-          renameFolderValue={renameFolderValue}
-          setRenameFolderValue={setRenameFolderValue}
-          projectId={project.id}
-          setFolderToDelete={setFolderToDelete}
-        />
-      </div>
-    )}
-  </li>
-))}
+              <li
+                key={project.id}
+                className={project.id === selectedProjectId ? styles.selected : ''}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  background: project.id === selectedProjectId ? '#333' : 'transparent',
+                  color: '#eee',
+                  padding: '14px 12px',
+                  borderRadius: 4,
+                  marginBottom: 2,
+                }}
+              >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                {renamingId === project.id ? (
+                  <form
+                    style={{ flex: 1, display: 'flex', alignItems: 'center' }}
+                    onSubmit={e => {
+                      e.preventDefault();
+                      if (renameValue.trim()) {
+                        onRename(project.id, renameValue.trim());
+                      }
+                      setRenamingId(null);
+                    }}
+                  >
+                    <input
+                      value={renameValue}
+                      onChange={e => setRenameValue(e.target.value)}
+                      autoFocus
+                      style={{ flex: 1, marginRight: 6, borderRadius: 4, border: '1px solid #ccc', padding: 4 }}
+                      onBlur={() => setRenamingId(null)}
+                    />
+                    <button type="submit" style={{ marginRight: 4 }}>Save</button>
+                  </form>
+                ) : (
+                  <>
+                    <span
+                      className="project-title"
+                      title={project.name}
+                      style={{ cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center' }}
+                    >
+                      {/* Arrow: toggles folders */}
+                      {/* Only show arrow if project has folders */}
+                      {folders.some(f => f.project_id === project.id) && (
+                        <span
+                          style={{ marginRight: 11, fontSize: 12, color: '#ccc', cursor: 'pointer' }}
+                          onClick={e => {
+                            e.stopPropagation(); // Prevent triggering project select
+                            toggleProjectFolders(project.id);
+                          }}
+                          title={collapsedProjects[project.id] ? 'Show folders' : 'Hide folders'}
+                        >
+                          {collapsedProjects[project.id] ? '▶' : '▼'}
+                        </span>
+                      )}
+                      {/* Project name: selects project and shows clipboard */}
+                      <span
+                        onClick={() => onSelect && onSelect(project.id)}
+                        style={{ flex: 1 }}
+                      >
+                        {project.name}
+                      </span>
+                    </span>
+                    {project.id === selectedProjectId && (
+                      <div>
+                        <button
+                          style={{
+                            fontSize: 13,
+                            padding: '2px 8px',
+                            borderRadius: 4,
+                            background: '#444',
+                            color: '#fff',
+                            border: 'none',
+                            marginBottom: 4,
+                            cursor: 'pointer'
+                          }}
+                          onClick={e => {
+                            // Expand folders for this project if collapsed
+                            if (collapsedProjects[project.id]) {
+                              setCollapsedProjects(prev => ({ ...prev, [project.id]: false }));
+                            }
+                            onAddFolder(null);
+                          }}
+                        >
+                          +
+                        </button>
+                        <button
+                          title="Rename"
+                          style={{ marginRight: 4 }}
+                          onClick={() => {
+                            setRenamingId(project.id);
+                            setRenameValue(project.name);
+                          }}
+                        >✎</button>
+                        <button
+                          title="Delete"
+                          onClick={() => onDelete && onDelete(project.id)}
+                        >🗑</button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+              {/* Folders for this project */}
+              {project.id === selectedProjectId && !collapsedProjects[project.id] && (
+                <div>
+                  <FolderTree
+                    folders={
+                      search
+                        ? folders.filter(f => {
+                            if (f.project_id !== project.id) return false;
+                            // Show folder if it matches search or is a parent of a matching folder
+                            if (f.name.toLowerCase().includes(search.toLowerCase())) return true;
+                            // Check if any descendant matches
+                            const hasMatchingDescendant = folders.some(desc =>
+                              desc.project_id === project.id &&
+                              desc.name.toLowerCase().includes(search.toLowerCase()) &&
+                              isDescendantFolder(folders, f.id, desc.id)
+                            );
+                            return hasMatchingDescendant;
+                          })
+                        : folders
+                    }
+                    parentId={null}
+                    selectedFolderId={selectedFolderId}
+                    onSelectFolder={onSelectFolder}
+                    onAddFolder={onAddFolder}
+                    onRenameFolder={onRenameFolder}
+                    onDeleteFolder={onDeleteFolder}
+                    renamingFolderId={renamingFolderId}
+                    setRenamingFolderId={setRenamingFolderId}
+                    renameFolderValue={renameFolderValue}
+                    setRenameFolderValue={setRenameFolderValue}
+                    projectId={project.id}
+                    setFolderToDelete={setFolderToDelete}
+                  />
+                </div>
+              )}
+            </li>
+          ))}
+          </>
+          )}
         </ul>
       </aside>
       <DeleteFolderModal

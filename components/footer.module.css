@@ -1,0 +1,67 @@
+.footer {
+  width: 100vw; /* Ensure full viewport width */
+  background: #232b36;
+  color: #e3f2fd;
+  padding: 40px 0 24px 0;
+  text-align: center;
+  font-size: 1rem;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+}
+
+.footerContent {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.footerBrand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.footerLogo {
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.footerNav {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.footerLink {
+  color: #b3e5fc;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.footerLink:hover {
+  color: #4fc3f7;
+}
+
+.footerCopyright {
+  font-size: 0.95rem;
+}
+
+.footerCopyright a {
+  color: #fff;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.footerCopyright a:hover {
+  color: var(--primary-color-hover)
+}

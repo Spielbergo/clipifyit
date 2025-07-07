@@ -6,11 +6,11 @@
   --dark-bg-color: #333;
   --dark-text-color: #eee;
   --app-width: 1080px;
-  --primary-color-hover: #0056b3;
+  --primary-color-hover: #4fc3f7;
 }
 
 body {   
-  min-height: 100vh;
+  /* min-height: 100vh; */
   display: flex;
   flex-direction: column;
   justify-content: center; /* vertical centering */

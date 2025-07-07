@@ -11,7 +11,7 @@ export default function DeleteFolderModal({ open, onCancel, onConfirm, folderNam
         background: '#111', borderRadius: 8, padding: 32, minWidth: 320, boxShadow: '0 8px 32px rgba(0,0,0,0.15)'
       }}>
         <h3 style={{ marginBottom: 16 }}>Delete Folder</h3>
-        <p>Are you sure you want to delete <b>{folderName}</b> and all its subfolders?</p>
+        <p>Are you sure you want to delete <b>{folderName}</b>?</p>
         <div style={{ marginTop: 24, display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
           <button onClick={onCancel} style={{ padding: '8px 16px', borderRadius: 4, border: 'none', background: '#ccc', color: '#222' }}>Cancel</button>
           <button onClick={onConfirm} style={{ padding: '8px 16px', borderRadius: 4, border: 'none', background: '#c00', color: '#fff' }}>Delete</button>
