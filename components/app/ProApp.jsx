@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import LogInOptions from '../LogInOptions';
+import Image from 'next/image';
 
+import LogInOptions from '../LogInOptions';
 import ClipboardList from '../ClipboardList';
 import Controls from '../Controls';
 import ProjectsSidebar from '../ProjectsSidebar';
@@ -9,6 +10,8 @@ import ExpandSidebar from '../ExpandSidebar';
 import DeleteProjectModal from '../DeleteProjectModal';
 
 import { useFolders } from '../../hooks/useFolders';
+
+import LogoWhite from '../../public/logos/logo-light-text.png';
 
 export default function ProApp() {
     const [clipboardItems, setClipboardItems] = useState([]);
@@ -326,7 +329,39 @@ export default function ProApp() {
                     showErrorNotification={showErrorNotification}
                 />
                 {loading ? (
-                    <div>Loading...</div>
+                    <div
+                        style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        minHeight: "50vh",
+                        width: "100%",
+                        //   opacity: 0.6,
+                        background: "#4fc3f711",
+                        borderRadius: 18,
+                        boxShadow: "0 2px 16px #4fc3f711",
+                        zIndex: 10,
+                        }}
+                    >
+                        <span>
+                            <Image
+                                src={LogoWhite}
+                                alt="Clipify It logo"
+                                aria-label="Clipify It logo"
+                                width="150"
+                                height="50"
+                                priority
+                            />
+                        </span>
+                        <div style={{ fontSize: 22, fontWeight: 700, color: "#1976d2", marginBottom: 8 }}>
+                        Welcome to Clipify It Pro!
+                        </div>
+                        <div style={{ fontSize: 16, textAlign: "center", maxWidth: 320 }}>
+                        Get started by <span style={{ fontWeight: 600 }}>creating your first project</span>.<br />
+                        Click the <span style={{ color: "#6599a6" }}>+ New Project</span> button in the sidebar.
+                        </div>
+                    </div>
                 ) : (
                     <ClipboardList
                         clipboardItems={clipboardItems}

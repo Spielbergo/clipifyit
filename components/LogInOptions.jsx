@@ -6,6 +6,7 @@ export default function LogInOptions() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
+  const [notification, setNotification] = useState('');
   const [error, setError] = useState('');
 
   const handleEmailLogin = async (e) => {
@@ -20,6 +21,7 @@ export default function LogInOptions() {
           options: { data: { display_name: name } }
         });
         if (error) throw error;
+        setNotification('Check your email to verify your account. You can close this window, a new one will open when you confirm.');
         // Insert into profiles table if you want to store more info
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -106,6 +108,11 @@ export default function LogInOptions() {
           {isSignUp ? 'Sign Up with Email' : 'Sign In with Email'}
         </button>
       </form>
+      {notification && (
+        <div style={{ color: '#1976d2', marginTop: 12, fontWeight: 600 }}>
+          {notification}
+        </div>
+      )}
       <button
         style={{
           background: 'none',

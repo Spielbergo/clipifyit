@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 
+import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
 
 import Loader from "../components/Loader.component";
@@ -22,48 +23,55 @@ export default function Dashboard() {
   const plan = user?.plan || "free"; // "free", "pro", "proplus"
 
   useEffect(() => {
-    // Wait until user is loaded (undefined means still loading)
     if (user === undefined) return;
     if (user === null) {
         router.replace("/login");
     } else {
-        setName(user.displayName || "");
+        // Fetch name from profiles table
+        (async () => {
+        const { data, error } = await supabase
+            .from("profiles")
+            .select("name")
+            .eq("id", user.id)
+            .single();
+        setName(data?.name || "");
         setLoading(false);
+        })();
     }
     }, [user, router]);
 
     if (loading || user === undefined) {
-    return (
-        <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Loader size={48} />
-        </div>
-    );
-  }
-
-  const handleSave = async () => {
-    setSaving(true);
-    setError("");
-    setSuccess("");
-    try {
-        // Update display name in Supabase Auth
-        const { error } = await supabase.auth.updateUser({
-        data: { display_name: name }
-        });
-        if (error) throw error;
-
-        // Update in profiles table as well
-        await supabase
-        .from("profiles")
-        .update({ name })
-        .eq("id", user.id);
-
-        setSuccess("Profile updated!");
-        setEditing(false);
-    } catch (e) {
-        setError("Failed to update profile.");
+        return (
+            <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Loader size={48} />
+            </div>
+        );
     }
-    setSaving(false);
-};
+
+    const handleSave = async () => {
+        setSaving(true);
+        setError("");
+        setSuccess("");
+        try {
+            // Update display name in Supabase Auth
+            const { error } = await supabase.auth.updateUser({
+            data: { display_name: name }
+            });
+            if (error) throw error;
+
+            // Update in profiles table as well
+            await supabase
+            .from("profiles")
+            .update({ name })
+            .eq("id", user.id);
+
+            setSuccess("Profile updated!");
+            setEditing(false);
+        } catch (e) {
+            setError("Failed to update profile.");
+        }
+        setSaving(false);
+    };
 
   // Stripe integration: these would redirect to your Stripe customer portal or checkout
   const handleUpgrade = () => {
