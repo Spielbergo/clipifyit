@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function SortBar({ sortMode, setSortMode }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, margin: '0 0 8px 0' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, padding: '0 8px', margin: '0 0 8px 0' }}>
       <button
         style={{ fontWeight: sortMode === 'alpha' || sortMode === 'descAlpha' ? 700 : 400 }}
         onClick={() => setSortMode(sortMode === 'alpha' ? 'descAlpha' : 'alpha')}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import Image from 'next/image';
 
+import HeroSection from '../HeroSection.component';
 import LogInOptions from '../LogInOptions';
 import ClipboardList from '../ClipboardList';
 import Controls from '../Controls';
@@ -248,10 +249,15 @@ export default function ProApp() {
 
     if (!user) {
         return (
-            <div style={{ textAlign: 'center', marginTop: 80 }}>
-                <h2>Sign in to use Clipify It Pro</h2>
-                <LogInOptions />
-            </div>
+            <>
+                <HeroSection
+                    title="Login or Sign Up"
+                    subtitle="Access your clipboard items and projects"
+                />
+                <div style={{ textAlign: 'center', marginTop: 80 }}>
+                    <LogInOptions />
+                </div>
+            </>
         );
     }
 
@@ -316,7 +322,7 @@ export default function ProApp() {
                     {selectedFolderId && (
                         <>
                         <span style={{ color: '#888', fontWeight: 400 }}> &nbsp;/&nbsp; </span>
-                        {folders.find(f => f.id === selectedFolderId)?.name || 'Folder'}
+                        {folders.find(f => f.id === selectedFolderId)?.name || ''}
                         </>
                     )}
                 </h2>

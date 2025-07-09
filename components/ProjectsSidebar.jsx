@@ -160,19 +160,19 @@ export default function ProjectsSidebar({
   });
 
   const flatSearchResults = search
-    ? [
-        ...sortedProjects
-          .filter(project =>
-            project.name.toLowerCase().includes(search.toLowerCase())
-          )
-          .map(project => ({ type: 'project', item: project })),
-        ...folders
-          .filter(folder =>
-            folder.name.toLowerCase().includes(search.toLowerCase())
-          )
-          .map(folder => ({ type: 'folder', item: folder })),
-      ]
-    : [];
+  ? [
+      ...projects
+        .filter(project =>
+          project.name.toLowerCase().includes(search.toLowerCase())
+        )
+        .map(project => ({ type: 'project', item: project })),
+      ...folders
+        .filter(folder =>
+          folder.name.toLowerCase().includes(search.toLowerCase())
+        )
+        .map(folder => ({ type: 'folder', item: folder })),
+    ]
+  : [];
 
   function isDescendantFolder(folders, parentId, childId) {
     let current = folders.find(f => f.id === childId);
@@ -201,6 +201,9 @@ export default function ProjectsSidebar({
     }));
   };
 
+  console.log('Projects:', projects);
+  console.log('Folders:', folders);
+  
   return (
     <>
       <aside className={`projects-sidebar${expanded ? ' expanded' : ''}`}>

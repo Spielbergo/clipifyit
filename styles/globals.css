@@ -522,14 +522,35 @@ input:checked + .slider:before {
   }
 }
 
-@media screen and (min-width: 1281px) {
+@media (min-width: 1281px) {
+  .app-main {
+    display: flex;
+    flex-direction: row;
+    min-height: 100vh;
+    width: 100vw;
+    position: relative;
+  }
+
+  .projects-sidebar {
+    position: relative;
+    width: 340px;
+    min-width: 340px;
+    max-width: 340px;
+    height: 100vh;
+    padding: 100px 0px 15px 8px;
+    z-index: 1;
+    box-shadow: 2px 0 12px #0001;
+  }
+
   .app-wrapper {
-    width: 100%;
-    margin: 50px auto;
-    min-width: var(--app-width);
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 100vw;
+    padding: 0 18px;
+    overflow-x: auto;
   }
 
   .controls-container {
-    top: 75px;
+    top: 60px;
   }
 }
