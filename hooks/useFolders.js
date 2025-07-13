@@ -16,13 +16,13 @@ export function useFolders(user, selectedProjectId) {
       const { data } = await supabase
         .from('folders')
         .select('*')
-        .eq('project_id', selectedProjectId);
+        .eq('user_id', user.id);
       setFolders(data || []);
     };
     fetchFolders();
   }, [user, selectedProjectId]);
 
-  const addFolder = async (parentId = null) => {
+  const addFolder = async (parentId, projectId) => {
     if (!user || !selectedProjectId) return;
     const { data, error } = await supabase
       .from('folders')

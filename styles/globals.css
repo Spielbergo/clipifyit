@@ -347,6 +347,7 @@ button:active {
   text-overflow: ellipsis;
   min-width: 0;
   max-width: 140px; /* Adjust as needed for your sidebar width */
+  height: 28px;
   display: inline-block;
   vertical-align: middle;
 }

@@ -132,6 +132,7 @@ export default function ProjectsSidebar({
   const [search, setSearch] = useState('');
   const [folderToDelete, setFolderToDelete] = useState(null);
   const [collapsedProjects, setCollapsedProjects] = useState({});
+  const [hoveredProjectId, setHoveredProjectId] = useState(null);
 
   // Folder rename state
   const [renamingFolderId, setRenamingFolderId] = useState(null);
@@ -144,9 +145,9 @@ export default function ProjectsSidebar({
     } else if (sortMode === 'descAlpha') {
       return [...projects].sort((a, b) => b.name.localeCompare(a.name));
     } else if (sortMode === 'oldest') {
-      return [...projects].sort((a, b) => a.createdAt - b.createdAt);
+      return [...projects].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
     } else if (sortMode === 'latest') {
-      return [...projects].sort((a, b) => b.createdAt - a.createdAt);
+      return [...projects].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     }
     return [...projects];
   }, [projects, sortMode]);
@@ -200,6 +201,14 @@ export default function ProjectsSidebar({
       [projectId]: !prev[projectId]
     }));
   };
+
+  useEffect(() => {
+    const collapsed = {};
+    projects.forEach(p => {
+      collapsed[p.id] = p.id !== selectedProjectId;
+    });
+    setCollapsedProjects(collapsed);
+  }, [projects, selectedProjectId]);
 
   console.log('Projects:', projects);
   console.log('Folders:', folders);
@@ -384,6 +393,8 @@ export default function ProjectsSidebar({
                   borderRadius: 4,
                   marginBottom: 2,
                 }}
+                onMouseEnter={() => setHoveredProjectId(project.id)}
+                onMouseLeave={() => setHoveredProjectId(null)}
               >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 {renamingId === project.id ? (
@@ -414,19 +425,21 @@ export default function ProjectsSidebar({
                       style={{ cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center' }}
                     >
                       {/* Arrow: toggles folders */}
-                      {/* Only show arrow if project has folders */}
-                      {folders.some(f => f.project_id === project.id) && (
-                        <span
-                          style={{ marginRight: 11, fontSize: 12, color: '#ccc', cursor: 'pointer' }}
-                          onClick={e => {
-                            e.stopPropagation(); // Prevent triggering project select
-                            toggleProjectFolders(project.id);
-                          }}
-                          title={collapsedProjects[project.id] ? 'Show folders' : 'Hide folders'}
-                        >
-                          {collapsedProjects[project.id] ? '▶' : '▼'}
-                        </span>
-                      )}
+                      <span
+                        style={{
+                          marginRight: 11,
+                          fontSize: 12,
+                          color: '#ccc', // Always enabled color
+                          cursor: 'pointer'
+                        }}
+                        onClick={e => {
+                          e.stopPropagation();
+                          toggleProjectFolders(project.id);
+                        }}
+                        title={collapsedProjects[project.id] ? 'Show folders' : 'Hide folders'}
+                      >
+                        {collapsedProjects[project.id] ? '▶' : '▼'}
+                      </span>
                       {/* Project name: selects project and shows clipboard */}
                       <span
                         onClick={() => onSelect && onSelect(project.id)}
@@ -435,8 +448,13 @@ export default function ProjectsSidebar({
                         {project.name}
                       </span>
                     </span>
-                    {project.id === selectedProjectId && (
-                      <div>
+                    {(hoveredProjectId === project.id || project.id === selectedProjectId) && (
+                      <div style={{
+                        visibility: (hoveredProjectId === project.id || project.id === selectedProjectId) ? 'visible' : 'hidden',
+                        height: 28,
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}>
                         <button
                           style={{
                             fontSize: 13,
@@ -449,11 +467,13 @@ export default function ProjectsSidebar({
                             cursor: 'pointer'
                           }}
                           onClick={e => {
+                            // Select this project before adding a folder
+                            if (onSelect) onSelect(project.id);
                             // Expand folders for this project if collapsed
                             if (collapsedProjects[project.id]) {
                               setCollapsedProjects(prev => ({ ...prev, [project.id]: false }));
                             }
-                            onAddFolder(null);
+                            onAddFolder(null, project.id);
                           }}
                         >
                           +
@@ -476,7 +496,7 @@ export default function ProjectsSidebar({
                 )}
               </div>
               {/* Folders for this project */}
-              {project.id === selectedProjectId && !collapsedProjects[project.id] && (
+              {!collapsedProjects[project.id] && (
                 <div>
                   <FolderTree
                     folders={

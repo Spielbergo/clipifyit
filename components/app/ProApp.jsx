@@ -386,6 +386,7 @@ export default function ProApp() {
                 open={!!projectToDelete}
                 onCancel={cancelDeleteProject}
                 onConfirm={confirmDeleteProject}
+                projectName={projects.find(p => p.id === projectToDelete)?.name || ''}
             />
         </div>
     );
