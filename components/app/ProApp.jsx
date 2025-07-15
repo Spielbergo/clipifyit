@@ -270,6 +270,7 @@ export default function ProApp() {
                 onClick={() => setSidebarExpanded(false)}
             />
             )}
+
             {/* Sidebar */}
             <ProjectsSidebar 
                 className={`projects-sidebar${isMobile && sidebarExpanded ? ' expanded' : ''}`}
@@ -294,6 +295,7 @@ export default function ProApp() {
                 renameFolderValue={renameFolderValue}
                 setRenameFolderValue={setRenameFolderValue}
             />
+
             {/* Expand button for mobile */}
             {isMobile && !sidebarExpanded && (
             <button
@@ -308,6 +310,7 @@ export default function ProApp() {
                 </svg>
             </button>
             )}
+            
             <div className="app-wrapper">
                 <h2
                     style={{
