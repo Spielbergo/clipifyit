@@ -323,19 +323,34 @@ export default function ProApp() {
                 setRenameFolderValue={setRenameFolderValue}
             />
 
-            {/* Expand button for mobile */}
+            {/* Expand button for mobile (top left) */}
             {isMobile && !sidebarExpanded && (
-            <button
-                className="expand-sidebar-btn"
-                onClick={() => setSidebarExpanded(true)}
-                aria-label="Open sidebar"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="4" width="4" height="16" rx="1" fill="#6599a6"/>
-                <rect x="9" y="4" width="12" height="16" rx="2" fill="#b3c6cc"/>
-                </svg>
-            </button>
+                <button
+                    className="expand-sidebar-btn"
+                    onClick={() => setSidebarExpanded(true)}
+                    aria-label="Open sidebar"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="4" width="4" height="16" rx="1" fill="#6599a6"/>
+                        <rect x="9" y="4" width="12" height="16" rx="2" fill="#b3c6cc"/>
+                    </svg>
+                </button>
+            )}
+
+            {/* Floating expand button for mobile (bottom right) */}
+            {isMobile && !sidebarExpanded && (
+                <button
+                    className="expand-sidebar-fab"
+                    onClick={() => setSidebarExpanded(true)}
+                    aria-label="Open sidebar"
+                    style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}
+                >
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="4" width="4" height="16" rx="1" fill="#6599a6"/>
+                        <rect x="9" y="4" width="12" height="16" rx="2" fill="#b3c6cc"/>
+                    </svg>
+                </button>
             )}
             
             <div className="app-wrapper">

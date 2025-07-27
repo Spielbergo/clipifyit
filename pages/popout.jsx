@@ -21,11 +21,14 @@ function getQueryParams() {
         folderId: params.get('folder') || '',
     };
 }
+
 import Controls from '../components/Controls';
 import ClipboardList from '../components/ClipboardList';
 
 
 export default function PopOut() {
+    const [projects, setProjects] = useState([]);
+    const [folders, setFolders] = useState([]);
     // Add popout class to body for popout-specific styling
     useEffect(() => {
         document.body.classList.add('popout');
@@ -62,6 +65,35 @@ export default function PopOut() {
         });
         return () => { listener?.subscription?.unsubscribe?.(); };
     }, []);
+
+    // Fetch projects for user (Pro mode)
+    useEffect(() => {
+        if (!user) return;
+        supabase
+            .from('projects')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .then(({ data }) => {
+                setProjects(data || []);
+            });
+    }, [user]);
+
+    // Fetch all folders for all projects (Pro mode)
+    useEffect(() => {
+        if (!user) {
+            setFolders([]);
+            return;
+        }
+        supabase
+            .from('folders')
+            .select('*')
+            .in('project_id', projects.map(p => p.id))
+            .order('created_at', { ascending: true })
+            .then(({ data }) => {
+                setFolders(data || []);
+            });
+    }, [user, projects]);
 
     // Fetch project/folder names for Pro mode
     useEffect(() => {
@@ -232,6 +264,16 @@ export default function PopOut() {
                 onRedoClear={handleRedoClear}
                 isPopOut={true}
                 showErrorNotification={showErrorNotification}
+                selectedProjectId={projectId}
+                selectedFolderId={folderId}
+                projects={projects}
+                folders={folders}
+                onSwitchProjectFolder={(newProjectId, newFolderId) => {
+                    // Update URL and reload clipboard for new project/folder
+                    const params = [`project=${encodeURIComponent(newProjectId)}`];
+                    if (newFolderId) params.push(`folder=${encodeURIComponent(newFolderId)}`);
+                    window.location.search = '?' + params.join('&');
+                }}
             />
             <ClipboardList
                 clipboardItems={clipboardItems}

@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 
 import Modal from './Modal.component';
-
 import styles from './controls.module.css';
 
-export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandlePopOut, isPopOut, showErrorNotification, onShowCustomModalChange, selectedProjectId, selectedFolderId }) {
+import { useRouter } from 'next/router';
+
+export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandlePopOut, isPopOut, showErrorNotification, onShowCustomModalChange, selectedProjectId, selectedFolderId, projects = [], folders = [], onSwitchProjectFolder }) {
+    const router = typeof window !== 'undefined' ? require('next/router').useRouter() : null;
     const [popOutSize, setPopOutSize] = useState('medium');
     const [showRedoButton, setShowRedoButton] = useState(false); // Track visibility of the "Redo" button
     const [isRedoDisabled, setIsRedoDisabled] = useState(false);
@@ -126,6 +128,54 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
 
     return (
         <div className='controls-container'>
+            {/* Popout-only: Project/Folder Switcher */}
+            {isPopOut && projects.length > 0 && (
+                <div style={{ marginRight: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {/* Project dropdown: all projects */}
+                    <select
+                        value={selectedProjectId || ''}
+                        onChange={e => {
+                            const newProjectId = e.target.value;
+                            if (onSwitchProjectFolder) {
+                                onSwitchProjectFolder(newProjectId, '');
+                            } else if (router) {
+                                // Remove folder param when switching project
+                                const params = [`project=${encodeURIComponent(newProjectId)}`];
+                                window.location.search = '?' + params.join('&');
+                            }
+                        }}
+                        style={{ minWidth: 120 }}
+                    >
+                        {projects.map(p => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                    </select>
+                    {/* Folder dropdown: all folders for all projects, grouped by project */}
+                    <select
+                        value={selectedFolderId || ''}
+                        onChange={e => {
+                            const newFolderId = e.target.value;
+                            if (onSwitchProjectFolder) {
+                                onSwitchProjectFolder(selectedProjectId, newFolderId);
+                            } else if (router) {
+                                const params = [`project=${encodeURIComponent(selectedProjectId)}`];
+                                if (newFolderId) params.push(`folder=${encodeURIComponent(newFolderId)}`);
+                                window.location.search = '?' + params.join('&');
+                            }
+                        }}
+                        style={{ minWidth: 120 }}
+                    >
+                        <option value=''>No Folder</option>
+                        {projects.map(project => (
+                            <optgroup key={project.id} label={project.name}>
+                                {folders.filter(f => f.project_id === project.id).map(f => (
+                                    <option key={f.id} value={f.id}>{f.name}</option>
+                                ))}
+                            </optgroup>
+                        ))}
+                    </select>
+                </div>
+            )}
             <div>
                 <button onClick={handleClearAll}>Clear All</button>
                 {showRedoButton && (

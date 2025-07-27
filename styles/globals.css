@@ -1,3 +1,32 @@
+/* Floating sidebar open button for mobile */
+.expand-sidebar-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #6599a6;
+  color: #fff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  transition: background 0.2s;
+}
+.expand-sidebar-fab:hover {
+  background: #4fc3f7;
+}
+.expand-sidebar-fab svg {
+  display: block;
+}
+@media (min-width: 900px) {
+  .expand-sidebar-fab {
+    display: none !important;
+  }
+}
 /* Override autofill styles for email input to match normal input appearance */
 input[type="email"]:-webkit-autofill,
 input[type="email"]:-webkit-autofill:focus,
