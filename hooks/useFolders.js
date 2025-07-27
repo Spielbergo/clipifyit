@@ -23,15 +23,15 @@ export function useFolders(user, selectedProjectId) {
   }, [user, selectedProjectId]);
 
   const addFolder = async (parentId, projectId) => {
-    if (!user || !selectedProjectId) return;
+    if (!user || !projectId) return;
     const { data, error } = await supabase
       .from('folders')
       .insert([{
-         project_id: selectedProjectId,
+         project_id: projectId,
          name: 'New Folder',
          parent_id: parentId,
          created_at: new Date(),
-         user_id: user.id // <-- Add this!
+         user_id: user.id
        }])
       .select();
     if (!error && data && data.length > 0) {

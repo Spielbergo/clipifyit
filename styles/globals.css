@@ -128,6 +128,11 @@ textarea:focus {
   z-index: 30;
 }
 
+/* Popout: make controls sticky to the very top since nav is gone */
+body.popout .controls-container {
+  top: 0 !important;
+}
+
 .table-wrapper {
   width: 100%;
 }

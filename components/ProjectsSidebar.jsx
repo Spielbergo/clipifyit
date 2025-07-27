@@ -494,15 +494,14 @@ export default function ProjectsSidebar({
                               marginBottom: 4,
                               cursor: 'pointer'
                             }}
-                            onClick={e => {
-                              // Select this project before adding a folder
-                              if (onSelect) onSelect(project.id);
-                              // Expand folders for this project if collapsed
-                              if (collapsedProjects[project.id]) {
-                                setCollapsedProjects(prev => ({ ...prev, [project.id]: false }));
-                              }
-                              onAddFolder(null, project.id);
-                            }}
+                          onClick={e => {
+                            // Expand folders for this project if collapsed
+                            if (collapsedProjects[project.id]) {
+                              setCollapsedProjects(prev => ({ ...prev, [project.id]: false }));
+                            }
+                            // Always add folder to the intended project, regardless of selectedProjectId
+                            onAddFolder(null, project.id);
+                          }}
                           >
                             +
                           </button>

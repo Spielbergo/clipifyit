@@ -4,9 +4,11 @@ import { AuthProvider } from '../contexts/AuthContext';
 
 import Navigation from '../components/Navigation.component';
 import NavigationMobile from '../components/NavigationMobile.component';
+import { useRouter } from 'next/router';
 
 export default function App({ Component, pageProps }) {
     const [isMobile, setIsMobile] = useState(false);
+    const router = useRouter();
 
     // Optional: Add a class to the body for dark mode based on system preference
     useEffect(() => {
@@ -26,8 +28,8 @@ export default function App({ Component, pageProps }) {
 
     return (
         <AuthProvider>
-            {isMobile ? <NavigationMobile /> : <Navigation />}
-            {/* Render the current page */}
+            {/* Only show nav if not popout */}
+            {router.pathname !== '/popout' && (isMobile ? <NavigationMobile /> : <Navigation />)}
             <Component {...pageProps} />
         </AuthProvider>
     );

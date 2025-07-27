@@ -364,6 +364,8 @@ export default function ProApp() {
                     isPopOut={false}
                     showErrorNotification={showErrorNotification}
                     onShowCustomModalChange={setShowCustomModal}
+                    selectedProjectId={selectedProjectId}
+                    selectedFolderId={selectedFolderId}
                 />
                 {loading ? (
                     <div

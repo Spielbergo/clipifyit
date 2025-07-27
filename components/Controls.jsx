@@ -4,7 +4,7 @@ import Modal from './Modal.component';
 
 import styles from './controls.module.css';
 
-export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandlePopOut, isPopOut, showErrorNotification, onShowCustomModalChange }) {
+export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandlePopOut, isPopOut, showErrorNotification, onShowCustomModalChange, selectedProjectId, selectedFolderId }) {
     const [popOutSize, setPopOutSize] = useState('medium');
     const [showRedoButton, setShowRedoButton] = useState(false); // Track visibility of the "Redo" button
     const [isRedoDisabled, setIsRedoDisabled] = useState(false);
@@ -157,10 +157,27 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
                     <option value="large">Large</option>
                 </select>
                 {!isPopOut && (
-                    <button onClick={() => onHandlePopOut(popOutSize)}>Pop Out</button>
+                    <button
+                        onClick={() => {
+                            // If project/folder are available, open popout with them in the URL
+                            if (typeof window !== 'undefined') {
+                                let url = '/popout';
+                                const params = [];
+                                if (selectedProjectId) params.push(`project=${encodeURIComponent(selectedProjectId)}`);
+                                if (selectedFolderId) params.push(`folder=${encodeURIComponent(selectedFolderId)}`);
+                                if (params.length) url += '?' + params.join('&');
+                                window.open(url, '_blank', `width=800,height=600`);
+                            } else if (onHandlePopOut) {
+                                // fallback for SSR/testing
+                                onHandlePopOut(popOutSize);
+                            }
+                        }}
+                    >
+                        Pop Out
+                    </button>
                 )}
             </div>
-            <div>
+            <div style={{ display: 'flex' }}>
                 <button style={{ marginRight: 8 }} onClick={() => setShowCustomModal(true)}>
                     Paste Custom Text
                 </button>
