@@ -69,7 +69,7 @@ export default function FreeApp() {
                     showErrorNotification={showErrorNotification}
                 />
                 <ClipboardList
-                    clipboardItems={clipboardItems}
+                    clipboardItems={clipboardItems || []}
                     setClipboardItems={setClipboardItems}
                 />
                 {showErrorMessage && (

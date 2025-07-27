@@ -66,7 +66,7 @@ export default function ProApp() {
                 .from('clipboard_items')
                 .select('*')
                 .eq('project_id', selectedProjectId)
-                .order('created_at', { ascending: false });
+                .order('order', { ascending: true, nullsLast: true }); // <-- Change here
 
             if (selectedFolderId) {
                 query = query.eq('folder_id', selectedFolderId);
@@ -85,16 +85,39 @@ export default function ProApp() {
     const handleAddItem = async (text) => {
         if (!user || !selectedProjectId) return;
         if (clipboardItems.some(item => item.text === text)) return true;
+
+        // Only count items in the current project/folder
+        const currentItems = clipboardItems.filter(item =>
+            item.project_id === selectedProjectId &&
+            (selectedFolderId ? item.folder_id === selectedFolderId : !item.folder_id)
+        );
+        const newOrder = currentItems.length;
+
+        console.log('Inserting:', {
+            project_id: selectedProjectId,
+            folder_id: selectedFolderId || null,
+            text,
+            created_at: new Date(),
+            user_id: user.id,
+            order: newOrder
+        });     
+
+        const insertObj = {
+            project_id: selectedProjectId,
+            folder_id: selectedFolderId || null,
+            text,
+            created_at: new Date(),
+            user_id: user.id,
+            order: newOrder
+        };
+
         const { data, error } = await supabase
             .from('clipboard_items')
-            .insert([{
-                project_id: selectedProjectId,
-                folder_id: selectedFolderId || null, // <--- Add this line
-                text,
-                created_at: new Date(),
-                user_id: user.id
-            }])
+            .insert([insertObj])
             .select();
+
+        console.log('Insert result:', data, error);
+
         if (!error && data) setClipboardItems([...(data || []), ...clipboardItems]);
         return false;
     };
@@ -276,7 +299,10 @@ export default function ProApp() {
                 className={`projects-sidebar${isMobile && sidebarExpanded ? ' expanded' : ''}`}
                 projects={projects}
                 selectedProjectId={selectedProjectId}
-                onSelect={setSelectedProjectId}
+                onSelect={projectId => {
+                    setSelectedProjectId(projectId);
+                    setSelectedFolderId(null); // Clear folder selection when switching projects
+                }}
                 onCreate={handleCreateProject}
                 onDelete={handleDeleteProject}
                 onRename={handleRenameProject}
@@ -377,6 +403,9 @@ export default function ProApp() {
                         setClipboardItems={setClipboardItems}
                         onRemoveItem={handleRemoveItem}
                         onSaveItem={handleSaveItem}
+                        selectedProjectId={selectedProjectId}
+                        selectedFolderId={selectedFolderId}
+                        isPro={true}
                     />
                 )}
                 {showErrorMessage && (

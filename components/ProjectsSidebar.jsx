@@ -11,6 +11,7 @@ function FolderTree({
   folders,
   selectedFolderId,
   onSelectFolder,
+  onSelect,
   onRenameFolder,
   renamingFolderId,
   setRenamingFolderId,
@@ -63,7 +64,10 @@ function FolderTree({
                     color: '#b3e5fc',
                     flex: 1,
                   }}
-                  onClick={() => onSelectFolder(folder.id)}
+                  onClick={() => {
+                    if (onSelect) onSelect(folder.project_id); // Switch project
+                    onSelectFolder(folder.id);                  // Select folder
+                  }}
                   title={folder.name}
                 >
                   <svg
@@ -203,15 +207,23 @@ export default function ProjectsSidebar({
   };
 
   useEffect(() => {
-    const collapsed = {};
-    projects.forEach(p => {
-      collapsed[p.id] = p.id !== selectedProjectId;
+    // Only set collapsed state when projects change (not on selectedProjectId)
+    setCollapsedProjects(prev => {
+      // If projects were added/removed, add new keys but keep user state for existing ones
+      const next = { ...prev };
+      projects.forEach(p => {
+        if (!(p.id in next)) next[p.id] = false; // default to expanded
+      });
+      // Remove collapsed states for deleted projects
+      Object.keys(next).forEach(id => {
+        if (!projects.find(p => p.id === id)) delete next[id];
+      });
+      return next;
     });
-    setCollapsedProjects(collapsed);
-  }, [projects, selectedProjectId]);
+  }, [projects]);
 
-  console.log('Projects:', projects);
-  console.log('Folders:', folders);
+  // console.log('Projects:', projects);
+  // console.log('Folders:', folders);
   
   return (
     <>
@@ -530,6 +542,7 @@ export default function ProjectsSidebar({
                       }
                       parentId={null}
                       selectedFolderId={selectedFolderId}
+                      onSelect={onSelect}
                       onSelectFolder={onSelectFolder}
                       onAddFolder={onAddFolder}
                       onRenameFolder={onRenameFolder}

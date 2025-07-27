@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 import ClipboardItem from './ClipboardItem';
 
@@ -8,12 +9,21 @@ export default function ClipboardList({
     onRemoveItem,
     onSaveItem,
     onCopyItem,
-    isPro = false, // Pass true for Pro version (Firestore), false for free (localStorage)
+    isPro = false,
+    selectedProjectId,
+    selectedFolderId,
 }) {
     const [selectedItems, setSelectedItems] = useState([]);
     const [showCopiedMessage, setShowCopiedMessage] = useState(false);
     const [showErrorMessage, setShowErrorMessage] = useState(false);
     const [draggedIndex, setDraggedIndex] = useState(null);
+
+    const filteredItems = isPro
+    ? clipboardItems.filter(item =>
+        item.project_id === selectedProjectId &&
+        (selectedFolderId ? item.folder_id === selectedFolderId : !item.folder_id)
+    )
+    : clipboardItems;
 
     // Helper to get text for an item (works for both free and pro)
     const getItemText = (item) => (typeof item === 'string' ? item : item.text);
@@ -68,23 +78,64 @@ export default function ClipboardList({
 
     // Drag and drop (free version only)
     const handleDragStart = (index) => {
-        if (isPro) return;
         setDraggedIndex(index);
     };
 
     const handleDragOver = (event) => {
-        if (isPro) return;
         event.preventDefault();
     };
 
-    const handleDrop = (index) => {
-        if (isPro || draggedIndex === null) return;
+    const handleDrop = async (dropIndex) => {
+        if (draggedIndex === null) return;
 
-        const updatedItems = [...clipboardItems];
-        const [draggedItem] = updatedItems.splice(draggedIndex, 1);
-        updatedItems.splice(index, 0, draggedItem);
+        // Work with a copy of the filtered items
+        const updatedFiltered = [...filteredItems];
+        const [draggedItem] = updatedFiltered.splice(draggedIndex, 1);
+        updatedFiltered.splice(dropIndex, 0, draggedItem);
 
-        setClipboardItems(updatedItems);
+        if (isPro) {
+            // Pro version: update order in Supabase
+            for (let idx = 0; idx < updatedFiltered.length; idx++) {
+                const item = updatedFiltered[idx];
+                const { error } = await supabase
+                    .from('clipboard_items')
+                    .update({ order: idx })
+                    .eq('id', item.id);
+                if (error) {
+                    console.error('Order update error:', error, item);
+                }
+            }
+
+            // Refetch clipboard items for this project/folder
+            let query = supabase
+                .from('clipboard_items')
+                .select('*')
+                .eq('project_id', selectedProjectId)
+                .order('order', { ascending: true, nullsLast: true });
+
+            if (selectedFolderId) {
+                query = query.eq('folder_id', selectedFolderId);
+            } else {
+                query = query.is('folder_id', null);
+            }
+
+            const { data, error } = await query;
+            if (!error) setClipboardItems(data || []);
+        } else {
+            // Free version: update local state only
+            const updated = [...clipboardItems];
+            // Remove all filteredItems from clipboardItems
+            filteredItems.forEach(item => {
+                const idx = updated.findIndex(i => getItemText(i) === getItemText(item));
+                if (idx !== -1) updated.splice(idx, 1);
+            });
+            // Insert reordered filteredItems back at the correct position
+            // (Assume all filteredItems are contiguous in clipboardItems)
+            const insertAt = clipboardItems.findIndex(i => getItemText(i) === getItemText(filteredItems[0]));
+            updated.splice(insertAt, 0, ...updatedFiltered);
+            setClipboardItems(updated);
+        }
+
         setDraggedIndex(null);
     };
 
@@ -188,16 +239,16 @@ export default function ClipboardList({
                     </tr>
                 </thead>
                 <tbody>
-                    {clipboardItems.map((item, index) => (
+                    {filteredItems.map((item, index) => (
                         <tr
                             key={getItemKey(item, index)}
-                            draggable={!isPro}
+                            draggable={true}
                             onDragStart={() => handleDragStart(index)}
                             onDragOver={handleDragOver}
                             onDrop={() => handleDrop(index)}
                         >
                             <ClipboardItem
-                                index={isPro ? item.id : index}
+                                index={index}
                                 text={getItemText(item)}
                                 isSelected={selectedItems.includes(index)}
                                 onToggleSelect={() => handleToggleSelect(index)}
