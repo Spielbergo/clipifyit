@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
 import ClipboardItem from './ClipboardItem';
@@ -12,6 +12,7 @@ export default function ClipboardList({
     isPro = false,
     selectedProjectId,
     selectedFolderId,
+    showCustomModal = false,
 }) {
     const [selectedItems, setSelectedItems] = useState([]);
     const [showCopiedMessage, setShowCopiedMessage] = useState(false);
@@ -31,20 +32,43 @@ export default function ClipboardList({
     // Helper to get item id or index
     const getItemKey = (item, index) => (item.id ? item.id : index);
 
-    // Keyboard shortcuts (free version only)
+    // Keyboard shortcuts (paste/copy)
+    // Use a ref to always get the latest clipboardItems for duplicate check
+    const clipboardItemsRef = useRef(clipboardItems);
+    useEffect(() => { clipboardItemsRef.current = clipboardItems; }, [clipboardItems]);
+
     useEffect(() => {
-        if (isPro) return; // Don't handle shortcuts in pro version (Firestore)
+        if (showCustomModal) return; // Don't handle if modal is open
         const handleKeyDown = async (event) => {
             if ((event.ctrlKey || event.metaKey) && event.key === 'v') {
                 // Handle paste shortcut
                 try {
                     const text = await navigator.clipboard.readText();
                     if (text) {
-                        if (clipboardItems.includes(text)) {
+                        if (clipboardItemsRef.current.some(item => getItemText(item) === text)) {
                             showErrorNotification('Duplicate content cannot be added!');
                             return;
                         }
-                        setClipboardItems([text, ...clipboardItems]);
+                        if (isPro) {
+                            // Insert into Supabase for Pro
+                            const insertObj = {
+                                project_id: selectedProjectId,
+                                folder_id: selectedFolderId || null,
+                                text,
+                                created_at: new Date(),
+                                order: clipboardItemsRef.current.length,
+                            };
+                            const { data, error } = await supabase
+                                .from('clipboard_items')
+                                .insert([insertObj])
+                                .select();
+                            if (!error && data) {
+                                setClipboardItems(prevItems => [ ...(data || []), ...prevItems ]);
+                            }
+                        } else {
+                            // Free: just update local state
+                            setClipboardItems(prevItems => [text, ...prevItems]);
+                        }
                     }
                 } catch (err) {
                     console.error('Failed to paste from clipboard:', err);
@@ -58,7 +82,7 @@ export default function ClipboardList({
                     return;
                 }
 
-                const itemsToCopy = selectedItems.map((index) => clipboardItems[index]);
+                const itemsToCopy = selectedItems.map((index) => getItemText(clipboardItems[index]));
                 const textToCopy = itemsToCopy.join('\n');
                 try {
                     await navigator.clipboard.writeText(textToCopy);
@@ -74,7 +98,7 @@ export default function ClipboardList({
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [clipboardItems, selectedItems, isPro, setClipboardItems]);
+    }, [clipboardItems, selectedItems, setClipboardItems, showCustomModal]);
 
     // Drag and drop (free version only)
     const handleDragStart = (index) => {
@@ -148,12 +172,31 @@ export default function ClipboardList({
         }
     };
 
+
     const handleSelectAll = () => {
         if (selectedItems.length > 0) {
             setSelectedItems([]);
         } else {
             setSelectedItems(clipboardItems.map((_, index) => index));
         }
+    };
+
+    // Delete selected items
+    const handleDeleteSelected = async () => {
+        if (selectedItems.length === 0) return;
+        // For Pro: call onRemoveItem for each selected
+        if (isPro && onRemoveItem) {
+            for (const index of selectedItems) {
+                const item = clipboardItems[index];
+                await onRemoveItem(item.id);
+            }
+            // Remove from UI
+            setClipboardItems(clipboardItems.filter((_, idx) => !selectedItems.includes(idx)));
+        } else if (setClipboardItems) {
+            // Free: remove by index
+            setClipboardItems(clipboardItems.filter((_, idx) => !selectedItems.includes(idx)));
+        }
+        setSelectedItems([]);
     };
 
     // Remove item
@@ -262,10 +305,15 @@ export default function ClipboardList({
                 <tfoot>
                     <tr>
                         <td colSpan="6">
-                            <button onClick={handleSelectAll}>
-                                {selectedItems.length > 0 ? 'Deselect All' : ' Select All '}
-                            </button>
-                            <button onClick={handleCopySelected}>Copy Selected</button>
+                            {selectedItems.length > 0 ? (
+                                <>
+                                    <button onClick={handleSelectAll}>Deselect All</button>
+                                    <button onClick={handleDeleteSelected} style={{ marginLeft: 8, backgroundColor: '#f44336' }}>Delete Selected</button>
+                                </>
+                            ) : (
+                                <button onClick={handleSelectAll}>Select All</button>
+                            )}
+                            <button onClick={handleCopySelected} style={{ marginLeft: 8 }}>Copy Selected</button>
                         </td>
                     </tr>
                 </tfoot>

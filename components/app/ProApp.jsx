@@ -15,6 +15,7 @@ import { useFolders } from '../../hooks/useFolders';
 import LogoWhite from '../../public/logos/logo-light-text.png';
 
 export default function ProApp() {
+    const [showCustomModal, setShowCustomModal] = useState(false);
     const [clipboardItems, setClipboardItems] = useState([]);
     const [clearedItems, setClearedItems] = useState([]);
     const [showErrorMessage, setShowErrorMessage] = useState(false);
@@ -362,6 +363,7 @@ export default function ProApp() {
                     onHandlePopOut={handlePopOut}
                     isPopOut={false}
                     showErrorNotification={showErrorNotification}
+                    onShowCustomModalChange={setShowCustomModal}
                 />
                 {loading ? (
                     <div
@@ -406,6 +408,7 @@ export default function ProApp() {
                         selectedProjectId={selectedProjectId}
                         selectedFolderId={selectedFolderId}
                         isPro={true}
+                        showCustomModal={showCustomModal}
                     />
                 )}
                 {showErrorMessage && (

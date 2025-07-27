@@ -117,7 +117,7 @@ export default function ClipboardItem({
                     <textarea
                         value={editedText}
                         onChange={(e) => setEditedText(e.target.value)}
-                        style={{ width: '100%' }}
+                        style={{ width: '97%' }}
                     />
                 ) : (
                     <span style={{ whiteSpace: 'pre-wrap' }}>{linkify(safeText)}</span>

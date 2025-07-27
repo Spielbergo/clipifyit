@@ -9,6 +9,7 @@ export default function LogInOptions() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [notification, setNotification] = useState('');
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleEmailLogin = async (e) => {
     e.preventDefault();
@@ -117,14 +118,45 @@ export default function LogInOptions() {
             onChange={e => setEmail(e.target.value)}
             className={styles.input}
           />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            required
-            onChange={e => setPassword(e.target.value)}
-            className={styles.input}
-          />
+          <div style={{ position: 'relative' }}>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Password"
+              value={password}
+              required
+              onChange={e => setPassword(e.target.value)}
+              className={styles.input}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              style={{
+                position: 'absolute',
+                right: 4,
+                top: '29%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#888',
+                fontSize: 18,
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              tabIndex={-1}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? (
+                // Eye-off SVG
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.06 10.06 0 0 1 12 20c-5 0-9.27-3.11-11-8 1.21-3.06 3.62-5.5 6.58-6.71"/><path d="M1 1l22 22"/><path d="M9.53 9.53A3.5 3.5 0 0 0 12 15.5c.96 0 1.84-.38 2.47-1"/><path d="M14.47 14.47A3.5 3.5 0 0 0 12 8.5c-.96 0-1.84.38-2.47 1"/></svg>
+              ) : (
+                // Eye SVG
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="12" rx="10" ry="7"/><circle cx="12" cy="12" r="3"/></svg>
+              )}
+            </button>
+          </div>
           <button type="submit" className={styles.submitBtn}>
             {isSignUp ? 'Sign Up with Email' : 'Sign In with Email'}
           </button>

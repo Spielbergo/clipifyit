@@ -1,16 +1,42 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 import Modal from './Modal.component';
 
 import styles from './controls.module.css';
 
-export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandlePopOut, isPopOut, showErrorNotification }) {
+export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandlePopOut, isPopOut, showErrorNotification, onShowCustomModalChange }) {
     const [popOutSize, setPopOutSize] = useState('medium');
     const [showRedoButton, setShowRedoButton] = useState(false); // Track visibility of the "Redo" button
     const [isRedoDisabled, setIsRedoDisabled] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [showCustomModal, setShowCustomModal] = useState(false);
+    // Notify parent when modal open/close changes
+    useEffect(() => {
+        if (onShowCustomModalChange) onShowCustomModalChange(showCustomModal);
+    }, [showCustomModal, onShowCustomModalChange]);
     const [customText, setCustomText] = useState('');
+    const textareaRef = useRef(null);
+    // Handle CTRL+V/CMD+V for modal paste
+    useEffect(() => {
+        if (!showCustomModal) return;
+        const handlePaste = async (event) => {
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'v') {
+                // Only handle if modal is open and textarea is not focused
+                if (textareaRef.current && document.activeElement !== textareaRef.current) {
+                    event.preventDefault();
+                    try {
+                        const text = await navigator.clipboard.readText();
+                        setCustomText(prev => prev + text);
+                        textareaRef.current.focus();
+                    } catch (err) {
+                        console.error('Failed to paste into modal:', err);
+                    }
+                }
+            }
+        };
+        window.addEventListener('keydown', handlePaste);
+        return () => window.removeEventListener('keydown', handlePaste);
+    }, [showCustomModal]);
 
     const handleClearAll = () => {
         onClearAll(); // Call the parent-provided clear all function
@@ -51,7 +77,18 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
 
     const handleAddCustom = async () => {
         if (customText.trim()) {
-            await onAddItem(customText.trim());
+            const result = await onAddItem(customText.trim());
+            if (result === true) {
+                setErrorMessage("Duplicate content cannot be added!");
+                const errorElement = document.querySelector('.no-selection-message');
+                if (errorElement) {
+                    errorElement.style.display = 'block';
+                    setTimeout(() => {
+                        errorElement.style.display = 'none';
+                    }, 2000);
+                }
+                return;
+            }
             setCustomText('');
             setShowCustomModal(false);
         }
@@ -134,6 +171,7 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
             <Modal open={showCustomModal} onClose={() => setShowCustomModal(false)}>
                 <h3 style={{ marginBottom: 12 }}>Paste Custom Text</h3>
                 <textarea
+                    ref={textareaRef}
                     value={customText}
                     onChange={e => setCustomText(e.target.value)}
                     rows={4}

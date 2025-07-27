@@ -222,6 +222,9 @@ export default function ProjectsSidebar({
     });
   }, [projects]);
 
+
+
+
   // console.log('Projects:', projects);
   // console.log('Folders:', folders);
   
@@ -568,8 +571,20 @@ export default function ProjectsSidebar({
         folderName={folderToDelete?.name}
         onCancel={() => setFolderToDelete(null)}
         onConfirm={() => {
-          onDeleteFolder(folderToDelete.id);
+          const deletedFolder = folderToDelete;
+          onDeleteFolder(deletedFolder.id);
           setFolderToDelete(null);
+          // Only update the collapsed state for the affected project, never touch others
+          setTimeout(() => {
+            const remainingFolders = folders.filter(f => f.project_id === deletedFolder.project_id && f.id !== deletedFolder.id);
+            setCollapsedProjects(prev => {
+              // Only update the affected project, leave others untouched
+              return {
+                ...prev,
+                [deletedFolder.project_id]: remainingFolders.length === 0 ? false : prev[deletedFolder.project_id]
+              };
+            });
+          }, 0);
         }}
       />
     </>
