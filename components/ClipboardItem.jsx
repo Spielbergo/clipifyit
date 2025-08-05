@@ -15,6 +15,7 @@ export default function ClipboardItem({
     const [isEditing, setIsEditing] = useState(false);
     const [editedText, setEditedText] = useState(safeText);
     const [isCopied, setIsCopied] = useState(false);
+    const [confirmRemove, setConfirmRemove] = useState(false);
 
     useEffect(() => {
         setEditedText(safeText);
@@ -109,45 +110,64 @@ export default function ClipboardItem({
             <td
                 style={
                     !isEditing && isColor(safeText)
-                    ? { color: safeText.trim(), fontWeight: '500' }
-                    : {}
+                        ? { color: safeText.trim(), fontWeight: '500' }
+                        : {}
                 }
             >
                 {isEditing ? (
                     <textarea
                         value={editedText}
                         onChange={(e) => setEditedText(e.target.value)}
-                        style={{ width: '97%' }}
+                        style={{ width: '97%', color: confirmRemove ? '#888' : undefined, textDecoration: confirmRemove ? 'line-through' : undefined, opacity: confirmRemove ? 0.6 : 1 }}
                     />
                 ) : (
-                    <span style={{ whiteSpace: 'pre-wrap' }}>{linkify(safeText)}</span>
+                    <span style={{ whiteSpace: 'pre-wrap', color: confirmRemove ? '#888' : undefined, textDecoration: confirmRemove ? 'line-through' : undefined, opacity: confirmRemove ? 0.6 : 1 }}>{linkify(safeText)}</span>
                 )}
             </td>
-            <td>
-                {isEditing ? (
-                    <>
-                        <button onClick={handleSave} title="Save">
-                            <FaCheck />
+            {/* Edit, Copy, Remove buttons in a flex row, with Remove confirmation overlayed */}
+            <td colSpan={3} style={{ position: 'relative', minWidth: 120 }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'flex-start' }}>
+                    {/* Edit button */}
+                    {!isEditing && !confirmRemove && (
+                        <button onClick={() => setIsEditing(true)} title="Edit">
+                            <FaEdit />
                         </button>
-                        <button onClick={handleCancel} title="Cancel">
+                    )}
+                    {/* Save/Cancel buttons */}
+                    {isEditing && (
+                        <>
+                            <button onClick={handleSave} title="Save">
+                                <FaCheck />
+                            </button>
+                            <button onClick={handleCancel} title="Cancel">
+                                <FaTimes />
+                            </button>
+                        </>
+                    )}
+                    {/* Copy button */}
+                    {!isEditing && !confirmRemove && (
+                        <button onClick={handleCopy} title="Copy">
+                            {isCopied ? <FaCheck /> : <FaCopy />}
+                        </button>
+                    )}
+                    {/* Remove button or confirmation overlay */}
+                    {!isEditing && !confirmRemove && (
+                        <button onClick={() => setConfirmRemove(true)} title="Remove">
                             <FaTimes />
                         </button>
-                    </>
-                ) : (
-                    <button onClick={() => setIsEditing(true)} title="Edit">
-                        <FaEdit />
-                    </button>
+                    )}
+                </div>
+                {/* Confirmation overlay, positioned absolutely over the button row */}
+                {confirmRemove && (
+                    <div style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, zIndex: 2, borderRadius: 4 }}>
+                        <button onClick={() => { setConfirmRemove(false); onRemove(); }} title="Confirm Remove" style={{ background: '#d32f2f', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <FaCheck />
+                        </button>
+                        <button onClick={() => setConfirmRemove(false)} title="Cancel" style={{ background: '#888', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <FaTimes />
+                        </button>
+                    </div>
                 )}
-            </td>
-            <td>
-                <button onClick={handleCopy} title="Copy">
-                    {isCopied ? <FaCheck /> : <FaCopy />}
-                </button>
-            </td>
-            <td>
-                <button onClick={onRemove} title="Remove">
-                    <FaTimes />
-                </button>
             </td>
             {/* <td>
                 <span
