@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import Image from 'next/image';
 
@@ -56,31 +56,58 @@ export default function ProApp() {
     }, []);
 
     // Load clipboard items for the selected project
+    const fetchCountRef = useRef(0);
+    const prevVisibilityRef = useRef(typeof document !== 'undefined' ? document.visibilityState : 'visible');
+    const lastFetchedDepsRef = useRef({ userId: null, selectedProjectId: null, selectedFolderId: null });
     useEffect(() => {
-        if (!user || !selectedProjectId) {
-            setClipboardItems([]);
-            return;
-        }
-        setLoading(true);
+        const userId = user?.id || null;
+        console.log('[Clipboard Effect] Invoked. Current deps:', { userId, selectedProjectId, selectedFolderId });
+        const lastDeps = { userId, selectedProjectId, selectedFolderId };
+        const last = lastFetchedDepsRef.current;
+        const depsChanged = last.userId !== lastDeps.userId || last.selectedProjectId !== lastDeps.selectedProjectId || last.selectedFolderId !== lastDeps.selectedFolderId;
+        console.log('[Clipboard Effect] Last fetched deps:', last);
+        console.log('[Clipboard Effect] Deps changed:', depsChanged);
         const fetchItems = async () => {
+            console.log('[Clipboard Fetch] fetchItems called. lastDeps:', lastDeps);
+            if (!lastDeps.userId || !lastDeps.selectedProjectId) {
+                console.log('[Clipboard Fetch] No user or project selected. Clearing clipboardItems.');
+                setClipboardItems([]);
+                lastFetchedDepsRef.current = { ...lastDeps };
+                return;
+            }
+            fetchCountRef.current++;
+            console.log('[Clipboard Fetch] Fetch count:', fetchCountRef.current, 'Project:', lastDeps.selectedProjectId, 'Folder:', lastDeps.selectedFolderId);
+            let loaderTimeout = setTimeout(() => setLoading(true), 200);
             let query = supabase
                 .from('clipboard_items')
                 .select('*')
-                .eq('project_id', selectedProjectId)
-                .order('order', { ascending: true, nullsLast: true }); // <-- Change here
+                .eq('project_id', lastDeps.selectedProjectId)
+                .order('order', { ascending: true, nullsLast: true });
 
-            if (selectedFolderId) {
-                query = query.eq('folder_id', selectedFolderId);
+            if (lastDeps.selectedFolderId) {
+                query = query.eq('folder_id', lastDeps.selectedFolderId);
             } else {
                 query = query.is('folder_id', null);
             }
 
             const { data, error } = await query;
-            setClipboardItems(data || []);
+            clearTimeout(loaderTimeout);
             setLoading(false);
+            setClipboardItems(data || []);
+            lastFetchedDepsRef.current = { ...lastDeps };
+            console.log('[Clipboard Fetch] Data:', data, 'Error:', error);
         };
-        fetchItems();
-    }, [user, selectedProjectId, selectedFolderId]);
+
+        // Only fetch on dependency change
+        if (depsChanged) {
+            console.log('[Clipboard Effect] Dependencies changed, fetching items...');
+            fetchItems();
+        } else {
+            console.log('[Clipboard Effect] Dependencies did NOT change, not fetching.');
+        }
+        // Cleanup: nothing to clean up
+        return undefined;
+    }, [user?.id, selectedProjectId, selectedFolderId]);
 
     // Add item to the selected project's clipboard
     const handleAddItem = async (text) => {
