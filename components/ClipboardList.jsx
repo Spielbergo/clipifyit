@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
 import ClipboardItem from './ClipboardItem';
@@ -18,6 +19,10 @@ export default function ClipboardList({
     const [showCopiedMessage, setShowCopiedMessage] = useState(false);
     const [showErrorMessage, setShowErrorMessage] = useState(false);
     const [draggedIndex, setDraggedIndex] = useState(null);
+
+    // Get current user from AuthContext
+    const { user } = useAuth();
+    const currentUserId = user?.id;
 
     const filteredItems = isPro
     ? clipboardItems.filter(item =>
@@ -57,6 +62,7 @@ export default function ClipboardList({
                                 text,
                                 created_at: new Date(),
                                 order: clipboardItemsRef.current.length,
+                                user_id: currentUserId,
                             };
                             const { data, error } = await supabase
                                 .from('clipboard_items')
@@ -118,19 +124,50 @@ export default function ClipboardList({
         updatedFiltered.splice(dropIndex, 0, draggedItem);
 
         if (isPro) {
-            // Pro version: update order in Supabase
-            for (let idx = 0; idx < updatedFiltered.length; idx++) {
-                const item = updatedFiltered[idx];
-                const { error } = await supabase
-                    .from('clipboard_items')
-                    .update({ order: idx })
-                    .eq('id', item.id);
-                if (error) {
-                    console.error('Order update error:', error, item);
-                }
+            // Pro version: update order for ALL items in the current project/folder
+            // 1. Get all items for this project/folder
+            let allQuery = supabase
+                .from('clipboard_items')
+                .select('*')
+                .eq('project_id', selectedProjectId);
+            if (selectedFolderId) {
+                allQuery = allQuery.eq('folder_id', selectedFolderId);
+            } else {
+                allQuery = allQuery.is('folder_id', null);
+            }
+            const { data: allItems, error: allError } = await allQuery;
+            if (allError) {
+                console.error('Failed to fetch all items for drag-and-drop:', allError);
+                setDraggedIndex(null);
+                return;
             }
 
-            // Refetch clipboard items for this project/folder
+            // 2. Build the reordered list
+            // Find the indexes of filteredItems in allItems
+            const filteredIndexes = filteredItems.map(fItem => allItems.findIndex(aItem => aItem.id === fItem.id));
+            // Remove filteredItems from allItems
+            let reordered = allItems.filter((item, idx) => !filteredIndexes.includes(idx));
+            // Find where to insert the reordered filteredItems
+            let insertAt = allItems.findIndex(item => item.id === filteredItems[0]?.id);
+            if (insertAt === -1) insertAt = reordered.length;
+            // Insert updatedFiltered at the correct position
+            reordered = [
+                ...reordered.slice(0, insertAt),
+                ...updatedFiltered,
+                ...reordered.slice(insertAt)
+            ];
+
+            // 3. Update order for all items in reordered list
+            await Promise.all(
+                reordered.map((item, idx) =>
+                    supabase
+                        .from('clipboard_items')
+                        .update({ order: idx })
+                        .eq('id', item.id)
+                )
+            );
+
+            // 4. Refetch clipboard items for this project/folder after all updates
             let query = supabase
                 .from('clipboard_items')
                 .select('*')
@@ -147,16 +184,20 @@ export default function ClipboardList({
             if (!error) setClipboardItems(data || []);
         } else {
             // Free version: update local state only
-            const updated = [...clipboardItems];
             // Remove all filteredItems from clipboardItems
-            filteredItems.forEach(item => {
-                const idx = updated.findIndex(i => getItemText(i) === getItemText(item));
-                if (idx !== -1) updated.splice(idx, 1);
-            });
+            let updated = clipboardItems.filter(item => !filteredItems.some(f => getItemText(f) === getItemText(item)));
+            // Find the index of the first filtered item in clipboardItems
+            let insertAt = clipboardItems.findIndex(i => getItemText(i) === getItemText(filteredItems[0]));
+            if (insertAt === -1) {
+                // If not found, append at the end
+                insertAt = updated.length;
+            }
             // Insert reordered filteredItems back at the correct position
-            // (Assume all filteredItems are contiguous in clipboardItems)
-            const insertAt = clipboardItems.findIndex(i => getItemText(i) === getItemText(filteredItems[0]));
-            updated.splice(insertAt, 0, ...updatedFiltered);
+            updated = [
+                ...updated.slice(0, insertAt),
+                ...updatedFiltered,
+                ...updated.slice(insertAt)
+            ];
             setClipboardItems(updated);
         }
 
@@ -184,14 +225,33 @@ export default function ClipboardList({
     // Delete selected items
     const handleDeleteSelected = async () => {
         if (selectedItems.length === 0) return;
-        // For Pro: call onRemoveItem for each selected
-        if (isPro && onRemoveItem) {
-            for (const index of selectedItems) {
-                const item = clipboardItems[index];
-                await onRemoveItem(item.id);
+        if (isPro) {
+            // Pro: delete from Supabase
+            const idsToDelete = selectedItems.map(index => clipboardItems[index].id).filter(Boolean);
+            console.log('Attempting to delete IDs:', idsToDelete);
+            const { data: deleteData, error } = await supabase
+                .from('clipboard_items')
+                .delete()
+                .in('id', idsToDelete);
+            if (error) {
+                console.error('Error deleting items:', error);
+            } else {
+                console.log('Delete result:', deleteData);
             }
-            // Remove from UI
-            setClipboardItems(clipboardItems.filter((_, idx) => !selectedItems.includes(idx)));
+            // Refetch clipboard items for this project/folder
+            let query = supabase
+                .from('clipboard_items')
+                .select('*')
+                .eq('project_id', selectedProjectId)
+                .order('order', { ascending: true, nullsLast: true });
+            if (selectedFolderId) {
+                query = query.eq('folder_id', selectedFolderId);
+            } else {
+                query = query.is('folder_id', null);
+            }
+            const { data, error: fetchError } = await query;
+            console.log('Items after delete:', data);
+            if (!fetchError) setClipboardItems(data || []);
         } else if (setClipboardItems) {
             // Free: remove by index
             setClipboardItems(clipboardItems.filter((_, idx) => !selectedItems.includes(idx)));
@@ -201,9 +261,39 @@ export default function ClipboardList({
 
     // Remove item
     const handleRemove = (item, index) => {
-        if (onRemoveItem) {
-            // Pro version: pass Firestore id
-            onRemoveItem(item.id);
+        if (isPro) {
+            // Pro: delete from Supabase
+            if (!item.id) {
+                console.warn('Attempted to delete item with no id:', item);
+                return;
+            }
+            console.log('Attempting to delete ID:', item.id);
+            supabase
+                .from('clipboard_items')
+                .delete()
+                .eq('id', item.id)
+                .then(({ data: deleteData, error }) => {
+                    if (error) {
+                        console.error('Error deleting item:', error);
+                    } else {
+                        console.log('Delete result:', deleteData);
+                    }
+                    // Refetch clipboard items for this project/folder
+                    let query = supabase
+                        .from('clipboard_items')
+                        .select('*')
+                        .eq('project_id', selectedProjectId)
+                        .order('order', { ascending: true, nullsLast: true });
+                    if (selectedFolderId) {
+                        query = query.eq('folder_id', selectedFolderId);
+                    } else {
+                        query = query.is('folder_id', null);
+                    }
+                    query.then(({ data, error: fetchError }) => {
+                        console.log('Items after delete:', data);
+                        if (!fetchError) setClipboardItems(data || []);
+                    });
+                });
         } else if (setClipboardItems) {
             // Free version: remove by index
             const updatedItems = [...clipboardItems];
