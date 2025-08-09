@@ -1,0 +1,97 @@
+/* Dark panel wrapper matching sidebar colors */
+.listRoot {
+  background: #222;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+
+/* Table base */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* Header */
+.table thead th {
+  background: #2a2a2a;
+  color: #eaeaea;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  border-bottom: 1px solid #333;
+}
+
+/* Align the select column */
+.table thead th:first-child,
+.table tbody td:first-child {
+  width: 48px;
+  text-align: center;
+}
+
+/* Cells */
+.table th,
+.table td {
+  border: none;
+  padding: 12px 10px;
+}
+
+/* Make checkboxes vertically centered */
+.table tbody td:first-child input[type="checkbox"] {
+  vertical-align: middle;
+}
+
+/* Row striping & hover */
+.table tbody tr:nth-child(odd) {
+  background: #242424;
+}
+
+.table tbody tr:nth-child(even) {
+  background: #1f1f1f;
+}
+
+.table tbody tr:hover {
+  background: #2c2c2c;
+}
+
+/* Footer */
+.table tfoot td {
+  background: #1f1f1f;
+  border-top: 1px solid #333;
+}
+
+/* Make the text column behave nicely on dark bg */
+.table td:nth-child(2) span {
+  color: #e6e6e6;
+}
+
+/* Brand the checkboxes without extra markup */
+.listRoot input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  accent-color: #6599a6; /* brand color */
+}
+
+/* Buttons row inside cells: tighten spacing a bit on dark */
+.table td button {
+  background: #2f2f2f;
+  color: #f3f3f3;
+  border: 1px solid #3a3a3a;
+}
+
+.table td button:hover {
+  background: #3a3a3a;
+}
+
+/* Notifications override to blend with dark */
+.listRoot :global(.copied-message),
+.listRoot :global(.no-selection-message) {
+  background: #2f2f2f;
+  color: #f3f3f3;
+  border: 1px solid #3a3a3a;
+}

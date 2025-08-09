@@ -252,6 +252,11 @@ td {
   text-align: center;
 }
 
+td a {
+  color: #fff !important;
+  text-decoration: underline;
+}
+
 td button {
   margin-right: -1px;
   background-color: rgb(164, 163, 163);

@@ -69,6 +69,7 @@ export default function ClipboardItem({
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{ color: '#1976d2', wordBreak: 'break-all' }}
+                    title='Open link in new tab'
                 >
                     {url}
                 </a>

@@ -5,13 +5,12 @@ import styles from './controls.module.css';
 
 import { useRouter } from 'next/router';
 
-export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandlePopOut, isPopOut, showErrorNotification, onShowCustomModalChange, selectedProjectId, selectedFolderId, projects = [], folders = [], onSwitchProjectFolder }) {
+export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandlePopOut, isPopOut, showErrorNotification, onShowCustomModalChange, selectedProjectId, selectedFolderId, projects = [], folders = [], onSwitchProjectFolder, onSortChange }) {
     const router = typeof window !== 'undefined' ? require('next/router').useRouter() : null;
     const [popOutSize, setPopOutSize] = useState('medium');
-    const [showRedoButton, setShowRedoButton] = useState(false); // Track visibility of the "Redo" button
-    const [isRedoDisabled, setIsRedoDisabled] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [showCustomModal, setShowCustomModal] = useState(false);
+    const [sortMode, setSortMode] = useState('newest');
     // Notify parent when modal open/close changes
     useEffect(() => {
         if (onShowCustomModalChange) onShowCustomModalChange(showCustomModal);
@@ -39,17 +38,6 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
         window.addEventListener('keydown', handlePaste);
         return () => window.removeEventListener('keydown', handlePaste);
     }, [showCustomModal]);
-
-    const handleClearAll = () => {
-        onClearAll(); // Call the parent-provided clear all function
-        setShowRedoButton(true); // Show the "Redo" button
-        setIsRedoDisabled(false); // Enable the "Redo" button
-    };
-
-    const handleRedoClear = () => {
-        onRedoClear(); // Call the parent-provided redo clear function
-        setIsRedoDisabled(true); // Disable the "Redo" button
-    };
 
     const handlePaste = async () => {
         try {
@@ -126,6 +114,16 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
         }
     }, [popOutSize, isPopOut]);
 
+    // Broadcast sort changes so the list can react
+    const applySortChange = (mode) => {
+        setSortMode(mode);
+        if (typeof window !== 'undefined') {
+            const ev = new CustomEvent('clipboard-sort-change', { detail: mode });
+            window.dispatchEvent(ev);
+        }
+        if (onSortChange) onSortChange(mode);
+    };
+
     return (
         <div className='controls-container'>
             {/* Popout-only: Project/Folder Switcher */}
@@ -176,20 +174,19 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
                     </select>
                 </div>
             )}
+            {/* Sort dropdown replaces Clear/Redo */}
             <div>
-                <button onClick={handleClearAll}>Clear All</button>
-                {showRedoButton && (
-                    <button
-                        onClick={handleRedoClear}
-                        disabled={isRedoDisabled}
-                        style={{
-                            backgroundColor: isRedoDisabled ? 'gray' : '',
-                            cursor: isRedoDisabled ? 'not-allowed' : 'pointer',
-                        }}
-                    >
-                        Redo
-                    </button>
-                )}
+                <select
+                    aria-label="Sort clipboard items"
+                    value={sortMode}
+                    onChange={(e) => applySortChange(e.target.value)}
+                    style={{ minWidth: 160 }}
+                >
+                    <option value="newest">Newest</option>
+                    <option value="oldest">Oldest</option>
+                    <option value="az">A → Z</option>
+                    <option value="za">Z → A</option>
+                </select>
             </div>
             <div className={styles.popout__container} >
                 <select

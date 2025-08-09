@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
 import ClipboardItem from './ClipboardItem';
+import styles from './clipboard-list.module.css';
 
 export default function ClipboardList({
     clipboardItems,
@@ -15,10 +16,18 @@ export default function ClipboardList({
     selectedFolderId,
     showCustomModal = false,
 }) {
-    const [selectedItems, setSelectedItems] = useState([]);
+    const [selectedKeys, setSelectedKeys] = useState([]);
     const [showCopiedMessage, setShowCopiedMessage] = useState(false);
     const [showErrorMessage, setShowErrorMessage] = useState(false);
     const [draggedIndex, setDraggedIndex] = useState(null);
+    const [sortMode, setSortMode] = useState('newest');
+
+    // Listen for sort changes from Controls
+    useEffect(() => {
+        const handler = (e) => setSortMode(e.detail || 'newest');
+        window.addEventListener('clipboard-sort-change', handler);
+        return () => window.removeEventListener('clipboard-sort-change', handler);
+    }, []);
 
     // Get current user from AuthContext
     const { user } = useAuth();
@@ -34,8 +43,27 @@ export default function ClipboardList({
     // Helper to get text for an item (works for both free and pro)
     const getItemText = (item) => (typeof item === 'string' ? item : item.text);
 
-    // Helper to get item id or index
-    const getItemKey = (item, index) => (item.id ? item.id : index);
+    // Stable key for items (id for pro; text for free where duplicates are prevented)
+    const getStableKey = (item) => (typeof item === 'string' ? item : (item.id ?? item.text));
+
+    // React key (prefer stable id/text)
+    const getItemKey = (item) => getStableKey(item);
+
+    // Derive sorted view
+    const displayItems = useMemo(() => {
+        const items = [...filteredItems];
+        switch (sortMode) {
+            case 'oldest':
+                return items.slice().reverse();
+            case 'az':
+                return items.sort((a, b) => getItemText(a).localeCompare(getItemText(b), undefined, { sensitivity: 'base' }));
+            case 'za':
+                return items.sort((a, b) => getItemText(b).localeCompare(getItemText(a), undefined, { sensitivity: 'base' }));
+            case 'newest':
+            default:
+                return items; // keep existing order
+        }
+    }, [filteredItems, sortMode]);
 
     // Keyboard shortcuts (paste/copy)
     // Use a ref to always get the latest clipboardItems for duplicate check
@@ -83,12 +111,12 @@ export default function ClipboardList({
 
             if ((event.ctrlKey || event.metaKey) && event.key === 'c') {
                 // Handle copy shortcut
-                if (selectedItems.length === 0) {
+                if (selectedKeys.length === 0) {
                     showErrorNotification('No items selected to copy!');
                     return;
                 }
 
-                const itemsToCopy = selectedItems.map((index) => getItemText(clipboardItems[index]));
+                const itemsToCopy = displayItems.filter(it => selectedKeys.includes(getStableKey(it))).map(it => getItemText(it));
                 const textToCopy = itemsToCopy.join('\n');
                 try {
                     await navigator.clipboard.writeText(textToCopy);
@@ -104,21 +132,24 @@ export default function ClipboardList({
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [clipboardItems, selectedItems, setClipboardItems, showCustomModal]);
+    }, [displayItems, selectedKeys, setClipboardItems, showCustomModal, isPro, selectedProjectId, selectedFolderId, currentUserId]);
 
-    // Drag and drop (free version only)
+    // Drag and drop (free version only) — only when sort is default
     const handleDragStart = (index) => {
+        if (sortMode !== 'newest') return;
         setDraggedIndex(index);
     };
 
     const handleDragOver = (event) => {
+        if (sortMode !== 'newest') return;
         event.preventDefault();
     };
 
     const handleDrop = async (dropIndex) => {
+        if (sortMode !== 'newest') return;
         if (draggedIndex === null) return;
 
-        // Work with a copy of the filtered items
+        // Work with a copy of the filtered items (default order)
         const updatedFiltered = [...filteredItems];
         const [draggedItem] = updatedFiltered.splice(draggedIndex, 1);
         updatedFiltered.splice(dropIndex, 0, draggedItem);
@@ -143,14 +174,10 @@ export default function ClipboardList({
             }
 
             // 2. Build the reordered list
-            // Find the indexes of filteredItems in allItems
             const filteredIndexes = filteredItems.map(fItem => allItems.findIndex(aItem => aItem.id === fItem.id));
-            // Remove filteredItems from allItems
             let reordered = allItems.filter((item, idx) => !filteredIndexes.includes(idx));
-            // Find where to insert the reordered filteredItems
             let insertAt = allItems.findIndex(item => item.id === filteredItems[0]?.id);
             if (insertAt === -1) insertAt = reordered.length;
-            // Insert updatedFiltered at the correct position
             reordered = [
                 ...reordered.slice(0, insertAt),
                 ...updatedFiltered,
@@ -189,10 +216,8 @@ export default function ClipboardList({
             // Find the index of the first filtered item in clipboardItems
             let insertAt = clipboardItems.findIndex(i => getItemText(i) === getItemText(filteredItems[0]));
             if (insertAt === -1) {
-                // If not found, append at the end
                 insertAt = updated.length;
             }
-            // Insert reordered filteredItems back at the correct position
             updated = [
                 ...updated.slice(0, insertAt),
                 ...updatedFiltered,
@@ -204,39 +229,41 @@ export default function ClipboardList({
         setDraggedIndex(null);
     };
 
-    // Selection logic (works for both)
-    const handleToggleSelect = (index) => {
-        if (selectedItems.includes(index)) {
-            setSelectedItems(selectedItems.filter((i) => i !== index));
+    // Selection logic using stable keys (works for both)
+    const handleToggleSelect = (item) => {
+        const key = getStableKey(item);
+        if (selectedKeys.includes(key)) {
+            setSelectedKeys(selectedKeys.filter((k) => k !== key));
         } else {
-            setSelectedItems([...selectedItems, index]);
+            setSelectedKeys([...selectedKeys, key]);
         }
     };
 
-
     const handleSelectAll = () => {
-        if (selectedItems.length > 0) {
-            setSelectedItems([]);
+        const allKeys = displayItems.map((it) => getStableKey(it));
+        if (selectedKeys.length > 0) {
+            setSelectedKeys([]);
         } else {
-            setSelectedItems(clipboardItems.map((_, index) => index));
+            setSelectedKeys(allKeys);
         }
     };
 
     // Delete selected items
     const handleDeleteSelected = async () => {
-        if (selectedItems.length === 0) return;
+        if (selectedKeys.length === 0) return;
         if (isPro) {
             // Pro: delete from Supabase
-            const idsToDelete = selectedItems.map(index => clipboardItems[index].id).filter(Boolean);
-            console.log('Attempting to delete IDs:', idsToDelete);
-            const { data: deleteData, error } = await supabase
+            const idsToDelete = displayItems
+                .filter(it => selectedKeys.includes(getStableKey(it)))
+                .map(it => it.id)
+                .filter(Boolean);
+            if (idsToDelete.length === 0) return;
+            const { error } = await supabase
                 .from('clipboard_items')
                 .delete()
                 .in('id', idsToDelete);
             if (error) {
                 console.error('Error deleting items:', error);
-            } else {
-                console.log('Delete result:', deleteData);
             }
             // Refetch clipboard items for this project/folder
             let query = supabase
@@ -250,33 +277,28 @@ export default function ClipboardList({
                 query = query.is('folder_id', null);
             }
             const { data, error: fetchError } = await query;
-            console.log('Items after delete:', data);
             if (!fetchError) setClipboardItems(data || []);
         } else if (setClipboardItems) {
-            // Free: remove by index
-            setClipboardItems(clipboardItems.filter((_, idx) => !selectedItems.includes(idx)));
+            // Free: remove by key (text)
+            setClipboardItems(clipboardItems.filter(it => !selectedKeys.includes(getStableKey(it))));
         }
-        setSelectedItems([]);
+        setSelectedKeys([]);
     };
 
-    // Remove item
+    // Remove single item
     const handleRemove = (item, index) => {
         if (isPro) {
-            // Pro: delete from Supabase
             if (!item.id) {
                 console.warn('Attempted to delete item with no id:', item);
                 return;
             }
-            console.log('Attempting to delete ID:', item.id);
             supabase
                 .from('clipboard_items')
                 .delete()
                 .eq('id', item.id)
-                .then(({ data: deleteData, error }) => {
+                .then(({ error }) => {
                     if (error) {
                         console.error('Error deleting item:', error);
-                    } else {
-                        console.log('Delete result:', deleteData);
                     }
                     // Refetch clipboard items for this project/folder
                     let query = supabase
@@ -290,15 +312,13 @@ export default function ClipboardList({
                         query = query.is('folder_id', null);
                     }
                     query.then(({ data, error: fetchError }) => {
-                        console.log('Items after delete:', data);
                         if (!fetchError) setClipboardItems(data || []);
                     });
                 });
         } else if (setClipboardItems) {
-            // Free version: remove by index
-            const updatedItems = [...clipboardItems];
-            updatedItems.splice(index, 1);
-            setClipboardItems(updatedItems);
+            // Free: remove by matching text to find original index
+            const key = getStableKey(item);
+            setClipboardItems(clipboardItems.filter(it => getStableKey(it) !== key));
         }
     };
 
@@ -321,13 +341,16 @@ export default function ClipboardList({
     // Save (edit) item
     const handleSave = (item, index, newText) => {
         if (onSaveItem) {
-            // Pro version: pass Firestore id
             onSaveItem(item.id, newText);
         } else if (setClipboardItems) {
-            // Free version: update by index
-            const updatedItems = [...clipboardItems];
-            updatedItems[index] = newText;
-            setClipboardItems(updatedItems);
+            // Free: find original index by key
+            const key = getStableKey(item);
+            const originalIndex = clipboardItems.findIndex(it => getStableKey(it) === key);
+            if (originalIndex >= 0) {
+                const updatedItems = [...clipboardItems];
+                updatedItems[originalIndex] = newText;
+                setClipboardItems(updatedItems);
+            }
         }
     };
 
@@ -344,11 +367,11 @@ export default function ClipboardList({
 
     // Copy selected items
     const handleCopySelected = async () => {
-        if (selectedItems.length === 0) {
+        if (selectedKeys.length === 0) {
             showErrorNotification();
             return;
         }
-        const itemsToCopy = selectedItems.map((index) => getItemText(clipboardItems[index]));
+        const itemsToCopy = displayItems.filter(it => selectedKeys.includes(getStableKey(it))).map(it => getItemText(it));
         const textToCopy = itemsToCopy.join('\n');
         try {
             await navigator.clipboard.writeText(textToCopy);
@@ -359,8 +382,8 @@ export default function ClipboardList({
     };
 
     return (
-        <div className="table-wrapper">
-            <table>
+        <div className={`table-wrapper ${styles.listRoot}`}>
+            <table className={styles.table}>
                 <thead>
                     <tr>
                         <th>Select</th>
@@ -372,10 +395,10 @@ export default function ClipboardList({
                     </tr>
                 </thead>
                 <tbody>
-                    {filteredItems.map((item, index) => (
+                    {displayItems.map((item, index) => (
                         <tr
-                            key={getItemKey(item, index)}
-                            draggable={true}
+                            key={getItemKey(item)}
+                            draggable={sortMode === 'newest'}
                             onDragStart={() => handleDragStart(index)}
                             onDragOver={handleDragOver}
                             onDrop={() => handleDrop(index)}
@@ -383,8 +406,8 @@ export default function ClipboardList({
                             <ClipboardItem
                                 index={index}
                                 text={getItemText(item)}
-                                isSelected={selectedItems.includes(index)}
-                                onToggleSelect={() => handleToggleSelect(index)}
+                                isSelected={selectedKeys.includes(getStableKey(item))}
+                                onToggleSelect={() => handleToggleSelect(item)}
                                 onRemove={() => handleRemove(item, index)}
                                 onCopy={() => handleCopy(item)}
                                 onSave={(idOrIndex, newText) => handleSave(item, index, newText)}
@@ -395,7 +418,7 @@ export default function ClipboardList({
                 <tfoot>
                     <tr>
                         <td colSpan="6">
-                            {selectedItems.length > 0 ? (
+                            {selectedKeys.length > 0 ? (
                                 <>
                                     <button onClick={handleSelectAll}>Deselect All</button>
                                     <button onClick={handleDeleteSelected} style={{ marginLeft: 8, backgroundColor: '#f44336' }}>Delete Selected</button>
