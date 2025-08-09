@@ -1,18 +1,39 @@
+/* Full-bleed dark wrapper to match homepage */
+.pricing_page__section {
+  position: relative;
+  padding: 72px 0;
+  background: linear-gradient(180deg, #0e1428, #0b1020);
+  overflow: hidden;
+}
+.pricing_page__section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: 100%;
+  background: inherit;
+  z-index: 0;
+}
+
 /* Comparison Table */
 .comparisonWrapper {
   margin: 3.5rem auto 2.5rem auto;
   max-width: var(--app-width);
-  background: #f7fafd;
+  background: transparent;
   border-radius: 1.2rem;
-  box-shadow: 2px 3px 20px #4fc3f711;
+  box-shadow: 0 12px 60px #0000;
   padding: 2.5rem 1.5rem 2rem 1.5rem;
   text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
 .comparisonTitle {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1976d2;
+  color: #e8f2ff;
   margin-bottom: 1.5rem;
 }
 
@@ -21,33 +42,34 @@
   table-layout: fixed;
   border-collapse: collapse;
   font-size: 1.07rem;
-  background: #f7fafd;
+  background: transparent;
 }
 
 .comparisonTable th,
 .comparisonTable td {
-  background: #fff !important;
-  color: #374151 !important;
+  background: #0b1226 !important;
+  color: #b9c9e6 !important;
   padding: 1rem 0.7rem;
-  border-bottom: 1px solid #e0e7ef;
+  border-bottom: 1px solid #203257;
   text-align: center;
   box-sizing: border-box;
   word-break: break-word;
 }
 
 .comparisonTable th {
-  background: #e3f2fd !important;
-  color: #1976d2 !important;
+  background: #0f1b35 !important;
+  color: #dfeaff !important;
   font-weight: 700;
   font-size: 1.1rem;
+  border-bottom: 1px solid #203257 !important;
 }
 
 .comparisonTable td {
-  color: #374151;
+  color: #b9c9e6 !important;
 }
 
 .comparisonTable tr {
-  background: #fff !important;
+  background: transparent !important;
 }
 
 .comparisonTable tr:last-child td {
@@ -61,8 +83,8 @@
 }
 
 .proPlusCol {
-  background: #f3e5f5 !important;
-  color: #8e24aa !important;
+  background: #1b1230 !important;
+  color: #cba6f7 !important;
   font-weight: 700;
   font-size: 1.1rem;
 }
@@ -77,30 +99,6 @@
   padding: 2px 8px;
   margin-top: 4px;
   letter-spacing: 0.5px;
-}
-
-.comparisonTable th,
-.comparisonTable td {
-  background: #fff !important;
-  color: #374151 !important;
-  padding: 1rem 0.7rem;
-  border-bottom: 1px solid #e0e7ef;
-  text-align: center;
-}
-
-.comparisonTable th {
-  background: #e3f2fd !important;
-  color: #1976d2 !important;
-}
-
-.comparisonTable th.proPlusCol {
-  background: #f3e5f5 !important;
-  color: #8e24aa !important;
-}
-
-.comparisonTable td:last-child {
-  background: #f8f3fd !important;
-  color: #8e24aa !important;
 }
 
 /* Set explicit column widths */

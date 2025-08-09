@@ -49,7 +49,6 @@ function FAQItem({ question, answer, idx }) {
       <div
         className={styles.faqAnswer}
         id={`faq-content-${idx}`}
-        style={{ maxHeight: open ? 300 : 0 }}
       >
         {answer}
       </div>
@@ -76,10 +75,13 @@ export default function FAQPage() {
         <main>
             {/* FAQ Section */}
             <section className={styles.faqSection}>
+                <div className={`${styles.blob} ${styles.blobA}`}></div>
+                <div className={`${styles.blob} ${styles.blobB}`}></div>
+
                 <div className={styles.faqList}>
-                {faqs.map((faq, idx) => (
-                    <FAQItem key={idx} idx={idx} {...faq} />
-                ))}
+                    {faqs.map((faq, idx) => (
+                        <FAQItem key={idx} idx={idx} {...faq} />
+                    ))}
                 </div>
             </section>
                 

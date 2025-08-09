@@ -127,70 +127,22 @@ const Navigation = () => {
               <DarkModeToggle />
             </li>
             {user && (
-          <li style={{ position: 'relative' }} ref={dropdownRef}>
+          <li className={styles.userMenuContainer} ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen((open) => !open)}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
-                margin: 0,
-                display: 'flex',
-                alignItems: 'center',
-              }}
+              className={styles.userMenuButton}
               aria-label="User menu"
             >
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 36,
-                  height: 36,
-                  borderRadius: '50%',
-                  background: '#6599a6',
-                  color: '#fff',
-                  fontWeight: 'bold',
-                  fontSize: 18,
-                  marginRight: 8,
-                  textTransform: 'uppercase',
-                  userSelect: 'none',
-                }}
-              >
+              <span className={styles.avatarBadge}>
                 {(user.displayName || user.email || '?')[0]}
               </span>
-              {/* <svg width="16" height="16" style={{ marginLeft: 4, fill: '#fff' }} viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg> */}
             </button>
             {dropdownOpen && (
-              <ul
-                style={{
-                  position: 'absolute',
-                  right: 0,
-                  top: '120%',
-                  background: '#222',
-                  color: '#333',
-                  border: '1px solid #ccc',
-                  borderRadius: 8,
-                  minWidth: 160,
-                  zIndex: 1000,
-                  listStyle: 'none',
-                  padding: 0,
-                  margin: 0,
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.10)',
-                }}
-              >
+              <ul className={styles.userMenu}>
                 <li>
                   <a
                     href="/profile"
-                    style={{
-                      display: 'block',
-                      padding: '12px 20px',
-                      textDecoration: 'none',
-                      color: '#ccc',
-                      borderBottom: '1px solid #eee',
-                      fontSize: 15,
-                    }}
+                    className={styles.userMenuItem}
                   >
                     Profile
                   </a>

@@ -1,11 +1,11 @@
 .testimonials {
-  background: linear-gradient(120deg, #232b36 0%, #2d3a4a 100%);
+  background: linear-gradient(180deg, #0e1428, #0b1020);
   padding: 80px 0 60px 0;
   text-align: center;
 }
 
 .testimonials .sectionTitle {
-  color: #ddd;
+  color: #e8f2ff;
 }
 
 .testimonialGrid {
@@ -17,9 +17,9 @@
 }
 
 .testimonialCard {
-  background: linear-gradient(120deg, #263043 80%, #232b36 100%);
+  background: linear-gradient(180deg, #101932 80%, #0b1226 100%);
   border-radius: 18px;
-  box-shadow: 0 4px 32px #0008;
+  box-shadow: 0 12px 60px #0006, inset 0 1px 0 #4365a533;
   padding: 44px 32px 32px 32px;
   width: 340px;
   max-width: 92vw;
@@ -29,15 +29,17 @@
   align-items: flex-start;
   animation: fadeInUp 1s;
   position: relative;
-  transition: transform 0.22s, box-shadow 0.22s;
+  transition: transform 0.22s, box-shadow 0.22s, border-color 0.22s;
   overflow: hidden;
-  color: #e3f2fd;
+  color: #e6eefc;
+  border: 1px solid #203257;
 }
 
 .testimonialCard:hover {
   transform: translateY(-8px) scale(1.04);
-  box-shadow: 0 12px 48px #4fc3f799;
-  background: linear-gradient(120deg, #2d3a4a 60%, #263043 100%);
+  box-shadow: 0 16px 80px #0008;
+  background: linear-gradient(180deg, #0f1b35 60%, #101932 100%);
+  border-color: #315496;
 }
 
 .quoteIcon {
@@ -57,8 +59,12 @@
 }
 
 @keyframes quoteGradient {
-  0% { background-position: 0% 50%;}
-  100% { background-position: 100% 50%;}
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
 }
 
 /* Add a subtle animated border on hover */
@@ -77,18 +83,28 @@
 }
 
 @keyframes borderPulse {
-  0% { border-color: #4fc3f7; }
-  100% { border-color: #1976d2; }
+  0% {
+    border-color: #4fc3f7;
+  }
+  100% {
+    border-color: #1976d2;
+  }
 }
 
 /*Add a fade-in stagger for each card */
-.testimonialCard:nth-child(1) { animation-delay: 0.1s; }
-.testimonialCard:nth-child(2) { animation-delay: 0.3s; }
-.testimonialCard:nth-child(3) { animation-delay: 0.5s; }
+.testimonialCard:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.testimonialCard:nth-child(2) {
+  animation-delay: 0.3s;
+}
+.testimonialCard:nth-child(3) {
+  animation-delay: 0.5s;
+}
 
 .testimonialText {
   font-size: 1.18rem;
-  color: #e3f2fd;
+  color: #d5e7ff;
   font-style: italic;
   margin-bottom: 18px;
   line-height: 1.5;

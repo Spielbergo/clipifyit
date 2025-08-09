@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Image from 'next/image';
 
 import CTASection from '../components/CTASection.component';
 import Testimonials from '../components/Testimonials.component';
@@ -9,158 +8,221 @@ import styles from '../styles/home.module.css';
 
 export default function Home() {
   return (
-    <main>
-        {/* Full Screen Hero Section */}
-        <section className={styles.heroFull}>
-            <div className={styles.heroContent}>
-            <h1 className={styles.heroTitle}>
-                Clipify It
-            </h1>
+    <main className={styles.page}>
+      {/* HERO */}
+      <section className={styles.heroModern}>
+        <div className={styles.heroBg}>
+          <div className={styles.gridOverlay} />
+          <span className={`${styles.blob} ${styles.blobOne}`} />
+          <span className={`${styles.blob} ${styles.blobTwo}`} />
+          <span className={`${styles.blob} ${styles.blobThree}`} />
+        </div>
+
+        <div className={styles.heroGrid}>
+          <div className={styles.heroContent}>
+            <div className={styles.brandRow}>
+              {/* Inline logomark */}
+              <svg className={styles.logoMark} viewBox="0 0 48 48" aria-hidden="true">
+                <defs>
+                  <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#4fc3f7" />
+                    <stop offset="100%" stopColor="#1976d2" />
+                  </linearGradient>
+                </defs>
+                <rect x="4" y="6" width="40" height="30" rx="8" fill="url(#g1)" />
+                <rect x="10" y="12" width="28" height="18" rx="4" fill="#0b1020" opacity="0.95" />
+                <path d="M16 18h16M16 22h10" stroke="#78d1ff" strokeWidth="2.5" strokeLinecap="round" />
+                <circle cx="38" cy="37" r="6" fill="#0b1020" />
+                <path d="M36 37l2 2 4-4" stroke="#4fc3f7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <div className={styles.brandText}>
+                <div className={styles.brandTitle}>Clipify It</div>
+                <div className={styles.brandTag}>Your clipboard companion</div>
+              </div>
+            </div>
+
+            <h1 className={styles.heroTitle}>Organize everything you copy. Faster.</h1>
             <p className={styles.heroSubtitle}>
-                The ultimate clipboard manager for productivity.<br />
-                Save, search, and organize your clipboard with ease.
+              Capture, search, and curate snippets across projects. Beautiful, fast, and synced to the cloud.
             </p>
-            <Link href="/app">
-                <button className={styles['cta-btn']}>
-                Try Free
-                </button>
-            </Link>
-            <div className={styles.heroProPromo}>
-                ✨ Upgrade to <b>Pro</b> for unlimited history &amp; cloud sync!
+
+            <div className={styles.ctaRow}>
+              <Link href="/app" className={styles.btnPrimary}>Launch App</Link>
+              <Link href="/prices" className={styles.btnSecondary}>Upgrade to Pro</Link>
             </div>
+
+            <div className={styles.trustRow}>
+              <span className={styles.dot} /> No tracking • Privacy‑first • Works offline with sync
             </div>
-            <div className={styles.heroVector}>
-                <svg
-                    viewBox="0 0 500 340"
-                    width="440"
-                    height="340"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className={styles.heroSvg}
-                >
-                    {/* Background shapes */}
-                    <ellipse cx="400" cy="60" rx="70" ry="30" fill="#4fc3f7" opacity="0.15" />
-                    <ellipse cx="120" cy="40" rx="40" ry="18" fill="#4fc3f7" opacity="0.10" />
-                    <ellipse cx="250" cy="320" rx="180" ry="40" fill="#4fc3f7" opacity="0.13" />
+          </div>
 
-                    {/* Desk */}
-                    <rect x="80" y="260" width="340" height="18" rx="9" fill="#374151" />
-                    {/* Computer monitor */}
-                    <rect x="180" y="90" width="140" height="100" rx="16" fill="#fff" stroke="#4fc3f7" strokeWidth="4" />
-                    {/* Monitor stand */}
-                    <rect x="240" y="190" width="20" height="30" rx="8" fill="#90caf9" />
-                    {/* Keyboard */}
-                    <rect x="210" y="230" width="80" height="14" rx="7" fill="#b3e5fc" />
-
-                    {/* Table on screen */}
-                    <rect x="200" y="110" width="100" height="60" rx="8" fill="#e3f2fd" />
-                    {/* Table rows */}
-                    <rect x="210" y="122" width="80" height="10" rx="4" className={styles.clipRow1} />
-                    <rect x="210" y="138" width="80" height="10" rx="4" className={styles.clipRow2} />
-                    <rect x="210" y="154" width="80" height="10" rx="4" className={styles.clipRow3} />
-
-                    {/* Animated clipboard items flying in */}
-                    <g>
-                    <rect x="100" y="60" width="32" height="18" rx="6" fill="#4fc3f7" className={styles.clipAnim1} />
-                    <rect x="130" y="30" width="32" height="18" rx="6" fill="#4fc3f7" className={styles.clipAnim2} />
-                    <rect x="170" y="20" width="32" height="18" rx="6" fill="#4fc3f7" className={styles.clipAnim3} />
-                    </g>
-                </svg>
-            </div>
-        </section>
-
-        {/* Features Section */}
-        <section className={styles.features}>
-            <div className={styles.features__container}>
-                <h2 className={styles.sectionTitle}>
-                    Why Clipify It?
-                </h2>
-                <div className={styles.featureCard}>
-                    <div className={styles.featureIcon}>📋</div>
-                    <h3>Save Everything <span className={styles.proBadge}>Pro</span></h3>
-                    <p>Automatically keep a history of everything you copy. Never lose a snippet again.</p>
+          <div className={styles.heroPreview}>
+            {/* Preview Card */}
+            <div className={styles.previewOuter}>
+              <div className={styles.previewCard}>
+                <div className={styles.windowBar}>
+                  <span />
+                  <span />
+                  <span />
                 </div>
-                <div className={styles.featureCard}>
-                    <div className={styles.featureIcon}>🔍</div>
-                    <h3>Instant Search <span className={styles.proBadge}>Pro</span></h3>
-                    <p>Find any clipboard item in seconds with powerful search and filters.</p>
+                <div className={styles.previewBody}>
+                  <div className={styles.item}>
+                    {/* <span className={styles.itemBadge}>JS</span> */}
+                    <span className={styles.itemText}>fetch('/api/notes').then(res =&gt; res.json())</span>
+                  </div>
+                  <div className={styles.item}>
+                    <span className={styles.itemBadge}>SQL</span>
+                    <span className={styles.itemText}>select * from clipboard_items where project_id = :id</span>
+                  </div>
+                  <div className={styles.item}>
+                    <span className={styles.itemBadge}>CMD</span>
+                    <span className={styles.itemText}>npm i clipify-it</span>
+                  </div>
+                  <div className={styles.item}>
+                    <span className={styles.itemBadge}>UX</span>
+                    <span className={styles.itemText}>“Dark, modern cards look amazing!”</span>
+                  </div>
                 </div>
-                <div className={styles.featureCard}>
-                    <div className={styles.featureIcon}>🗂️</div>
-                    <h3>Organize <span className={styles.proBadge}>Pro</span></h3>
-                    <p>Group your clips into folders and keep your workflow tidy and efficient.</p>
-                </div>
-                <div className={styles.featureCard}>
-                    <div className={styles.featureIcon}>☁️</div>
-                    <h3>
-                    Cloud Sync <span className={styles.proBadge}>Pro</span>
-                    </h3>
-                    <p>Access your clipboard history anywhere with secure cloud sync.</p>
-                </div>
-                <div className={styles.featureCard}>
-                    <div className={styles.featureIcon}>🔒</div>
-                    <h3>
-                    Unlimited History <span className={styles.proBadge}>Pro</span>
-                    </h3>
-                    <p>Keep as many clipboard items as you want—no limits!</p>
-                </div>
+              </div>
             </div>
-            </section>
+          </div>
+        </div>
+      </section>
 
-            {/* Upgrade to Pro Section */}
-            <section className={styles.proPromoSection}>
-            <div className={styles.proPromoContent}>
-                <h2>
-                Unlock <span className={styles.proBadgeBig}>Pro</span> for just <span className={styles.proPrice}>$0.99/mo</span>
-                </h2>
-                <p>
-                Get unlimited history, cloud sync, and more. Cancel anytime.
-                </p>
-                <Link href="/signup">
-                <button className={styles.proCtaBtn}>Upgrade to Pro</button>
-                </Link>
+      {/* FEATURE CARDS */}
+      <section className={styles.cardsSection}>
+        <div className={styles.sectionHeader}>
+          <h2>Everything you need to move faster</h2>
+          <p>From quick capture to deep search, Clipify It keeps your flow unbroken.</p>
+        </div>
+        <div className={styles.cardsGrid}>
+          <div className={styles.card}>
+            <div className={styles.cardIcon}>📋</div>
+            <h3>Instant Capture</h3>
+            <p>Save any text with one click or paste. Zero friction, all speed.</p>
+          </div>
+          <div className={styles.card}>
+            <div className={styles.cardIcon}>🔎</div>
+            <h3>Blazing Search</h3>
+            <p>Type to find anything across projects and folders.</p>
+          </div>
+          <div className={styles.card}>
+            <div className={styles.cardIcon}>🗂️</div>
+            <h3>Project Folders</h3>
+            <p>Group clips by project and keep your workspace tidy.</p>
+          </div>
+          <div className={styles.card}>
+            <div className={styles.cardIcon}>✨</div>
+            <h3>Smart Cleanup</h3>
+            <p>Auto‑dedupe and keep your best version front and center.</p>
+          </div>
+          <div className={styles.card}>
+            <div className={styles.cardIcon}>☁️</div>
+            <h3>Cloud Sync <span className={styles.badgePro}>Pro</span></h3>
+            <p>Access your clips anywhere with secure, low‑latency sync.</p>
+          </div>
+          <div className={styles.card}>
+            <div className={styles.cardIcon}>🔒</div>
+            <h3>Privacy First</h3>
+            <p>Your data, your control. Local‑first with optional sync.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section className={styles.hiwSection}>
+        <span className={styles.hiwBlobA} />
+        <span className={styles.hiwBlobB} />
+        <div className={styles.hiwWrap}>
+          <div className={styles.hiwHeader}>
+            <h2>How it works</h2>
+            <p>Three simple steps to keep your flow unbroken.</p>
+          </div>
+          <div className={styles.hiwGrid}>
+            <div className={styles.hiwCard}>
+              <div className={styles.hiwIcon}>📋</div>
+              <h3>Capture</h3>
+              <p>Copy anything. It’s automatically saved and organized.</p>
             </div>
-        </section>
-
-        {/* Screenshots Section */}
-        <section className={styles.screenshots}>
-            <h2 className={styles.sectionTitle} style={{ color: '#232b36' }}>
-                See Clipify It in Action
-            </h2>
-            <div className={styles.screenshotScroller}>
-                <Image
-                src="/screenshots/clipifyit-screenshot.jpg"
-                alt="Clipboard Table"
-                className={styles.screenshotImg}
-                width={1280}
-                height={768}
-                priority={true}
-                />
-                <Image
-                src="/screenshots/clipifyit-screenshot-2.jpg"
-                alt="Search Feature"
-                className={styles.screenshotImg}
-                width={1280}
-                height={768}
-                />
-                <Image
-                src="/screenshots/clipifyit-screenshot.jpg"
-                alt="Folders Feature"
-                className={styles.screenshotImg}
-                width={1280}
-                height={768}
-                />
+            <div className={styles.hiwCard}>
+              <div className={styles.hiwIcon}>🔎</div>
+              <h3>Find</h3>
+              <p>Search across projects and folders in milliseconds.</p>
             </div>
-        </section>
+            <div className={styles.hiwCard}>
+              <div className={styles.hiwIcon}>☁️</div>
+              <h3>Sync</h3>
+              <p>Upgrade to Pro for encrypted cloud sync across devices.</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        {/* Testimonials Section */}
+      {/* DEMO IMAGES */}
+      <section className={styles.demoSection}>
+        <span className={styles.demoBlobA} />
+        <span className={styles.demoBlobB} />
+        <div className={styles.demoWrap}>
+          <div className={styles.demoHeader}>
+            <h2>See it in action</h2>
+            <p>Add Real Screenshots Below - Update Text</p>
+          </div>
+          <div className={styles.demoStage}>
+            <div className={styles.demoWindow}>
+              <div className={styles.demoBar}>
+                <span />
+                <span />
+                <span />
+              </div>
+              <div className={styles.demoBody}>
+                <div className={styles.demoPlaceholder}>
+                  <span className={styles.demoTag}>CAPTURE</span>
+                  Copy text → saved instantly
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.demoWindow}>
+              <div className={styles.demoBar}>
+                <span />
+                <span />
+                <span />
+              </div>
+              <div className={styles.demoBody}>
+                <div className={styles.demoPlaceholder}>
+                  <span className={styles.demoTag}>SEARCH</span>
+                  Type to find anything
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.demoWindow}>
+              <div className={styles.demoBar}>
+                <span />
+                <span />
+                <span />
+              </div>
+              <div className={styles.demoBody}>
+                <div className={styles.demoPlaceholder}>
+                  <span className={styles.demoTag}>SYNC</span>
+                  Cloud sync across devices
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Optional: keep existing sections to preserve site content */}
+      <section className={styles.darkWrap}>
         <Testimonials />
+      </section>
 
-        {/* Call to Action Section */}
+      <section className={styles.darkWrapAlt}>
         <CTASection />
+      </section>
 
-        {/* Footer */}
-        <Footer />
+      <Footer />
     </main>
   );
 }

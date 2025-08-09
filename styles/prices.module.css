@@ -1,19 +1,66 @@
+/* Modern dark section wrapper */
 .pricing_page__section {
-  padding: 2rem 0;
-  background: #f7fafd;
+  position: relative;
+  padding: 72px 0;
+  background: linear-gradient(180deg, #0e1428, #0b1020);
+  overflow: hidden;
+}
+
+.pricing_page__section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: 100%;
+  background: inherit;
+  z-index: 0;
+}
+
+/* Decorative blobs */
+.blob {
+  position: absolute;
+  filter: blur(40px);
+  opacity: 0.6;
+  pointer-events: none;
+}
+.blobA {
+  top: -80px;
+  left: -120px;
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle at 30% 30%, #1976d2, transparent 60%),
+              radial-gradient(circle at 70% 70%, #4fc3f7, transparent 60%);
+  transform: rotate(12deg);
+  z-index: 0;
+}
+.blobB {
+  bottom: -120px;
+  right: -140px;
+  width: 620px;
+  height: 620px;
+  background: radial-gradient(circle at 30% 30%, #7c4dff, transparent 60%),
+              radial-gradient(circle at 70% 70%, #00e5ff, transparent 60%);
+  transform: rotate(-8deg);
+  opacity: 0.4;
+  z-index: 0;
 }
 
 .pricingPage {
+  position: relative;
   padding: 2rem 1rem;
   max-width: 1100px;
   margin: 0 auto;
+  z-index: 1;
 }
 
 .heading {
   text-align: center;
-  font-size: 2.2rem;
+  font-size: clamp(1.8rem, 2.6vw, 2.8rem);
   margin-bottom: 2rem;
-  font-weight: 700;
+  font-weight: 900;
+  color: #e8f2ff;
 }
 
 .pricingGrid {
@@ -23,30 +70,31 @@
 }
 
 .card {
-  background: #fff;
+  background: linear-gradient(180deg, #101932, #0b1226);
   border-radius: 1.2rem;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+  box-shadow: 0 12px 60px #0006, inset 0 1px 0 #4365a533;
   padding: 2rem 1.5rem;
   text-align: center;
-  border: 2px solid #e0e7ef;
-  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid #203257;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
 
 .card:hover {
   transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+  box-shadow: 0 16px 80px #0008;
+  border-color: #315496;
 }
 
 .highlight {
-  border: 2px solid #6599a6;
-  box-shadow: 0 6px 32px rgba(101,153,166,0.10);
+  border: 1px solid #315496;
+  box-shadow: 0 16px 80px #0008;
 }
 
 .planName {
   font-size: 1.3rem;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 0.5rem;
-  color: #222;
+  color: #e6eefc;
 }
 
 .priceRow {
@@ -59,20 +107,20 @@
 
 .price {
   font-size: 2.5rem;
-  font-weight: 700;
-  color: #6599a6;
+  font-weight: 800;
+  color: #4fc3f7;
 }
 
 .period {
   font-size: 1.1rem;
-  color: #888;
+  color: #9fb4d7;
 }
 
 .features {
   list-style: none;
   padding: 0;
   margin: 1.2rem 0 2rem 0;
-  color: #444;
+  color: #b9c9e6;
   font-size: 1rem;
   line-height: 1.7;
 }
@@ -80,31 +128,34 @@
 .button {
   display: inline-block;
   padding: 0.75em 2em;
-  border-radius: 2em;
+  border-radius: 12px;
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: 700;
   text-decoration: none;
-  transition: background 0.18s, color 0.18s;
-  border: none;
+  transition: background 0.18s, color 0.18s, transform 0.18s, box-shadow 0.18s;
+  border: 1px solid #23406e;
   cursor: pointer;
+  box-shadow: 0 8px 30px #0005;
 }
 
 .primary {
-  background: #6599a6;
-  color: #fff;
+  background: linear-gradient(90deg, #4fc3f7, #1976d2);
+  color: #0b1020;
 }
 
 .primary:hover {
-  background: #4a7b8a;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px #0007;
 }
 
 .accent {
-  background: #222;
-  color: #fff;
+  background: #0f1b35;
+  color: #d1e6ff;
 }
 
 .accent:hover {
-  background: #444;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px #0007;
 }
 
 .secondary {

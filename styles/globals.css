@@ -66,28 +66,38 @@ input[type="password"] {
 :root {
   --primary-color: #6599a6;
   --secondary-color: #f1f0f0;
-  --primary-bg-color: #333;
+  /* --primary-bg-color: #333;
   --text-color: #333;
-  --dark-bg-color: #333;
+  --dark-bg-color: #333; */
   --dark-text-color: #eee;
   --app-width: 1080px;
   --primary-color-hover: #4fc3f7;
+  
+  --primary-bg-color: #2a2929;
+  --text-color: #2a2929;
+  --dark-bg-color: #2a2929;
+}
+
+html, body {
+  width: 100%;
 }
 
 body {   
   /* min-height: 100vh; */
-  display: flex;
-  flex-direction: column;
-  justify-content: center; /* vertical centering */
-  align-items: center;     /* horizontal centering */
+  display: block; /* allow children to span full width */
+  /* Removed flex centering that was constraining width */
   padding-top: 60px;       /* adjust if your navbar is 60px tall */
   box-sizing: border-box;
   margin: 0;
   font-family: Arial, sans-serif;
   color: #333;
   background-color: #f9f9f9;
-  width: 99.2%;
-  /* overflow-x: hidden; */
+  width: 100%;
+  overflow-x: hidden;
+}
+
+a {
+  text-decoration: none;
 }
 
 p {
@@ -167,7 +177,7 @@ body.popout .controls-container {
 }
 
 .dark-mode .controls-container {
-  background-color: #333;;
+  background-color: var(--primary-bg-color);
 }
 
 .app-container {
@@ -375,7 +385,7 @@ button:active {
 
 /* Dark Mode Toggle */
 .dark-mode {
-  background-color: #333;
+  background-color: var(--primary-bg-color);
   color: white;
 }
 

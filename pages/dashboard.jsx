@@ -42,8 +42,8 @@ export default function Dashboard() {
 
     if (loading || user === undefined) {
         return (
-            <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Loader size={48} />
+            <div className={styles.loadingWrap}>
+              <Loader size={48} />
             </div>
         );
     }

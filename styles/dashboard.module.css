@@ -1,68 +1,94 @@
 .dashboardMain {
+  position: relative;
   max-width: 700px;
   margin: 40px auto 60px auto;
   display: flex;
   flex-direction: column;
   gap: 2.5rem;
+  z-index: 1;
+}
+
+.dashboardMain::before {
+  content: "";
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: calc(100% + 100px);
+  background: linear-gradient(180deg, #0e1428, #0b1020);
+  z-index: -1;
+}
+
+.loadingWrap {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .card {
-  /* background: #fff; */
+  background: linear-gradient(180deg, #101932, #0b1226);
+  border: 1px solid #203257;
   border-radius: 1.2rem;
-  box-shadow: 0 2px 16px #4fc3f711;
+  box-shadow: 0 12px 60px #0006, inset 0 1px 0 #4365a533;
   padding: 2rem 1.5rem;
   margin-bottom: 0.5rem;
 }
 
-.profileRow, .planRow {
+.profileRow,
+.planRow {
   display: flex;
   align-items: center;
   gap: 1rem;
   margin-bottom: 1.2rem;
 }
 
-.profileRow label, .planRow span:first-child {
+.profileRow label,
+.planRow span:first-child {
   font-weight: 600;
   min-width: 90px;
+  color: #e6eefc;
 }
 
 .profileRow input {
   padding: 0.5em 1em;
   border-radius: 0.7em;
-  border: 1.5px solid #e0e7ef;
+  border: 1px solid #203257;
   font-size: 1.08rem;
-  background: #f7fafd;
-  transition: border 0.2s;
+  background: #0f1b35;
+  transition: border 0.2s, box-shadow 0.2s, background 0.2s;
+  color: #d5e7ff;
 }
 
 .profileRow input:focus {
-  border-color: #4fc3f7;
+  border-color: #315496;
+  background: #0f244b;
+  box-shadow: 0 0 0 2px #3a5a9b55;
 }
 
 .dashboardMain button {
-  background: #1976d2;
-  color: #fff;
-  border: none;
-  border-radius: 1.5em;
+  background: linear-gradient(90deg, #4fc3f7, #1976d2);
+  color: #0b1020;
+  border: 1px solid #23406e;
+  border-radius: 12px;
   padding: 0.5em 1.5em;
-  font-weight: 600;
+  font-weight: 800;
   margin-left: 0.5em;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 8px 30px #0005;
 }
 
 .dashboardMain button:hover:not(:disabled) {
-  background: #4fc3f7;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px #0007;
 }
 
 .deleteBtn {
-  background: #d32f2f;
+  background: linear-gradient(90deg, #d32f2f, #b71c1c);
   color: #fff;
-  margin-top: 1em;
-}
-
-.deleteBtn:hover {
-  background: #b71c1c;
+  border: none;
 }
 
 .planBadge_free {
@@ -90,11 +116,11 @@
 }
 
 .error {
-  color: #d32f2f;
+  color: #ff8a80;
   margin-top: 0.5em;
 }
 
 .success {
-  color: #2e7d32;
+  color: #b9f6ca;
   margin-top: 0.5em;
 }

@@ -247,6 +247,61 @@
   transition: 0.4s;
 }
 
+.userMenuContainer {
+  position: relative;
+}
+
+.userMenuButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.avatarBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #6599a6;
+  color: #fff;
+  font-weight: bold;
+  font-size: 18px;
+  margin-right: 8px;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.userMenu {
+  position: absolute;
+  right: 0;
+  top: 120%;
+  background: #222;
+  color: #ccc;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  min-width: 160px;
+  z-index: 1000;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
+}
+
+.userMenuItem {
+  display: block;
+  padding: 12px 20px;
+  text-decoration: none;
+  color: #ccc;
+  border-bottom: 1px solid #eee;
+  font-size: 15px;
+}
+
 .bar1_open {
   transform: rotate(-45deg) translate(-6px, 4px);
 }

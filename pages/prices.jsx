@@ -5,6 +5,7 @@ import plans from '../data/prices';
 import HeroSection from "../components/HeroSection.component";
 import Testimonials from "../components/Testimonials.component";
 import FeatureComparisonTable from "../components/ComparisonTable.component";
+import CTASection from "../components/CTASection.component";
 import Footer from '../components/Footer.component';
 
 import styles from "../styles/prices.module.css";
@@ -17,6 +18,8 @@ const Prices = () => (
   />
   <main>
     <section className={styles.pricing_page__section}>
+      <div className={`${styles.blob} ${styles.blobA}`}></div>
+      <div className={`${styles.blob} ${styles.blobB}`}></div>
       <div className={styles.pricingPage}>
         <h1 className={styles.heading}>Choose Your Plan</h1>
         <div className={styles.pricingGrid}>
@@ -52,6 +55,9 @@ const Prices = () => (
 
     {/* Feature Comparison Table */}
     <FeatureComparisonTable />
+
+    {/* Call to Action Section */}
+    <CTASection />
   </main>
   
   {/* Footer */}
