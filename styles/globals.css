@@ -91,9 +91,10 @@ body {
   margin: 0;
   font-family: Arial, sans-serif;
   color: #333;
-  background-color: #f9f9f9;
+  /* background-color: #f9f9f9; */
   width: 100%;
   overflow-x: hidden;
+  background: linear-gradient(180deg, #0b1020, #0b1020);
 }
 
 a {
@@ -137,6 +138,7 @@ textarea:focus {
   display: flex;
   flex-direction: row;
   /* min-height: 100vh; */
+  background-color: var(--primary-bg-color);
 }
 
 .app-wrapper {
@@ -646,8 +648,6 @@ input:checked + .slider:before {
 
 @media (min-width: 1281px) {
   .app-main {
-    display: flex;
-    flex-direction: row;
     min-height: 100vh;
     width: 100vw;
     position: relative;
@@ -668,7 +668,7 @@ input:checked + .slider:before {
     flex: 1 1 0;
     min-width: 0;
     max-width: 100vw;
-    padding: 0 18px;
+    padding: 0 39px 0 18px;
     margin-left: 360px;
     /* overflow-x: auto; */
   }
