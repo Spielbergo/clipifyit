@@ -9,6 +9,9 @@ export default function ClipboardItem({
     onRemove,
     onCopy,
     onSave,
+    onExpandEdit,
+    stableKey,
+    inlineCloseSignal,
     ...props
 }) {
     const safeText = typeof text === 'string' ? text : (text ? String(text) : '');
@@ -20,6 +23,13 @@ export default function ClipboardItem({
     useEffect(() => {
         setEditedText(safeText);
     }, [safeText]);
+
+    useEffect(() => {
+        if (!inlineCloseSignal || !stableKey) return;
+        if (inlineCloseSignal.key === stableKey) {
+            setIsEditing(false);
+        }
+    }, [inlineCloseSignal, stableKey]);
 
     const handleSave = () => {
         setIsEditing(false);
@@ -34,12 +44,17 @@ export default function ClipboardItem({
     };
 
     const handleCopy = () => {
+        if (onCopy) {
+            onCopy(text);
+            setIsCopied(true);
+            setTimeout(() => setIsCopied(false), 2000);
+            return;
+        }
         if (navigator.clipboard) {
             navigator.clipboard.writeText(text)
                 .then(() => {
                     setIsCopied(true);
                     setTimeout(() => setIsCopied(false), 2000);
-                    if (onCopy) onCopy(text);
                 })
                 .catch((err) => console.error('Failed to copy text: ', err));
         } else {
@@ -135,7 +150,7 @@ export default function ClipboardItem({
                             <FaEdit />
                         </button>
                     )}
-                    {/* Save/Cancel buttons */}
+                    {/* Save/Cancel + Expand buttons while editing */}
                     {isEditing && (
                         <>
                             <button onClick={handleSave} title="Save">
@@ -143,6 +158,9 @@ export default function ClipboardItem({
                             </button>
                             <button onClick={handleCancel} title="Cancel">
                                 <FaTimes />
+                            </button>
+                            <button onClick={() => onExpandEdit && onExpandEdit(editedText)} title="Expand editor">
+                                ⤢
                             </button>
                         </>
                     )}

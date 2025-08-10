@@ -25,6 +25,34 @@ export default function ClipboardList({
     const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
     const [lastClickedIndex, setLastClickedIndex] = useState(null);
 
+    // New: edit modal state
+    const [editModalOpen, setEditModalOpen] = useState(false);
+    const [editText, setEditText] = useState('');
+    const editTargetRef = useRef({ item: null, index: -1 });
+    // Signal to close inline editor for the item saved via modal
+    const [inlineCloseSignal, setInlineCloseSignal] = useState(null);
+
+    const openEditModal = (item, index) => {
+        editTargetRef.current = { item, index };
+        setEditText(getItemText(item));
+        setEditModalOpen(true);
+    };
+    const closeEditModal = () => {
+        setEditModalOpen(false);
+        setEditText('');
+        editTargetRef.current = { item: null, index: -1 };
+    };
+    const saveEditModal = () => {
+        const { item, index } = editTargetRef.current || {};
+        if (item && index >= 0) {
+            handleSave(item, index, editText);
+            // Ask the matching inline editor (if open) to close
+            const key = getStableKey(item);
+            setInlineCloseSignal({ key, nonce: Date.now() });
+        }
+        closeEditModal();
+    };
+
     // Listen for sort changes from Controls
     useEffect(() => {
         const handler = (e) => setSortMode(e.detail || 'newest');
@@ -74,7 +102,7 @@ export default function ClipboardList({
     useEffect(() => { clipboardItemsRef.current = clipboardItems; }, [clipboardItems]);
 
     useEffect(() => {
-        if (showCustomModal) return; // Don't handle if modal is open
+        if (showCustomModal || editModalOpen) return; // Don't handle if any modal is open
         const handleKeyDown = async (event) => {
             if ((event.ctrlKey || event.metaKey) && event.key === 'v') {
                 // Handle paste shortcut
@@ -118,7 +146,7 @@ export default function ClipboardList({
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [displayItems, selectedKeys, setClipboardItems, showCustomModal, isPro, selectedProjectId, selectedFolderId, currentUserId]);
+    }, [displayItems, selectedKeys, setClipboardItems, showCustomModal, editModalOpen, isPro, selectedProjectId, selectedFolderId, currentUserId]);
 
     // Drag and drop (free version only) — only when sort is default
     const handleDragStart = (index) => {
@@ -398,7 +426,9 @@ export default function ClipboardList({
                     </tr>
                 </thead>
                 <tbody>
-                    {displayItems.map((item, index) => (
+                    {displayItems.map((item, index) => {
+                        const stableKey = getStableKey(item);
+                        return (
                         <tr
                             key={getItemKey(item)}
                             draggable={sortMode === 'newest'}
@@ -409,14 +439,24 @@ export default function ClipboardList({
                             <ClipboardItem
                                 index={index}
                                 text={getItemText(item)}
-                                isSelected={selectedKeys.includes(getStableKey(item))}
+                                isSelected={selectedKeys.includes(stableKey)}
                                 onToggleSelect={(e) => handleToggleSelect(item, index, e)}
                                 onRemove={() => handleRemove(item, index)}
                                 onCopy={() => handleCopy(item)}
-                                onSave={(idOrIndex, newText) => handleSave(item, index, newText)}
+                                onSave={(_, newText) => handleSave(item, index, newText)}
+                                onExpandEdit={(currentText) => {
+                                    // Open modal seeded with the current inline text
+                                    editTargetRef.current = { item, index };
+                                    setEditText(typeof currentText === 'string' ? currentText : getItemText(item));
+                                    setEditModalOpen(true);
+                                }}
+                                // Close inline editor when modal save happens for this item
+                                stableKey={stableKey}
+                                inlineCloseSignal={inlineCloseSignal}
                             />
                         </tr>
-                    ))}
+                        );
+                    })}
                 </tbody>
                 <tfoot>
                     <tr>
@@ -453,6 +493,28 @@ export default function ClipboardList({
                     </button>
                 </div>
             </Modal>
+
+            {/* Edit item modal */}
+            <Modal open={editModalOpen} onClose={closeEditModal}>
+                <h3 style={{ marginBottom: 12 }}>Edit clipboard item</h3>
+                <textarea
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                    onKeyDown={(e) => {
+                        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                            e.preventDefault();
+                            saveEditModal();
+                        }
+                    }}
+                    style={{ width: '100%', minHeight: 180, background: '#1e1e1e', color: '#eee', border: '1px solid #444', borderRadius: 6, padding: 10 }}
+                    autoFocus
+                />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
+                    <button onClick={closeEditModal}>Cancel</button>
+                    <button onClick={saveEditModal} style={{ backgroundColor: 'var(--primary-color)', color: '#fff' }}>Save</button>
+                </div>
+            </Modal>
+
             <div
                 className="copied-message"
                 style={{ display: showCopiedMessage ? 'block' : 'none' }}
