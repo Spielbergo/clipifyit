@@ -89,9 +89,9 @@
 }
 
 /* Notifications override to blend with dark */
-.listRoot :global(.copied-message),
+/* .listRoot :global(.copied-message),
 .listRoot :global(.no-selection-message) {
   background: #2f2f2f;
   color: #f3f3f3;
   border: 1px solid #3a3a3a;
-}
+} */

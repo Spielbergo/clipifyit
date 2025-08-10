@@ -105,7 +105,8 @@ export default function ClipboardItem({
                 <input
                     type="checkbox"
                     checked={isSelected}
-                    onChange={onToggleSelect}
+                    onClick={onToggleSelect}
+                    readOnly
                 />
             </td>
             <td

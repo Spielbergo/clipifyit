@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import SortBar from './SortBar.component';
 import SearchBar from './SearchBar.component';
@@ -13,7 +13,7 @@ function FolderTree({
   onSelectFolder,
   onSelect,
   onRenameFolder,
-  renamingFolderId,
+  renamingFolderId: activeRenamingFolderId = null,
   setRenamingFolderId,
   renameFolderValue,
   setRenameFolderValue,
@@ -27,7 +27,7 @@ function FolderTree({
         .filter(folder => folder.parent_id === parentId && folder.project_id === projectId)
         .map(folder => (
           <li key={folder.id} style={{ marginBottom: 2 }}>
-            {renamingFolderId === folder.id ? (
+            {activeRenamingFolderId === folder.id ? (
               <form
                 style={{ display: 'flex', alignItems: 'center' }}
                 onSubmit={e => {
@@ -79,9 +79,9 @@ function FolderTree({
                   >
                     <path
                       d="M2 5a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5z"
-                      stroke="#ddd"
+                      stroke={folder.id === selectedFolderId ? '#b3e5fc' : '#ddd'}
                       strokeWidth="1.2"
-                      fill="none"
+                      fill={folder.id === selectedFolderId ? '#b3e5fc' : 'none'}
                     />
                   </svg>
                   {folder.name}
@@ -138,9 +138,77 @@ export default function ProjectsSidebar({
   const [collapsedProjects, setCollapsedProjects] = useState({});
   const [hoveredProjectId, setHoveredProjectId] = useState(null);
 
-  // Folder rename state
+  // Folder rename state (for FolderTree)
   const [renamingFolderId, setRenamingFolderId] = useState(null);
   const [renameFolderValue, setRenameFolderValue] = useState('');
+
+  // Track folder counts per project to avoid UI flicker (arrows greying out) during refetches
+  const [projectFolderCounts, setProjectFolderCounts] = useState({});
+  const countsInitializedRef = useRef(false);
+  const lastDeletedProjectIdRef = useRef(null);
+  const lastDeletedFolderIdRef = useRef(null);
+  const prevFoldersByProjectRef = useRef({});
+
+  useEffect(() => {
+    // Group incoming folders by project
+    const grouped = folders.reduce((acc, f) => {
+      (acc[f.project_id] = acc[f.project_id] || []).push(f);
+      return acc;
+    }, {});
+
+    // Build next cache without causing unrelated projects to drop to 0 during brief refetches
+    const nextCache = { ...prevFoldersByProjectRef.current };
+
+    // Seed cache on first run
+    if (!countsInitializedRef.current) {
+      projects.forEach(p => {
+        nextCache[p.id] = grouped[p.id] ? [...grouped[p.id]] : [];
+      });
+      countsInitializedRef.current = true;
+    } else {
+      projects.forEach(p => {
+        const pid = p.id;
+        const current = grouped[pid] || [];
+        const prev = prevFoldersByProjectRef.current[pid] || [];
+        const isTarget = pid === lastDeletedProjectIdRef.current;
+        const prevMinusDeleted = isTarget && lastDeletedFolderIdRef.current
+          ? prev.filter(f => f.id !== lastDeletedFolderIdRef.current)
+          : prev;
+
+        if (current.length > 0) {
+          nextCache[pid] = [...current];
+        } else if (isTarget && prevMinusDeleted.length > 0) {
+          // Keep previous-minus-deleted for the project we just modified
+          nextCache[pid] = prevMinusDeleted;
+        } else if (!isTarget && prev.length > 0) {
+          // Keep previous list to avoid UI flicker for unrelated projects
+          nextCache[pid] = prev;
+        } else {
+          // Legit drop to zero (no folders remain)
+          nextCache[pid] = [];
+        }
+      });
+    }
+
+    prevFoldersByProjectRef.current = nextCache;
+
+    // Update counts from cache
+    const counts = Object.fromEntries(
+      projects.map(p => [p.id, (nextCache[p.id] || []).length])
+    );
+    setProjectFolderCounts(counts);
+
+    // Reset last-deleted markers after applying
+    lastDeletedProjectIdRef.current = null;
+    lastDeletedFolderIdRef.current = null;
+  }, [folders, projects]);
+
+  // Persist collapsed state so it survives re-mounts (e.g., after folder deletes)
+  useEffect(() => {
+    try {
+      localStorage.setItem('sidebarCollapsed', JSON.stringify(collapsedProjects));
+    } catch {}
+  }, [collapsedProjects]);
 
   // Sorting logic
   let sortedProjects = React.useMemo(() => {
@@ -208,15 +276,18 @@ export default function ProjectsSidebar({
 
   useEffect(() => {
     // Only set collapsed state when projects change (not on selectedProjectId)
+    const saved = (() => {
+      try {
+        return JSON.parse(localStorage.getItem('sidebarCollapsed') || '{}');
+      } catch {
+        return {};
+      }
+    })();
     setCollapsedProjects(prev => {
       // If projects were added/removed, add new keys but keep user state for existing ones
       const next = { ...prev };
       projects.forEach(p => {
-        if (!(p.id in next)) next[p.id] = false; // default to expanded
-      });
-      // Remove collapsed states for deleted projects
-      Object.keys(next).forEach(id => {
-        if (!projects.find(p => p.id === id)) delete next[id];
+        if (!(p.id in next)) next[p.id] = typeof saved[p.id] === 'boolean' ? saved[p.id] : false; // default to expanded unless saved
       });
       return next;
     });
@@ -452,21 +523,23 @@ export default function ProjectsSidebar({
                           style={{
                             marginRight: 11,
                             fontSize: 12,
-                            color: folders.some(f => f.project_id === project.id) ? '#ccc' : '#444', // Dim if no folders
-                            cursor: folders.some(f => f.project_id === project.id) ? 'pointer' : 'default'
+                            color: (projectFolderCounts[project.id] || 0) > 0 ? '#ccc' : '#444', // Dim if no folders
+                            cursor: (projectFolderCounts[project.id] || 0) > 0 ? 'pointer' : 'default'
                           }}
                           onClick={e => {
-                            if (!folders.some(f => f.project_id === project.id)) return; // Only toggle if folders exist
+                            if (!((projectFolderCounts[project.id] || 0) > 0)) return; // Only toggle if folders exist
                             e.stopPropagation();
                             toggleProjectFolders(project.id);
                           }}
                           title={
-                            folders.some(f => f.project_id === project.id)
+                            (projectFolderCounts[project.id] || 0) > 0
                               ? (collapsedProjects[project.id] ? 'Show folders' : 'Hide folders')
                               : 'No folders'
                           }
                         >
-                          {collapsedProjects[project.id] ? '▶' : '▼'}
+                          {(projectFolderCounts[project.id] || 0) > 0
+                            ? (collapsedProjects[project.id] ? '▶' : '▼')
+                            : '▶'}
                         </span>
                         {/* Project name: selects project and shows clipboard */}
                         <span
@@ -525,37 +598,48 @@ export default function ProjectsSidebar({
                 {/* Folders for this project */}
                 {!collapsedProjects[project.id] && (
                   <div>
-                    <FolderTree
-                      folders={
-                        search
-                          ? folders.filter(f => {
-                              if (f.project_id !== project.id) return false;
-                              // Show folder if it matches search or is a parent of a matching folder
-                              if (f.name.toLowerCase().includes(search.toLowerCase())) return true;
-                              // Check if any descendant matches
-                              const hasMatchingDescendant = folders.some(desc =>
-                                desc.project_id === project.id &&
-                                desc.name.toLowerCase().includes(search.toLowerCase()) &&
-                                isDescendantFolder(folders, f.id, desc.id)
-                              );
-                              return hasMatchingDescendant;
-                            })
-                          : folders
-                      }
-                      parentId={null}
-                      selectedFolderId={selectedFolderId}
-                      onSelect={onSelect}
-                      onSelectFolder={onSelectFolder}
-                      onAddFolder={onAddFolder}
-                      onRenameFolder={onRenameFolder}
-                      onDeleteFolder={onDeleteFolder}
-                      renamingFolderId={renamingFolderId}
-                      setRenamingFolderId={setRenamingFolderId}
-                      renameFolderValue={renameFolderValue}
-                      setRenameFolderValue={setRenameFolderValue}
-                      projectId={project.id}
-                      setFolderToDelete={setFolderToDelete}
-                    />
+                    {
+                      // Build a stable per-project folders list that won't flicker to empty during refetch
+                    }
+                    {(() => {
+                      const baseFolders = prevFoldersByProjectRef.current[project.id] || [];
+                      const listForTree = search
+                        ? baseFolders.filter(f => {
+                            // Show folder if it matches search or is a parent of a matching folder within this project
+                            if (f.name.toLowerCase().includes(search.toLowerCase())) return true;
+                            const hasMatchingDescendant = baseFolders.some(desc =>
+                              desc.name.toLowerCase().includes(search.toLowerCase()) &&
+                              (function isDescendantFolder(localFolders, parentId, childId) {
+                                let current = localFolders.find(ff => ff.id === childId);
+                                while (current && current.parent_id) {
+                                  if (current.parent_id === parentId) return true;
+                                  current = localFolders.find(ff => ff.id === current.parent_id);
+                                }
+                                return false;
+                              })(baseFolders, f.id, desc.id)
+                            );
+                            return hasMatchingDescendant;
+                          })
+                        : baseFolders;
+                      return (
+                        <FolderTree
+                          folders={listForTree}
+                          parentId={null}
+                          selectedFolderId={selectedFolderId}
+                          onSelect={onSelect}
+                          onSelectFolder={onSelectFolder}
+                          onAddFolder={onAddFolder}
+                          onRenameFolder={onRenameFolder}
+                          onDeleteFolder={onDeleteFolder}
+                          renamingFolderId={renamingFolderId}
+                          setRenamingFolderId={setRenamingFolderId}
+                          renameFolderValue={renameFolderValue}
+                          setRenameFolderValue={setRenameFolderValue}
+                          projectId={project.id}
+                          setFolderToDelete={setFolderToDelete}
+                        />
+                      );
+                    })()}
                   </div>
                 )}
               </li>
@@ -571,19 +655,14 @@ export default function ProjectsSidebar({
         onCancel={() => setFolderToDelete(null)}
         onConfirm={() => {
           const deletedFolder = folderToDelete;
+          // Mark which project's count is legitimately dropping
+          if (deletedFolder?.project_id) {
+            lastDeletedProjectIdRef.current = deletedFolder.project_id;
+            lastDeletedFolderIdRef.current = deletedFolder.id;
+          }
           onDeleteFolder(deletedFolder.id);
           setFolderToDelete(null);
-          // Only update the collapsed state for the affected project, never touch others
-          setTimeout(() => {
-            const remainingFolders = folders.filter(f => f.project_id === deletedFolder.project_id && f.id !== deletedFolder.id);
-            setCollapsedProjects(prev => {
-              // Only update the affected project, leave others untouched
-              return {
-                ...prev,
-                [deletedFolder.project_id]: remainingFolders.length === 0 ? false : prev[deletedFolder.project_id]
-              };
-            });
-          }, 0);
+          // Keep the project's expanded/collapsed state unchanged.
         }}
       />
     </>

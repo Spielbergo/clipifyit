@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 
 import ClipboardItem from './ClipboardItem';
 import styles from './clipboard-list.module.css';
+import Modal from './Modal.component';
 
 export default function ClipboardList({
     clipboardItems,
@@ -21,6 +22,8 @@ export default function ClipboardList({
     const [showErrorMessage, setShowErrorMessage] = useState(false);
     const [draggedIndex, setDraggedIndex] = useState(null);
     const [sortMode, setSortMode] = useState('newest');
+    const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
+    const [lastClickedIndex, setLastClickedIndex] = useState(null);
 
     // Listen for sort changes from Controls
     useEffect(() => {
@@ -106,23 +109,6 @@ export default function ClipboardList({
                     }
                 } catch (err) {
                     console.error('Failed to paste from clipboard:', err);
-                }
-            }
-
-            if ((event.ctrlKey || event.metaKey) && event.key === 'c') {
-                // Handle copy shortcut
-                if (selectedKeys.length === 0) {
-                    showErrorNotification('No items selected to copy!');
-                    return;
-                }
-
-                const itemsToCopy = displayItems.filter(it => selectedKeys.includes(getStableKey(it))).map(it => getItemText(it));
-                const textToCopy = itemsToCopy.join('\n');
-                try {
-                    await navigator.clipboard.writeText(textToCopy);
-                    showCopiedNotification();
-                } catch (err) {
-                    console.error('Failed to copy to clipboard:', err);
                 }
             }
         };
@@ -229,14 +215,31 @@ export default function ClipboardList({
         setDraggedIndex(null);
     };
 
-    // Selection logic using stable keys (works for both)
-    const handleToggleSelect = (item) => {
+    // Selection logic using stable keys (works for both) with shift-range support
+    const handleToggleSelect = (item, index, event) => {
         const key = getStableKey(item);
-        if (selectedKeys.includes(key)) {
-            setSelectedKeys(selectedKeys.filter((k) => k !== key));
+        const isChecked = event && typeof event.currentTarget?.checked === 'boolean'
+            ? event.currentTarget.checked
+            : !selectedKeys.includes(key);
+        const isShift = !!event?.shiftKey;
+
+        if (isShift && lastClickedIndex !== null) {
+            const start = Math.min(lastClickedIndex, index);
+            const end = Math.max(lastClickedIndex, index);
+            const rangeKeys = displayItems.slice(start, end + 1).map((it) => getStableKey(it));
+            if (isChecked) {
+                setSelectedKeys((prev) => Array.from(new Set([...prev, ...rangeKeys])));
+            } else {
+                setSelectedKeys((prev) => prev.filter((k) => !rangeKeys.includes(k)));
+            }
         } else {
-            setSelectedKeys([...selectedKeys, key]);
+            if (isChecked) {
+                setSelectedKeys((prev) => (prev.includes(key) ? prev : [...prev, key]));
+            } else {
+                setSelectedKeys((prev) => prev.filter((k) => k !== key));
+            }
         }
+        setLastClickedIndex(index);
     };
 
     const handleSelectAll = () => {
@@ -407,7 +410,7 @@ export default function ClipboardList({
                                 index={index}
                                 text={getItemText(item)}
                                 isSelected={selectedKeys.includes(getStableKey(item))}
-                                onToggleSelect={() => handleToggleSelect(item)}
+                                onToggleSelect={(e) => handleToggleSelect(item, index, e)}
                                 onRemove={() => handleRemove(item, index)}
                                 onCopy={() => handleCopy(item)}
                                 onSave={(idOrIndex, newText) => handleSave(item, index, newText)}
@@ -421,16 +424,35 @@ export default function ClipboardList({
                             {selectedKeys.length > 0 ? (
                                 <>
                                     <button onClick={handleSelectAll}>Deselect All</button>
-                                    <button onClick={handleDeleteSelected} style={{ marginLeft: 8, backgroundColor: '#f44336' }}>Delete Selected</button>
+                                    <button onClick={handleCopySelected} style={{ marginLeft: 8 }}>Copy Selected</button>
+                                    <button onClick={() => setConfirmBulkDeleteOpen(true)} style={{ marginLeft: 8, backgroundColor: '#f44336' }}>Delete Selected</button>
                                 </>
                             ) : (
                                 <button onClick={handleSelectAll}>Select All</button>
                             )}
-                            <button onClick={handleCopySelected} style={{ marginLeft: 8 }}>Copy Selected</button>
                         </td>
                     </tr>
                 </tfoot>
             </table>
+            {/* Bulk delete confirmation modal */}
+            <Modal open={confirmBulkDeleteOpen} onClose={() => setConfirmBulkDeleteOpen(false)}>
+                <h3 style={{ marginBottom: 12 }}>Delete selected items?</h3>
+                <p style={{ marginBottom: 16 }}>
+                    You are about to delete {selectedKeys.length} item{selectedKeys.length === 1 ? '' : 's'}. This action cannot be undone.
+                </p>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                    <button onClick={() => setConfirmBulkDeleteOpen(false)}>Cancel</button>
+                    <button
+                        onClick={async () => {
+                            await handleDeleteSelected();
+                            setConfirmBulkDeleteOpen(false);
+                        }}
+                        style={{ backgroundColor: '#d32f2f' }}
+                    >
+                        Delete
+                    </button>
+                </div>
+            </Modal>
             <div
                 className="copied-message"
                 style={{ display: showCopiedMessage ? 'block' : 'none' }}

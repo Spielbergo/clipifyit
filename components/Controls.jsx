@@ -4,6 +4,7 @@ import Modal from './Modal.component';
 import styles from './controls.module.css';
 
 import { useRouter } from 'next/router';
+import { FaSort, FaChevronDown, FaFolderOpen, FaProjectDiagram, FaExpand, FaExternalLinkAlt, FaPaste, FaKeyboard } from 'react-icons/fa';
 
 export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandlePopOut, isPopOut, showErrorNotification, onShowCustomModalChange, selectedProjectId, selectedFolderId, projects = [], folders = [], onSwitchProjectFolder, onSortChange }) {
     const router = typeof window !== 'undefined' ? require('next/router').useRouter() : null;
@@ -130,83 +131,98 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
             {isPopOut && projects.length > 0 && (
                 <div style={{ marginRight: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
                     {/* Project dropdown: all projects */}
-                    <select
-                        value={selectedProjectId || ''}
-                        onChange={e => {
-                            const newProjectId = e.target.value;
-                            if (onSwitchProjectFolder) {
-                                onSwitchProjectFolder(newProjectId, '');
-                            } else if (router) {
-                                // Remove folder param when switching project
-                                const params = [`project=${encodeURIComponent(newProjectId)}`];
-                                window.location.search = '?' + params.join('&');
-                            }
-                        }}
-                        style={{ minWidth: 120 }}
-                    >
-                        {projects.map(p => (
-                            <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                    </select>
-                    {/* Folder dropdown: all folders for all projects, grouped by project */}
-                    <select
-                        value={selectedFolderId || ''}
-                        onChange={e => {
-                            const newFolderId = e.target.value;
-                            if (onSwitchProjectFolder) {
-                                onSwitchProjectFolder(selectedProjectId, newFolderId);
-                            } else if (router) {
-                                const params = [`project=${encodeURIComponent(selectedProjectId)}`];
-                                if (newFolderId) params.push(`folder=${encodeURIComponent(newFolderId)}`);
-                                window.location.search = '?' + params.join('&');
-                            }
-                        }}
-                        style={{ minWidth: 120 }}
-                    >
-                        <option value=''>No Folder</option>
-                        {projects.map(project => (
-                            <optgroup key={project.id} label={project.name}>
-                                {folders.filter(f => f.project_id === project.id).map(f => (
-                                    <option key={f.id} value={f.id}>{f.name}</option>
-                                ))}
-                            </optgroup>
-                        ))}
-                    </select>
+                    <div className={styles.pillWrap}>
+                        <FaProjectDiagram className={styles.pillIcon} aria-hidden="true" />
+                        <select
+                            className={styles.pillSelect}
+                            value={selectedProjectId || ''}
+                            onChange={e => {
+                                const newProjectId = e.target.value;
+                                if (onSwitchProjectFolder) {
+                                    onSwitchProjectFolder(newProjectId, '');
+                                } else if (router) {
+                                    const params = [`project=${encodeURIComponent(newProjectId)}`];
+                                    window.location.search = '?' + params.join('&');
+                                }
+                            }}
+                        >
+                            {projects.map(p => (
+                                <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                        </select>
+                        <FaChevronDown className={styles.pillChevron} aria-hidden="true" />
+                    </div>
+                    {/* Folder dropdown: grouped by project */}
+                    <div className={styles.pillWrap}>
+                        <FaFolderOpen className={styles.pillIcon} aria-hidden="true" />
+                        <select
+                            className={styles.pillSelect}
+                            value={selectedFolderId || ''}
+                            onChange={e => {
+                                const newFolderId = e.target.value;
+                                if (onSwitchProjectFolder) {
+                                    onSwitchProjectFolder(selectedProjectId, newFolderId);
+                                } else if (router) {
+                                    const params = [`project=${encodeURIComponent(selectedProjectId)}`];
+                                    if (newFolderId) params.push(`folder=${encodeURIComponent(newFolderId)}`);
+                                    window.location.search = '?' + params.join('&');
+                                }
+                            }}
+                        >
+                            <option value=''>No Folder</option>
+                            {projects.map(project => (
+                                <optgroup key={project.id} label={project.name}>
+                                    {folders.filter(f => f.project_id === project.id).map(f => (
+                                        <option key={f.id} value={f.id}>{f.name}</option>
+                                    ))}
+                                </optgroup>
+                            ))}
+                        </select>
+                        {/* <FaChevronDown className={styles.pillChevron} aria-hidden="true" /> */}
+                    </div>
                 </div>
             )}
-            {/* Sort dropdown replaces Clear/Redo */}
-            <div>
+            {/* Sort dropdown */}
+            <div className={styles.pillWrap}>
+                <FaSort className={styles.pillIcon} aria-hidden="true" />
                 <select
+                    className={styles.pillSelect}
                     aria-label="Sort clipboard items"
                     value={sortMode}
                     onChange={(e) => applySortChange(e.target.value)}
-                    style={{ minWidth: 160 }}
                 >
                     <option value="newest">Newest</option>
                     <option value="oldest">Oldest</option>
                     <option value="az">A → Z</option>
                     <option value="za">Z → A</option>
                 </select>
+                {/* <FaChevronDown className={styles.pillChevron} aria-hidden="true" /> */}
             </div>
             <div className={styles.popout__container} >
-                <select
-                    value={popOutSize}
-                    onChange={(e) => {
-                        const newSize = e.target.value;
-                        setPopOutSize(newSize);
-                        if (isPopOut) {
-                            handleResizeWindow(newSize);
-                        }
-                    }}
-                >
-                    <option value="small">Small</option>
-                    <option value="medium">Medium</option>
-                    <option value="large">Large</option>
-                </select>
+                <div className={styles.pillWrap}>
+                    <FaExpand className={styles.pillIcon} aria-hidden="true" />
+                    <select
+                        className={styles.pillSelect}
+                        value={popOutSize}
+                        title='Popout window size'
+                        onChange={(e) => {
+                            const newSize = e.target.value;
+                            setPopOutSize(newSize);
+                            if (isPopOut) {
+                                handleResizeWindow(newSize);
+                            }
+                        }}
+                    >
+                        <option value="small">Small</option>
+                        <option value="medium">Medium</option>
+                        <option value="large">Large</option>
+                    </select>
+                    {/* <FaChevronDown className={styles.pillChevron} aria-hidden="true" /> */}
+                </div>
                 {!isPopOut && (
                     <button
+                        className={styles.pillButton}
                         onClick={() => {
-                            // If project/folder are available, open popout with them in the URL
                             if (typeof window !== 'undefined') {
                                 let url = '/popout';
                                 const params = [];
@@ -215,20 +231,24 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
                                 if (params.length) url += '?' + params.join('&');
                                 window.open(url, '_blank', `width=800,height=600`);
                             } else if (onHandlePopOut) {
-                                // fallback for SSR/testing
                                 onHandlePopOut(popOutSize);
                             }
                         }}
                     >
+                        <FaExternalLinkAlt className={styles.pillIcon} aria-hidden="true" />
                         Pop Out
                     </button>
                 )}
             </div>
-            <div style={{ display: 'flex' }}>
-                <button style={{ marginRight: 8 }} onClick={() => setShowCustomModal(true)}>
+            <div className={styles.actionsRow}>
+                <button className={styles.pillButton} onClick={() => setShowCustomModal(true)}>
+                    <FaKeyboard className={styles.pillIcon} aria-hidden="true" />
                     Paste Custom Text
                 </button>
-                <button onClick={handlePaste}>Paste from Clipboard</button>
+                <button className={styles.pillButton} onClick={handlePaste}>
+                    <FaPaste className={styles.pillIcon} aria-hidden="true" />
+                    Paste from Clipboard
+                </button>
             </div>
             <div className="no-selection-message">{errorMessage}</div>
 
