@@ -619,6 +619,14 @@ input:checked + .slider:before {
   border-radius: 50%;
 } */
 
+/* Responsive containers for nav to avoid SSR/CSR mismatches */
+.navDesktopOnly { display: none; }
+.navMobileOnly { display: block; }
+@media (min-width: 1025px) {
+  .navDesktopOnly { display: block; }
+  .navMobileOnly { display: none; }
+}
+
 /* Media Queries */
 @media screen and (min-width: 767px) {
   .window-controls{

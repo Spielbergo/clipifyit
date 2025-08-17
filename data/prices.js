@@ -9,7 +9,7 @@ const plans = [
       "Manual backup/restore",
       "No login required",
     ],
-    button: { text: "Get Started", link: "/app", variant: "primary" },
+    button: { text: "Get Started", link: "/app", variant: "primary", checkout: false },
     highlight: false,
   },
   {
@@ -22,7 +22,7 @@ const plans = [
       "Priority support",
       "All Free features",
     ],
-    button: { text: "Go Pro", link: "/app", variant: "accent" },
+    button: { text: "Go Pro", link: "checkout:pro", variant: "accent", checkout: true },
     highlight: true,
   },
   {
@@ -37,7 +37,7 @@ const plans = [
       "Advanced analytics",
       "Early access to new features",
     ],
-    button: { text: "Go Pro Plus", link: "/app", variant: "secondary" },
+    button: { text: "Go Pro Plus", link: "checkout:proplus", variant: "secondary", checkout: true },
     highlight: false,
   },
 ];

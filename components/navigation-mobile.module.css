@@ -33,8 +33,12 @@
   position: relative;
   left: 80px;
   top: -6px;
-  width: 100%;
+  width: 150px;
+  max-width: 150px;
+  height: auto;
   object-fit: contain;
+  display: block;
+  pointer-events: auto;
 }
 
 .main_nav__navLinks {

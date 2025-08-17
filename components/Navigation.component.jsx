@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { useAuth } from '../contexts/AuthContext';
+import useSubscription from '../hooks/useSubscription';
 import { supabase } from '../lib/supabase';
 
 import { navigation } from '../data';
@@ -20,6 +21,7 @@ import Socials from './SocialIcons.component';
 import styles from './navigation.module.css';
 
 import NavLogoWhite from '../public/logos/logo-light-text.png';
+import ManageBillingButton from './ManageBillingButton';
 
 const Navigation = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -27,18 +29,23 @@ const Navigation = () => {
   const navRef = useRef();
   const router = useRouter();
   const { user } = useAuth();
+  const { isActive, plan } = useSubscription();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   // const { openModal } = useModal();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   let planLabel = null;
-  if (router.pathname === "/app") {
-    if (user && user.plan === "proplus") {
-      planLabel = <span className={styles.planLabel + " " + styles.proPlus}>PRO+</span>;
-    } else if (user) {
-      planLabel = <span className={styles.planLabel + " " + styles.pro}>PRO</span>;
+  if (mounted && router.pathname === "/app") {
+    if (user && isActive) {
+      if ((plan || '').toLowerCase() === 'proplus') {
+        planLabel = <span suppressHydrationWarning className={styles.planLabel + " " + styles.proPlus}>PRO+</span>;
+      } else {
+        planLabel = <span suppressHydrationWarning className={styles.planLabel + " " + styles.pro}>PRO</span>;
+      }
     } else {
-      planLabel = <span className={styles.planLabel + " " + styles.free}>FREE</span>;
+      planLabel = <span suppressHydrationWarning className={styles.planLabel + " " + styles.free}>FREE</span>;
     }
   }
 
@@ -139,7 +146,7 @@ const Navigation = () => {
             ))}
           </ul>
 
-          <ul className={styles.rightUtilities}>
+          <ul className={styles.rightUtilities} suppressHydrationWarning>
             {/* {socialIcons.map((socials) => (
               <li key={socials.id}>
                 <Link href={socials.link} target="_blank" rel="noopener nofollow noreferrer" title={socials.title} aria-label={socials.title} className={styles.main_nav__social_icons_false}><socials.icon /></Link>
@@ -153,7 +160,7 @@ const Navigation = () => {
               </Button> */}
               <DarkModeToggle />
             </li>
-            {user && (
+            {mounted && user && (
               <li className={styles.userMenuContainer} ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen((open) => !open)}
@@ -173,6 +180,9 @@ const Navigation = () => {
                       >
                         Dashboard
                       </a>
+                    </li>
+                    <li>
+                      <ManageBillingButton className={styles.userMenuItem} />
                     </li>
                     <li>
                       <LogoutButton onAfterLogout={() => setDropdownOpen(false)} />

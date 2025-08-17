@@ -1,3 +1,9 @@
+/* Ensure root class exists to avoid hydration mismatches when referenced in pages/index.jsx */
+.page {
+  /* intentionally minimal; add layout styles as needed */
+  display: block;
+}
+
 /* .page {
   background: radial-gradient(1200px 800px at 20% -10%, #102040 0%, transparent 60%),
               radial-gradient(1200px 800px at 120% 10%, #0f1630 0%, transparent 60%),

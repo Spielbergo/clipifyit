@@ -167,6 +167,29 @@
   background: #c2d3e0;
 }
 
+.termToggle {
+  display: inline-flex;
+  gap: 8px;
+  margin: 16px 0 24px;
+  background: #111a2e;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid #23406e;
+}
+.toggleBtn {
+  background: transparent;
+  color: #c7d7f3;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+.toggleBtn.active {
+  background: linear-gradient(90deg, #4fc3f7, #1976d2);
+  color: #fff;
+}
+
 @media (min-width: 700px) {
   .pricingGrid {
     flex-direction: row;
