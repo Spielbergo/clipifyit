@@ -1,5 +1,6 @@
 import { stripe } from './config';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
+import { getAuthUserId } from '../../../lib/authServer';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -8,22 +9,18 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { customerId, customerEmail, returnUrl, userId } = req.body || {};
+    const { returnUrl } = req.body || {};
+    const authedUserId = await getAuthUserId(req);
+    if (!authedUserId) return res.status(401).json({ error: 'Unauthorized' });
 
-    let custId = customerId || null;
-    // Prefer resolving by userId via Supabase profile
-    if (!custId && userId && supabaseAdmin) {
+    let custId = null;
+    if (supabaseAdmin) {
       const { data: profile } = await supabaseAdmin
         .from('profiles')
         .select('stripe_customer_id')
-        .eq('id', userId)
+        .eq('id', authedUserId)
         .single();
       custId = profile?.stripe_customer_id || null;
-    }
-    // Fallback: find by email
-    if (!custId && customerEmail) {
-      const customers = await stripe.customers.list({ email: customerEmail, limit: 1 });
-      custId = customers?.data?.[0]?.id || null;
     }
 
     if (!custId) return res.status(404).json({ error: 'No Stripe customer found for this user/email' });

@@ -98,20 +98,14 @@ export default function ClipboardItem({
         return parts;
     }
 
-    function isColor(str) {
-        // Hex
-        if (/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(str.trim())) return true;
-        // rgb/rgba
-        if (/^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+(,\s*(0|1|0?\.\d+))?\s*\)$/i.test(str.trim())) return true;
-        // hsl/hsla
-        if (/^hsla?\(\s*\d+\s*,\s*\d+%?\s*,\s*\d+%?(,\s*(0|1|0?\.\d+))?\s*\)$/i.test(str.trim())) return true;
-        // Named colors (basic set)
-        if (
-            [
-            'red','blue','green','yellow','orange','purple','pink','black','white','gray','grey','brown','cyan','magenta','lime','maroon','navy','olive','teal','aqua','fuchsia','silver','gold'
-            ].includes(str.trim().toLowerCase())
-        ) return true;
-        return false;
+    function resolveCssColor(str) {
+        const v = (str || '').trim();
+        if (!v) return null;
+        if (typeof window === 'undefined') return null;
+        const s = new Option().style; // lightweight CSS parser
+        s.color = '';
+        s.color = v;
+        return s.color ? v : null;
     }
 
     return (
@@ -124,13 +118,7 @@ export default function ClipboardItem({
                     readOnly
                 />
             </td>
-            <td
-                style={
-                    !isEditing && isColor(safeText)
-                        ? { color: safeText.trim(), fontWeight: '500' }
-                        : {}
-                }
-            >
+            <td>
                 {isEditing ? (
                     <textarea
                         value={editedText}
@@ -138,7 +126,24 @@ export default function ClipboardItem({
                         style={{ width: '97%', color: confirmRemove ? '#888' : undefined, textDecoration: confirmRemove ? 'line-through' : undefined, opacity: confirmRemove ? 0.6 : 1 }}
                     />
                 ) : (
-                    <span style={{ whiteSpace: 'pre-wrap', color: confirmRemove ? '#888' : undefined, textDecoration: confirmRemove ? 'line-through' : undefined, opacity: confirmRemove ? 0.6 : 1 }}>{linkify(safeText)}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {resolveCssColor(safeText) ? (
+                            <span
+                                title={safeText.trim()}
+                                aria-label={`color ${safeText.trim()}`}
+                                style={{
+                                    display: 'inline-block',
+                                    width: 16,
+                                    height: 16,
+                                    borderRadius: 4,
+                                    border: '1px solid #ccc',
+                                    background: safeText.trim(),
+                                    flex: '0 0 auto'
+                                }}
+                            />
+                        ) : null}
+                        <span style={{ whiteSpace: 'pre-wrap', color: confirmRemove ? '#888' : undefined, textDecoration: confirmRemove ? 'line-through' : undefined, opacity: confirmRemove ? 0.6 : 1 }}>{linkify(safeText)}</span>
+                    </div>
                 )}
             </td>
             {/* Edit, Copy, Remove buttons in a flex row, with Remove confirmation overlayed */}

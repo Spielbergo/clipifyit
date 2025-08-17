@@ -1,5 +1,6 @@
 import { stripe } from './config';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
+import { getAuthUserId } from '../../../lib/authServer';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -7,14 +8,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
   try {
-    const { userId } = req.body || {};
-    if (!userId) return res.status(400).json({ error: 'Missing userId' });
+    const authedUserId = await getAuthUserId(req);
+    if (!authedUserId) return res.status(401).json({ error: 'Unauthorized' });
     if (!supabaseAdmin) return res.status(500).json({ error: 'Server not configured' });
 
     const { data: profile, error: profErr } = await supabaseAdmin
       .from('profiles')
       .select('stripe_customer_id')
-      .eq('id', userId)
+  .eq('id', authedUserId)
       .single();
     if (profErr) return res.status(500).json({ error: 'Profile lookup failed' });
     if (!profile?.stripe_customer_id) return res.status(404).json({ error: 'No Stripe customer on file' });

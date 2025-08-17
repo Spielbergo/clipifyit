@@ -125,6 +125,13 @@
   margin-top: 0.5em;
 }
 
+.termSwitcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 10px;
+}
+
 /* Billing details */
 .billingGrid {
   display: grid;

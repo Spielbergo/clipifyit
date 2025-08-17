@@ -52,6 +52,7 @@
   padding: 2rem 1rem;
   max-width: 1100px;
   margin: 0 auto;
+  text-align: center;
   z-index: 1;
 }
 
@@ -188,6 +189,23 @@
 .toggleBtn.active {
   background: linear-gradient(90deg, #4fc3f7, #1976d2);
   color: #fff;
+}
+
+.savingsCallout {
+  text-align: center;
+  margin: 6px 0 20px;
+  color: #d7f5ff;
+  font-weight: 700;
+}
+.savingsNote {
+  text-align: center;
+  margin: 6px 0 20px;
+  color: #a9c3ea;
+}
+.subNote {
+  color: #9fb4d7;
+  margin: -6px 0 18px;
+  font-size: 0.95rem;
 }
 
 @media (min-width: 700px) {

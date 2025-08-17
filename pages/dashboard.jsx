@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 
 import { supabase } from "../lib/supabase";
+import { fetchWithAuth } from "../lib/fetchWithAuth";
 import useSubscription from "../hooks/useSubscription";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -64,11 +65,7 @@ export default function Dashboard() {
       try {
         setSubLoading(true);
         setSubErr("");
-        const res = await fetch('/api/stripe/get-subscription', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user.id })
-        });
+  const res = await fetchWithAuth('/api/stripe/get-subscription', { method: 'POST', json: {} });
         const json = await res.json();
         if (!ignore) setSubDetails(json?.subscription ? json : { subscription: null });
       } catch (e) {
@@ -124,13 +121,14 @@ export default function Dashboard() {
     if (data?.url) window.location.href = data.url;
   };
   const openPortal = async () => {
-    const res = await fetch('/api/stripe/create-portal-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: user?.id || null, customerEmail: user?.email || undefined, returnUrl: window.location.origin + '/dashboard' }),
-    });
+  const res = await fetchWithAuth('/api/stripe/create-portal-session', { method: 'POST', json: { returnUrl: window.location.origin + '/dashboard' } });
     const data = await res.json();
     if (data?.url) window.location.href = data.url;
+    else {
+      setToastMessage(data?.error || 'Failed to open billing portal');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2000);
+    }
   };
 
   const handleDelete = () => {
@@ -140,7 +138,7 @@ export default function Dashboard() {
   const confirmDelete = async () => {
     try {
       setDeleting(true);
-      const res = await fetch("/api/delete-account", { method: "POST" });
+  const res = await fetchWithAuth("/api/delete-account", { method: "POST" });
       if (!res.ok) throw new Error('Delete failed');
       // Close modal and show toast before logging out
       setShowDeleteModal(false);
@@ -154,6 +152,36 @@ export default function Dashboard() {
       setDeleting(false);
     }
   };
+
+  const reloadSubscription = async () => {
+    if (!user?.id) return;
+    setSubLoading(true);
+    try {
+  const res = await fetchWithAuth('/api/stripe/get-subscription', { method: 'POST', json: {} });
+      const json = await res.json();
+      setSubDetails(json?.subscription ? json : { subscription: null });
+    } catch (_e) {
+      setSubErr('Failed to load subscription');
+    } finally {
+      setSubLoading(false);
+    }
+  };
+
+  const changePlan = async (target) => {
+    try {
+  const res = await fetchWithAuth('/api/stripe/change-plan', { method: 'POST', json: { targetPlan: target } });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Plan change failed');
+      setToastMessage('Plan update created. If a payment is required, complete it in the portal.');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2500);
+      reloadSubscription();
+    } catch (e) {
+      setToastMessage(e.message || 'Plan change failed');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2500);
+    }
+  }; 
 
   return (
     <>
@@ -209,7 +237,15 @@ export default function Dashboard() {
               <button onClick={() => startCheckout('pro')}>Upgrade to Pro</button>
             )}
             {isActive && (
-              <button onClick={openPortal}>Manage Subscription</button>
+              <>
+                <button onClick={openPortal}>Manage Subscription</button>
+                {subPlan === 'pro' ? (
+                  <button onClick={() => changePlan('proplus')} disabled={subLoading}>Upgrade to Pro+</button>
+                ) : (
+                  <button onClick={() => changePlan('pro')} disabled={subLoading}>Downgrade to Pro</button>
+                )}
+                {/* Billing term switcher removed */}
+              </>
             )}
           </div>
         </div>

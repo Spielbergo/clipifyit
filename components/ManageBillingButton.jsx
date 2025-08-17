@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import useSubscription from '../hooks/useSubscription';
 import { useAuth } from '../contexts/AuthContext';
+import { fetchWithAuth } from '../lib/fetchWithAuth';
 
 export default function ManageBillingButton({ className }) {
   const { isActive } = useSubscription();
@@ -11,12 +12,7 @@ export default function ManageBillingButton({ className }) {
     if (!user?.id || !isActive || loading) return;
     try {
       setLoading(true);
-      // Resolve customer by email; alternatively pass stripe_customer_id if stored client-side.
-      const res = await fetch('/api/stripe/create-portal-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, customerEmail: user.email, returnUrl: window.location.origin + '/app' }),
-      });
+  const res = await fetchWithAuth('/api/stripe/create-portal-session', { method: 'POST', json: { returnUrl: window.location.origin + '/app' } });
       const data = await res.json();
       if (data?.url) window.location.href = data.url;
       else alert(data?.error || 'Failed to open billing portal');
