@@ -9,6 +9,7 @@ import Controls from '../Controls';
 import ProjectsSidebar from '../ProjectsSidebar';
 import ExpandSidebar from '../ExpandSidebar';
 import DeleteProjectModal from '../DeleteProjectModal';
+import SavedArticles from '../SavedArticles';
 
 import { useFolders } from '../../hooks/useFolders';
 
@@ -27,6 +28,7 @@ export default function ProApp() {
     const [selectedProjectId, setSelectedProjectId] = useState('');
     const [creatingProject, setCreatingProject] = useState(false);
     const [projectToDelete, setProjectToDelete] = useState(null);
+    const [savedArticlesOpen, setSavedArticlesOpen] = useState(false);
 
     const {
         folders,
@@ -381,23 +383,27 @@ export default function ProApp() {
             )}
             
             <div className="app-wrapper">
-                <h2
-                    style={{
-                        margin: '24px 0 12px 0',
-                        fontWeight: 600,
-                        fontSize: 24,
-                        textAlign: 'left',
-                        width: '100%'
-                    }}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', margin: '24px 0 12px 0', gap: 12 }}>
+                    <h2
+                        style={{
+                            margin: 0,
+                            fontWeight: 600,
+                            fontSize: 24,
+                            textAlign: 'left',
+                        }}
                     >
-                    {projects.find(p => p.id === selectedProjectId)?.name || 'No Project Selected'}
-                    {selectedFolderId && (
-                        <>
-                        <span style={{ color: '#888', fontWeight: 400 }}> &nbsp;/&nbsp; </span>
-                        {folders.find(f => f.id === selectedFolderId)?.name || ''}
-                        </>
-                    )}
-                </h2>
+                        {projects.find(p => p.id === selectedProjectId)?.name || 'No Project Selected'}
+                        {selectedFolderId && (
+                            <>
+                            <span style={{ color: '#888', fontWeight: 400 }}> &nbsp;/&nbsp; </span>
+                            {folders.find(f => f.id === selectedFolderId)?.name || ''}
+                            </>
+                        )}
+                    </h2>
+                    <button onClick={() => setSavedArticlesOpen(true)} title="View saved articles" style={{ alignSelf: 'flex-start' }}>
+                        Saved Articles
+                    </button>
+                </div>
                 <Controls
                     onAddItem={handleAddItem}
                     onClearAll={handleClearAll}
@@ -460,6 +466,7 @@ export default function ProApp() {
                         {showErrorMessage}
                     </div>
                 )}
+                <SavedArticles open={savedArticlesOpen} onClose={() => setSavedArticlesOpen(false)} />
             </div>
             <DeleteProjectModal
                 open={!!projectToDelete}

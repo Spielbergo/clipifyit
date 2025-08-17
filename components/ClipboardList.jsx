@@ -453,6 +453,8 @@ export default function ClipboardList({
                                 // Close inline editor when modal save happens for this item
                                 stableKey={stableKey}
                                 inlineCloseSignal={inlineCloseSignal}
+                                // Gate offline article features to Pro
+                                canOffline={!!isPro}
                             />
                         </tr>
                         );

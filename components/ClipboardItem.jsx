@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { FaEdit, FaCheck, FaTimes, FaCopy } from 'react-icons/fa';
+import { FiDownload, FiBookOpen } from 'react-icons/fi';
+import Modal from './Modal.component';
+import { saveArticle, getArticle, hasArticle } from '../lib/offlineDB';
 
 export default function ClipboardItem({
     index,
@@ -12,6 +15,7 @@ export default function ClipboardItem({
     onExpandEdit,
     stableKey,
     inlineCloseSignal,
+    canOffline = false,
     ...props
 }) {
     const safeText = typeof text === 'string' ? text : (text ? String(text) : '');
@@ -19,6 +23,8 @@ export default function ClipboardItem({
     const [editedText, setEditedText] = useState(safeText);
     const [isCopied, setIsCopied] = useState(false);
     const [confirmRemove, setConfirmRemove] = useState(false);
+    const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
+    const [articleState, setArticleState] = useState({ has: false, loading: false, data: null, error: '' });
 
     useEffect(() => {
         setEditedText(safeText);
@@ -108,6 +114,50 @@ export default function ClipboardItem({
         return s.color ? v : null;
     }
 
+    const isLikelyUrl = (v) => /^(https?:\/\/|www\.)\S+$/i.test((v||'').trim());
+
+    async function handleDownloadArticle() {
+        const url = safeText.startsWith('http') ? safeText : `https://${safeText}`;
+        setArticleState(s => ({ ...s, loading: true, error: '' }));
+        try {
+            // Check cache first
+            const cached = await getArticle(url);
+            if (cached) {
+                setArticleState({ has: true, loading: false, data: cached, error: '' });
+                setIsArticleModalOpen(true);
+                return;
+            }
+            // Fetch from server to avoid CORS
+            const resp = await fetch('/api/offline/fetch-article', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            });
+            const json = await resp.json();
+            if (!resp.ok) throw new Error(json?.error || 'Fetch failed');
+            const article = { url, title: json.title, text: json.text, html: json.html || null, alts: json.alts || [], fetchedAt: json.fetchedAt };
+            await saveArticle(article);
+            setArticleState({ has: true, loading: false, data: article, error: '' });
+            setIsArticleModalOpen(true);
+        } catch (e) {
+            setArticleState(s => ({ ...s, loading: false, error: e.message || 'Failed to save article' }));
+        }
+    }
+
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            if (isLikelyUrl(safeText)) {
+                try {
+                    const url = safeText.startsWith('http') ? safeText : `https://${safeText}`;
+                    const exists = await hasArticle(url);
+                    if (mounted) setArticleState(s => ({ ...s, has: exists }));
+                } catch {}
+            }
+        })();
+        return () => { mounted = false; };
+    }, [safeText]);
+
     return (
         <>
             <td>
@@ -142,12 +192,33 @@ export default function ClipboardItem({
                                 }}
                             />
                         ) : null}
-                        <span style={{ whiteSpace: 'pre-wrap', color: confirmRemove ? '#888' : undefined, textDecoration: confirmRemove ? 'line-through' : undefined, opacity: confirmRemove ? 0.6 : 1 }}>{linkify(safeText)}</span>
+                        <span style={{ whiteSpace: 'pre-wrap', color: confirmRemove ? '#888' : undefined, textDecoration: confirmRemove ? 'line-through' : undefined, opacity: confirmRemove ? 0.6 : 1, flex: 1 }}>{linkify(safeText)}</span>
+                        {/* Inline right offline button for URL (Pro only) */}
+                        {canOffline && isLikelyUrl(safeText) && (
+                            <button
+                                onClick={handleDownloadArticle}
+                                title={articleState.has ? 'Read saved article' : 'Save for offline'}
+                                aria-busy={articleState.loading}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: '#1976d2',
+                                    padding: 0,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: 22,
+                                    height: 22
+                                }}
+                            >
+                                {articleState.has ? <FiBookOpen /> : <FiDownload />}
+                            </button>
+                        )}
                     </div>
                 )}
             </td>
             {/* Edit, Copy, Remove buttons in a flex row, with Remove confirmation overlayed */}
-            <td colSpan={3} style={{ position: 'relative', minWidth: 120 }}>
+            <td colSpan={3} style={{ position: 'relative', minWidth: 160 }}>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'flex-start' }}>
                     {/* Edit button */}
                     {!isEditing && !confirmRemove && (
@@ -155,6 +226,7 @@ export default function ClipboardItem({
                             <FaEdit />
                         </button>
                     )}
+                    {/* Offline action moved to left edge inside text cell */}
                     {/* Save/Cancel + Expand buttons while editing */}
                     {isEditing && (
                         <>
@@ -193,6 +265,41 @@ export default function ClipboardItem({
                         </button>
                     </div>
                 )}
+                {/* Offline reader modal */}
+                <Modal open={isArticleModalOpen} onClose={() => setIsArticleModalOpen(false)}>
+                    {articleState.loading ? (
+                        <div>Fetching…</div>
+                    ) : articleState.error ? (
+                        <div style={{ color: '#ff8a80' }}>{articleState.error}</div>
+                    ) : articleState.data ? (
+                        <div style={{ maxHeight: '70vh', overflow: 'auto' }}>
+                            <h3 style={{ marginTop: 0 }}>{articleState.data.title || 'Saved article'}</h3>
+                            {articleState.data.html ? (
+                                <div className="article-reader" style={{ lineHeight: 1.6, textAlign: 'left' }} dangerouslySetInnerHTML={{ __html: articleState.data.html }} />
+                            ) : (
+                                <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, textAlign: 'left' }}>{articleState.data.text}</p>
+                            )}
+                            {articleState.data.alts?.length ? (
+                                <details style={{ marginTop: 12 }}>
+                                    <summary>Image alt text ({articleState.data.alts.length})</summary>
+                                    <ul>
+                                        {articleState.data.alts.map((a, i) => <li key={i}>{a}</li>)}
+                                    </ul>
+                                </details>
+                            ) : null}
+                            <style jsx>{`
+                              .article-reader { text-align: left; }
+                              .article-reader p { margin: 0 0 1em; }
+                              .article-reader ul, .article-reader ol { padding-left: 1.25rem; margin: 0 0 1em; }
+                              .article-reader h1, .article-reader h2, .article-reader h3 { margin: 1.2em 0 0.6em; }
+                              .article-reader pre { background: #111; border: 1px solid #333; border-radius: 6px; padding: 10px; overflow: auto; }
+                              .article-reader code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+                            `}</style>
+                        </div>
+                    ) : (
+                        <div>No content saved yet.</div>
+                    )}
+                </Modal>
             </td>
             {/* <td>
                 <span

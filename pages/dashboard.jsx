@@ -112,11 +112,7 @@ export default function Dashboard() {
 
   // Stripe integration
   const startCheckout = async (plan) => {
-    const res = await fetch('/api/stripe/create-checkout-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan, userId: user?.id || null, term: 'monthly' }),
-    });
+  const res = await fetchWithAuth('/api/stripe/create-checkout-session', { method: 'POST', json: { plan, term: 'monthly' } });
     const data = await res.json();
     if (data?.url) window.location.href = data.url;
   };

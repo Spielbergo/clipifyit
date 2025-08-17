@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from 'next/router';
 import { useAuth } from "../contexts/AuthContext";
+import { fetchWithAuth } from "../lib/fetchWithAuth";
 
 import plans from '../data/prices';
 
@@ -13,11 +14,11 @@ import Footer from '../components/Footer.component';
 import styles from "../styles/prices.module.css";
 
 async function startCheckout(kind, term, userId) {
-  const res = await fetch('/api/stripe/create-checkout-session', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ plan: kind, term, userId }),
-  });
+  // If logged in, send Authorization and let server derive user
+  const useAuth = !!userId;
+  const res = useAuth
+    ? await fetchWithAuth('/api/stripe/create-checkout-session', { method: 'POST', json: { plan: kind, term } })
+    : await fetch('/api/stripe/create-checkout-session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plan: kind, term }) });
   const data = await res.json();
   if (data?.url) {
     window.location.href = data.url;
