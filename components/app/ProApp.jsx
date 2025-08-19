@@ -9,13 +9,15 @@ import Controls from '../Controls';
 import ProjectsSidebar from '../ProjectsSidebar';
 import ExpandSidebar from '../ExpandSidebar';
 import DeleteProjectModal from '../DeleteProjectModal';
-import SavedArticles from '../SavedArticles';
+import { useRouter } from 'next/router';
 
 import { useFolders } from '../../hooks/useFolders';
 
 import LogoWhite from '../../public/logos/logo-light-text.png';
 
 export default function ProApp() {
+    const router = useRouter();
+    
     const [showCustomModal, setShowCustomModal] = useState(false);
     const [clipboardItems, setClipboardItems] = useState([]);
     const [clearedItems, setClearedItems] = useState([]);
@@ -28,7 +30,7 @@ export default function ProApp() {
     const [selectedProjectId, setSelectedProjectId] = useState('');
     const [creatingProject, setCreatingProject] = useState(false);
     const [projectToDelete, setProjectToDelete] = useState(null);
-    const [savedArticlesOpen, setSavedArticlesOpen] = useState(false);
+    // Saved Articles unified at /saved; no internal modal state needed
 
     const {
         folders,
@@ -400,7 +402,7 @@ export default function ProApp() {
                             </>
                         )}
                     </h2>
-                    <button onClick={() => setSavedArticlesOpen(true)} title="View saved articles" style={{ alignSelf: 'flex-start' }}>
+                    <button onClick={() => router.push('/saved')} title="View saved articles" style={{ alignSelf: 'flex-start' }}>
                         Saved Articles
                     </button>
                 </div>
@@ -466,7 +468,7 @@ export default function ProApp() {
                         {showErrorMessage}
                     </div>
                 )}
-                <SavedArticles open={savedArticlesOpen} onClose={() => setSavedArticlesOpen(false)} />
+                
             </div>
             <DeleteProjectModal
                 open={!!projectToDelete}

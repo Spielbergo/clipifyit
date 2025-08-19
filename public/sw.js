@@ -56,3 +56,18 @@ self.addEventListener('fetch', (event) => {
     })());
   }
 });
+
+// Handle client-initiated sync to prime offline caches
+self.addEventListener('message', (event) => {
+  const data = event.data || {};
+  if (data.type === 'OFFLINE_SYNC') {
+    event.waitUntil((async () => {
+      try {
+        const cache = await caches.open(RUNTIME_CACHE);
+        await cache.addAll(['/', '/prices', '/saved']);
+      } catch (e) {
+        // ignore
+      }
+    })());
+  }
+});

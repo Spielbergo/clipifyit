@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import ClipboardList from '../ClipboardList';
 import Controls from '../Controls';
+import { useRouter } from 'next/router';
 
 export default function FreeApp() {
     const [clipboardItems, setClipboardItems] = useState([]);
     const [clearedItems, setClearedItems] = useState([]);
     const [showErrorMessage, setShowErrorMessage] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
         const storedItems = JSON.parse(localStorage.getItem('clipboardItems')) || [];
@@ -57,9 +59,19 @@ export default function FreeApp() {
         );
     };
 
+    const openSavedArticles = () => {
+        router.push('/saved');
+    };
+
     return (
         <div className="app-main">
             <div className="app-wrapper">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', margin: '24px 0 12px 0', gap: 12 }}>
+                    <h2 style={{ margin: 0, fontWeight: 600, fontSize: 24, textAlign: 'left' }}>Clipify It Free</h2>
+                    <button onClick={openSavedArticles} title="View saved articles" style={{ alignSelf: 'flex-start' }}>
+                        Saved Articles
+                    </button>
+                </div>
                 <Controls
                     onAddItem={handleAddItem}
                     onClearAll={handleClearAll}

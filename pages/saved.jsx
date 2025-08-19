@@ -1,10 +1,23 @@
 import { useEffect, useState } from 'react';
-import { listArticles, getArticle } from '../lib/offlineDB';
+import { listArticles, getArticle, deleteArticle } from '../lib/offlineDB';
+import { useAuth } from '../contexts/AuthContext';
+import Modal from '../components/Modal.component';
+import styles from '../styles/saved.module.css';
+import { FiTrash2 } from 'react-icons/fi';
 
 export default function Saved() {
   const [items, setItems] = useState([]);
   const [active, setActive] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [installAvailable, setInstallAvailable] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [showInstallHelp, setShowInstallHelp] = useState(false);
+  const [installHelpText, setInstallHelpText] = useState('');
+  const [isNarrow, setIsNarrow] = useState(true);
+  const [articleModalOpen, setArticleModalOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null); // { url, title }
 
   async function refresh() {
     try {
@@ -15,7 +28,26 @@ export default function Saved() {
       if (target) {
         const a = await getArticle(target);
         if (a) setActive(a);
+      } else if (!active && list.length) {
+        // default to first article for quick read
+        const first = await getArticle(list[0].url);
+        if (first) setActive(first);
       }
+
+      // Populate excerpts for list items (from IndexedDB only)
+      try {
+        const details = await Promise.all(
+          (list || []).map(async (it) => {
+            try {
+              const a = await getArticle(it.url);
+              const text = a?.html ? extractTextFromHTML(a.html) : (a?.text || '');
+              return { url: it.url, excerpt: summarize(text) };
+            } catch { return { url: it.url, excerpt: '' }; }
+          })
+        );
+        const map = Object.fromEntries(details.map(d => [d.url, d.excerpt]));
+        setItems(prev => (prev || []).map(it => ({ ...it, excerpt: map[it.url] || it.excerpt })));
+      } catch {}
     } finally {
       setLoading(false);
     }
@@ -23,22 +55,127 @@ export default function Saved() {
 
   useEffect(() => { refresh(); }, []);
 
+  // Responsive flag for mobile/tablet
+  useEffect(() => {
+    const onResize = () => setIsNarrow(typeof window !== 'undefined' ? window.innerWidth <= 1280 : true);
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // Install (Add to Home screen) prompt wiring
+  useEffect(() => {
+    const mq = typeof window !== 'undefined' ? window.matchMedia('(display-mode: standalone)') : null;
+    const standalone = (mq && mq.matches) || (typeof navigator !== 'undefined' && navigator.standalone);
+    setIsStandalone(!!standalone);
+
+    function onBeforeInstallPrompt(e) {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setInstallAvailable(true);
+    }
+    function onAppInstalled() {
+      setDeferredPrompt(null);
+      setInstallAvailable(false);
+      setIsStandalone(true);
+    }
+    window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+    window.addEventListener('appinstalled', onAppInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', onAppInstalled);
+    };
+  }, []);
+
+  const handleInstall = async () => {
+    try {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        setDeferredPrompt(null);
+        setInstallAvailable(false);
+        return;
+      }
+      // Fallback tips if prompt isn't available
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      setInstallHelpText(
+        isIOS
+          ? 'To install: Tap the Share button in Safari, then choose "Add to Home Screen".'
+          : 'To install: Use your browser menu to Add to Home screen (or the Install option in the address bar).'
+      );
+      setShowInstallHelp(true);
+    } catch {}
+  };
+
+  function extractTextFromHTML(html) {
+    if (!html) return '';
+    try {
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      return (div.textContent || '').trim();
+    } catch {
+      return '';
+    }
+  }
+
+  function summarize(text) {
+    if (!text) return '';
+    const normalized = text.replace(/\s+/g, ' ').trim();
+  const max = 120;
+  return normalized.length > max ? normalized.slice(0, max) + '…' : normalized;
+  }
+
+  const openItem = async (url) => {
+    const a = await getArticle(url);
+    if (a) setActive(a);
+    if (isNarrow) setArticleModalOpen(true);
+  };
+
+  const prevArticle = async () => {
+    if (!active) return;
+    const idx = items.findIndex(it => it.url === active.url);
+    if (idx > 0) openItem(items[idx - 1].url);
+  };
+
+  const nextArticle = async () => {
+    if (!active) return;
+    const idx = items.findIndex(it => it.url === active.url);
+    if (idx >= 0 && idx < items.length - 1) openItem(items[idx + 1].url);
+  };
+
+  const handleDelete = async (url) => {
+    await deleteArticle(url);
+    if (active?.url === url) setActive(null);
+    refresh();
+  };
+
+
   return (
-    <main style={{ display: 'flex', gap: 16, padding: 16, minHeight: '80vh' }}>
-      <div style={{ flex: '0 0 280px', maxHeight: '80vh', overflow: 'auto', borderRight: '1px solid #333', paddingRight: 12 }}>
-        <h2 style={{ marginTop: 0 }}>Saved Articles</h2>
+    <main className={styles.saved_main}>
+      <div className={styles.sidebar}>
+        <div className={styles.header_row}>
+          <h2 className={styles.title}>Saved Articles</h2>
+          {!isStandalone && (
+            <button onClick={handleInstall} title="Install app">
+              Install
+            </button>
+          )}
+        </div>
         {loading ? 'Loading…' : (
           items.length ? (
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            <ul className={styles.list}>
               {items.map(it => (
-                <li key={it.url} style={{ padding: '6px 0', borderBottom: '1px solid #2a2a2a' }}>
-                  <button onClick={async () => setActive(await getArticle(it.url))} style={{ background: 'none', border: 'none', color: '#ddd', textAlign: 'left' }}>
-                    <div style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 240 }}>
-                      {it.title || it.url}
-                    </div>
-                    <div style={{ fontSize: 12, color: '#999' }}>
-                      {new Date(it.savedAt || Date.now()).toLocaleString()}
-                    </div>
+                <li key={it.url} className={styles.list_item}>
+                  <button className={styles.item_button} onClick={() => openItem(it.url)}>
+                    <div className={styles.item_title}>{it.title || it.url}</div>
+                    {it.excerpt ? (
+                      <div className={styles.item_excerpt}>{it.excerpt}</div>
+                    ) : (
+                      <div className={styles.item_date}>{new Date(it.savedAt || Date.now()).toLocaleString()}</div>
+                    )}
+                  </button>
+                  <button className={styles.delete_btn} onClick={() => setConfirmDelete({ url: it.url, title: it.title || it.url })} aria-label="Delete">
+                    <FiTrash2 />
                   </button>
                 </li>
               ))}
@@ -46,26 +183,94 @@ export default function Saved() {
           ) : <div>No saved articles found.</div>
         )}
       </div>
-      <div style={{ flex: 1, maxHeight: '80vh', overflow: 'auto' }}>
-        {active ? (
-          <div>
-            <h3 style={{ marginTop: 0 }}>{active.title || 'Saved article'}</h3>
-            <div style={{ fontSize: 12, color: '#999', marginBottom: 8 }}>{active.url}</div>
-            {active.html ? (
-              <div className="article-reader" style={{ lineHeight: 1.6, textAlign: 'left' }} dangerouslySetInnerHTML={{ __html: active.html }} />
-            ) : (
-              <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, marginBottom: 10, textAlign: 'left' }}>{active.text}</p>
-            )}
-            <style jsx>{`
-              .article-reader { text-align: left; }
-              .article-reader p { margin: 0 0 1em; }
-              .article-reader ul, .article-reader ol { padding-left: 1.25rem; margin: 0 0 1em; }
-              .article-reader h1, .article-reader h2, .article-reader h3 { margin: 1.2em 0 0.6em; }
-              .article-reader pre { background: #111; border: 1px solid #333; border-radius: 6px; padding: 10px; overflow: auto; }
-            `}</style>
+
+      {/* Content pane for wide screens */}
+      {!isNarrow && (
+        <div className={styles.content}>
+          {!loading && items.length === 0 && !user ? (
+            <div className={styles.promo}>
+              <h3 className={styles.promo_title}>Read saved articles, anywhere</h3>
+              <p className={styles.promo_text}>
+                Upgrade to <strong>Pro</strong> to save article URLs and read them offline in a clean, focused reader.
+              </p>
+              <ul className={styles.promo_list}>
+                <li>Save from your clipboard with one tap</li>
+                <li>Install the app and read offline on mobile/desktop</li>
+                <li>Articles are stored on this device for quick access</li>
+              </ul>
+              <div className={styles.promo_actions}>
+                <a href="/login"><button>Sign in</button></a>
+                <a href="/prices"><button className={styles.primary_btn}>See Pro plans</button></a>
+              </div>
+            </div>
+          ) : active ? (
+            <div>
+              <h3 className={styles.article_title}>{active.title || 'Saved article'}</h3>
+              <div className={styles.article_url}>{active.url}</div>
+              {active.html ? (
+                <div className={styles.article_reader} dangerouslySetInnerHTML={{ __html: active.html }} />
+              ) : (
+                <p className={styles.article_text}>{active.text}</p>
+              )}
+            </div>
+          ) : <div className={styles.empty_hint}>Select a saved article to read</div>}
+        </div>
+      )}
+  <Modal open={showInstallHelp} onClose={() => setShowInstallHelp(false)}>
+        <div>
+          <h3 className={styles.install_title}>Install Clipify It</h3>
+          <p className={styles.install_text}>{installHelpText || 'Use your browser’s Install option to add the app to your device.'}</p>
+          <div className={styles.install_actions}>
+            <button onClick={() => setShowInstallHelp(false)}>Close</button>
           </div>
-        ) : <div style={{ color: '#888' }}>Select a saved article to read</div>}
-      </div>
+        </div>
+      </Modal>
+
+      {/* Delete confirmation */}
+  <Modal open={!!confirmDelete} onClose={() => setConfirmDelete(null)}>
+        <div>
+          <h3 className={styles.install_title}>Delete saved article?</h3>
+          <p className={styles.install_text}>This will remove the saved copy from this device:</p>
+          {confirmDelete?.title ? <p className={styles.install_text}><strong>{confirmDelete.title}</strong></p> : null}
+          <div className={styles.install_actions}>
+            <button onClick={() => setConfirmDelete(null)}>Cancel</button>
+            <button
+              className={styles.delete_btn}
+              onClick={async () => { if (confirmDelete?.url) await handleDelete(confirmDelete.url); setConfirmDelete(null); }}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Mobile/Tablet reading modal */}
+  <Modal open={isNarrow && articleModalOpen} onClose={() => setArticleModalOpen(false)} hideClose>
+        <div className={styles.mobile_modal_container}>
+          <div className={styles.mobile_modal_header}>
+            <div className={styles.mobile_header_title}>{active?.title || 'Saved article'}</div>
+            <button onClick={() => setArticleModalOpen(false)} className={styles.mobile_close_btn} aria-label="Close">Close</button>
+          </div>
+          <div className={styles.mobile_modal_body}>
+            {active ? (
+              <>
+                <div className={styles.article_url}>{active.url}</div>
+                {active.html ? (
+                  <div className={styles.article_reader} dangerouslySetInnerHTML={{ __html: active.html }} />
+                ) : (
+                  <p className={styles.article_text}>{active.text}</p>
+                )}
+              </>
+            ) : (
+              <div className={styles.empty_hint}>Select a saved article to read</div>
+            )}
+          </div>
+          <div className={styles.mobile_modal_footer}>
+            <button onClick={prevArticle} disabled={!active || items.findIndex(it => it.url === active.url) <= 0}>Previous</button>
+            <button onClick={nextArticle} disabled={!active || items.findIndex(it => it.url === active.url) >= items.length - 1}>Next</button>
+          </div>
+        </div>
+      </Modal>
     </main>
   );
 }

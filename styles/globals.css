@@ -400,11 +400,11 @@ button:active {
   background-color: #555;
 }
 
-.dark-mode button,
+/* .dark-mode button,
 .dark-mode select {
   background-color: #555;
   color: white;
-}
+} */
 
 /* Sidebar */
 /* Sidebar base styles */

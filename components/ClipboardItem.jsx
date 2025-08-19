@@ -199,17 +199,6 @@ export default function ClipboardItem({
                                 onClick={handleDownloadArticle}
                                 title={articleState.has ? 'Read saved article' : 'Save for offline'}
                                 aria-busy={articleState.loading}
-                                style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    color: '#1976d2',
-                                    padding: 0,
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    width: 22,
-                                    height: 22
-                                }}
                             >
                                 {articleState.has ? <FiBookOpen /> : <FiDownload />}
                             </button>
