@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { FaEdit, FaCheck, FaTimes, FaCopy } from 'react-icons/fa';
 import { FiDownload, FiBookOpen } from 'react-icons/fi';
 import Modal from './Modal.component';
+import Loader from './Loader.component';
 import { saveArticle, getArticle, hasArticle } from '../lib/offlineDB';
 
 export default function ClipboardItem({
@@ -25,6 +26,7 @@ export default function ClipboardItem({
     const [confirmRemove, setConfirmRemove] = useState(false);
     const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
     const [articleState, setArticleState] = useState({ has: false, loading: false, data: null, error: '' });
+    const [showSavedMessage, setShowSavedMessage] = useState(false);
 
     useEffect(() => {
         setEditedText(safeText);
@@ -138,7 +140,9 @@ export default function ClipboardItem({
             const article = { url, title: json.title, text: json.text, html: json.html || null, alts: json.alts || [], fetchedAt: json.fetchedAt };
             await saveArticle(article);
             setArticleState({ has: true, loading: false, data: article, error: '' });
-            setIsArticleModalOpen(true);
+            // Success notification only; do not auto-open reader
+            setShowSavedMessage(true);
+            setTimeout(() => setShowSavedMessage(false), 2000);
         } catch (e) {
             setArticleState(s => ({ ...s, loading: false, error: e.message || 'Failed to save article' }));
         }
@@ -197,10 +201,17 @@ export default function ClipboardItem({
                         {canOffline && isLikelyUrl(safeText) && (
                             <button
                                 onClick={handleDownloadArticle}
-                                title={articleState.has ? 'Read saved article' : 'Save for offline'}
+                                title={articleState.loading ? 'Saving…' : (articleState.has ? 'Read saved article' : 'Save for offline')}
                                 aria-busy={articleState.loading}
+                                disabled={articleState.loading}
                             >
-                                {articleState.has ? <FiBookOpen /> : <FiDownload />}
+                                {articleState.loading ? (
+                                    <Loader size={16} />
+                                ) : articleState.has ? (
+                                    <FiBookOpen />
+                                ) : (
+                                    <FiDownload />
+                                )}
                             </button>
                         )}
                     </div>
@@ -290,6 +301,13 @@ export default function ClipboardItem({
                     )}
                 </Modal>
             </td>
+            {/* Success popup notification for saved article */}
+            <div
+                className="copied-message"
+                style={{ display: showSavedMessage ? 'block' : 'none' }}
+            >
+                Saved for offline!
+            </div>
             {/* <td>
                 <span
                     style={{ cursor: 'grab' }}

@@ -63,6 +63,14 @@ export default function Saved() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
+  // Page-only: hide body overflow while /saved is mounted
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
   // Install (Add to Home screen) prompt wiring
   useEffect(() => {
     const mq = typeof window !== 'undefined' ? window.matchMedia('(display-mode: standalone)') : null;
@@ -152,7 +160,7 @@ export default function Saved() {
 
   return (
     <main className={styles.saved_main}>
-      <div className={styles.sidebar}>
+  <div className={`${styles.sidebar} saved_sidebar`}>
         <div className={styles.header_row}>
           <h2 className={styles.title}>Saved Articles</h2>
           {!isStandalone && (
@@ -186,7 +194,7 @@ export default function Saved() {
 
       {/* Content pane for wide screens */}
       {!isNarrow && (
-        <div className={styles.content}>
+        <div className={`${styles.content} saved_sidebar`}>
           {!loading && items.length === 0 && !user ? (
             <div className={styles.promo}>
               <h3 className={styles.promo_title}>Read saved articles, anywhere</h3>

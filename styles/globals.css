@@ -101,9 +101,9 @@ a {
   text-decoration: none;
 }
 
-p {
+/* p {
   margin: 0; 
-}
+} */
 
 ul { 
   list-style: none;
@@ -148,7 +148,7 @@ textarea:focus {
   align-items: stretch;
   width: 100%;
   max-width: var(--app-width);
-  min-width: 400px;   
+  /* min-width: 400px;    */
   margin: 50px auto 0 auto;
   padding: 0 15px;
   min-height: 100vh;
@@ -460,27 +460,32 @@ button:active {
 }
 
 /* Style the sidebar scrollbar */
+.saved_sidebar,
 .projects-sidebar {
   scrollbar-width: thin;
   scrollbar-color: #6599a6 #222; /* thumb color, track color */
 }
 
 /* Chrome, Edge, Safari */
+.saved_saved_main::-webkit-scrollbar,
 .projects-sidebar::-webkit-scrollbar {
   width: 10px;
   background: #222;
 }
 
+.saved_saved_main::-webkit-scrollbar-thumb,
 .projects-sidebar::-webkit-scrollbar-thumb {
   background: #6599a6;
   border-radius: 8px;
   border: 2px solid #222;
 }
 
+.saved_saved_main::-webkit-scrollbar-thumb:hover,
 .projects-sidebar::-webkit-scrollbar-thumb:hover {
   background: #4fc3f7;
 }
 
+.saved_saved_main::-webkit-scrollbar-track,
 .projects-sidebar::-webkit-scrollbar-track {
   background: #222;
 }
