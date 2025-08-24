@@ -84,15 +84,16 @@ export default function ClipboardList({
     const displayItems = useMemo(() => {
         const items = [...filteredItems];
         switch (sortMode) {
-            case 'oldest':
+            case 'newest':
+                // Newest first: reverse base order
                 return items.slice().reverse();
             case 'az':
                 return items.sort((a, b) => getItemText(a).localeCompare(getItemText(b), undefined, { sensitivity: 'base' }));
             case 'za':
                 return items.sort((a, b) => getItemText(b).localeCompare(getItemText(a), undefined, { sensitivity: 'base' }));
-            case 'newest':
+            case 'oldest':
             default:
-                return items; // keep existing order
+                return items; // Oldest first (base order)
         }
     }, [filteredItems, sortMode]);
 
@@ -131,8 +132,8 @@ export default function ClipboardList({
                                 setClipboardItems(prevItems => [ ...(data || []), ...prevItems ]);
                             }
                         } else {
-                            // Free: just update local state
-                            setClipboardItems(prevItems => [text, ...prevItems]);
+                            // Free: append to maintain base order (oldest-first)
+                            setClipboardItems(prevItems => [...prevItems, text]);
                         }
                     }
                 } catch (err) {
@@ -150,17 +151,18 @@ export default function ClipboardList({
 
     // Drag and drop (free version only) — only when sort is default
     const handleDragStart = (index) => {
-        if (sortMode !== 'newest') return;
+        // Allow DnD only in base order (Oldest first)
+        if (sortMode !== 'oldest') return;
         setDraggedIndex(index);
     };
 
     const handleDragOver = (event) => {
-        if (sortMode !== 'newest') return;
+        if (sortMode !== 'oldest') return;
         event.preventDefault();
     };
 
     const handleDrop = async (dropIndex) => {
-        if (sortMode !== 'newest') return;
+        if (sortMode !== 'oldest') return;
         if (draggedIndex === null) return;
 
         // Work with a copy of the filtered items (default order)

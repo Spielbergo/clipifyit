@@ -22,7 +22,7 @@ export default function FreeApp() {
         if (clipboardItems.includes(text)) {
             return true;
         }
-        setClipboardItems([text, ...clipboardItems]);
+    setClipboardItems([...clipboardItems, text]);
         return false;
     };
 

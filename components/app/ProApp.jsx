@@ -150,7 +150,7 @@ export default function ProApp() {
 
         console.log('Insert result:', data, error);
 
-        if (!error && data) setClipboardItems([...(data || []), ...clipboardItems]);
+    if (!error && data) setClipboardItems([...clipboardItems, ...(data || [])]);
         return false;
     };
 

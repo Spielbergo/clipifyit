@@ -172,6 +172,12 @@ textarea:focus {
 /* Popout: make controls sticky to the very top since nav is gone */
 body.popout .controls-container {
   top: 0 !important;
+  width: 100% !important; /* override global 101% so body padding is visible */
+  padding: 0 15px;
+}
+
+body.popout {
+  padding: 0 15px !important;
 }
 
 .table-wrapper {

@@ -4,7 +4,7 @@ import Modal from './Modal.component';
 import styles from './controls.module.css';
 
 import { useRouter } from 'next/router';
-import { FaSort, FaChevronDown, FaFolderOpen, FaProjectDiagram, FaExpand, FaExternalLinkAlt, FaPaste, FaKeyboard } from 'react-icons/fa';
+import { FaSort, FaFolderOpen, FaExpand, FaExternalLinkAlt, FaPaste, FaKeyboard } from 'react-icons/fa';
 
 export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandlePopOut, isPopOut, showErrorNotification, onShowCustomModalChange, selectedProjectId, selectedFolderId, projects = [], folders = [], onSwitchProjectFolder, onSortChange }) {
     const router = typeof window !== 'undefined' ? require('next/router').useRouter() : null;
@@ -129,58 +129,22 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
         <div className='controls-container'>
             {/* Popout-only: Project/Folder Switcher */}
             {isPopOut && projects.length > 0 && (
-                <div style={{ marginRight: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {/* Project dropdown: all projects */}
-                    <div className={styles.pillWrap}>
-                        <FaProjectDiagram className={styles.pillIcon} aria-hidden="true" />
-                        <select
-                            className={styles.pillSelect}
-                            value={selectedProjectId || ''}
-                            onChange={e => {
-                                const newProjectId = e.target.value;
-                                if (onSwitchProjectFolder) {
-                                    onSwitchProjectFolder(newProjectId, '');
-                                } else if (router) {
-                                    const params = [`project=${encodeURIComponent(newProjectId)}`];
-                                    window.location.search = '?' + params.join('&');
-                                }
-                            }}
-                        >
-                            {projects.map(p => (
-                                <option key={p.id} value={p.id}>{p.name}</option>
-                            ))}
-                        </select>
-                        <FaChevronDown className={styles.pillChevron} aria-hidden="true" />
-                    </div>
-                    {/* Folder dropdown: grouped by project */}
-                    <div className={styles.pillWrap}>
-                        <FaFolderOpen className={styles.pillIcon} aria-hidden="true" />
-                        <select
-                            className={styles.pillSelect}
-                            value={selectedFolderId || ''}
-                            onChange={e => {
-                                const newFolderId = e.target.value;
-                                if (onSwitchProjectFolder) {
-                                    onSwitchProjectFolder(selectedProjectId, newFolderId);
-                                } else if (router) {
-                                    const params = [`project=${encodeURIComponent(selectedProjectId)}`];
-                                    if (newFolderId) params.push(`folder=${encodeURIComponent(newFolderId)}`);
-                                    window.location.search = '?' + params.join('&');
-                                }
-                            }}
-                        >
-                            <option value=''>No Folder</option>
-                            {projects.map(project => (
-                                <optgroup key={project.id} label={project.name}>
-                                    {folders.filter(f => f.project_id === project.id).map(f => (
-                                        <option key={f.id} value={f.id}>{f.name}</option>
-                                    ))}
-                                </optgroup>
-                            ))}
-                        </select>
-                        {/* <FaChevronDown className={styles.pillChevron} aria-hidden="true" /> */}
-                    </div>
-                </div>
+                <ProjectFolderDropdown
+                    styles={styles}
+                    projects={projects}
+                    folders={folders}
+                    selectedProjectId={selectedProjectId}
+                    selectedFolderId={selectedFolderId}
+                    onSwitchProjectFolder={(projId, folderId) => {
+                        if (onSwitchProjectFolder) {
+                            onSwitchProjectFolder(projId, folderId || '');
+                        } else if (router) {
+                            const params = [`project=${encodeURIComponent(projId)}`];
+                            if (folderId) params.push(`folder=${encodeURIComponent(folderId)}`);
+                            window.location.search = '?' + params.join('&');
+                        }
+                    }}
+                />
             )}
             {/* Sort dropdown */}
             <div className={styles.pillWrap}>
@@ -276,6 +240,92 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
                     <button onClick={handleAddCustom} disabled={!customText.trim()}>Add</button>
                 </div>
             </Modal>
+        </div>
+    );
+}
+
+function ProjectFolderDropdown({ styles, projects, folders, selectedProjectId, selectedFolderId, onSwitchProjectFolder }) {
+    const [open, setOpen] = useState(false);
+    const wrapRef = useRef(null);
+
+    // Close on outside click or ESC
+    useEffect(() => {
+        const onDocClick = (e) => {
+            if (!wrapRef.current) return;
+            if (!wrapRef.current.contains(e.target)) setOpen(false);
+        };
+        const onKey = (e) => {
+            if (e.key === 'Escape') setOpen(false);
+        };
+        document.addEventListener('mousedown', onDocClick);
+        document.addEventListener('keydown', onKey);
+        return () => {
+            document.removeEventListener('mousedown', onDocClick);
+            document.removeEventListener('keydown', onKey);
+        };
+    }, []);
+
+    const currentLabel = (() => {
+        if (selectedFolderId) {
+            const f = folders.find(ff => String(ff.id) === String(selectedFolderId));
+            if (f) return f.name;
+        }
+        const p = projects.find(pp => String(pp.id) === String(selectedProjectId));
+        return p ? p.name : 'Select…';
+    })();
+
+    const handleSelectProject = (pid) => {
+        onSwitchProjectFolder(pid, '');
+        setOpen(false);
+    };
+    const handleSelectFolder = (fid) => {
+        onSwitchProjectFolder(
+            (folders.find(f => String(f.id) === String(fid))?.project_id) || selectedProjectId,
+            fid
+        );
+        setOpen(false);
+    };
+
+    return (
+        <div style={{ marginRight: 16, display: 'inline-block', position: 'relative' }} ref={wrapRef}>
+            <div className={styles.pillWrap} role="combobox" aria-expanded={open} aria-haspopup="listbox">
+                <FaFolderOpen className={styles.pillIcon} aria-hidden="true" />
+                <button
+                    type="button"
+                    className={styles.pillDropdownTrigger}
+                    onClick={() => setOpen(!open)}
+                    aria-label="Choose project or folder"
+                >
+                    {currentLabel}
+                </button>
+            </div>
+            {open && (
+                <div className={styles.dropdownMenu} role="listbox">
+                    {projects.map(project => (
+                        <div key={project.id}>
+                            <div
+                                role="option"
+                                aria-selected={String(project.id) === String(selectedProjectId) && !selectedFolderId}
+                                className={`${styles.menuItem} ${styles.menuItemProject}`}
+                                onClick={() => handleSelectProject(project.id)}
+                            >
+                                {project.name}
+                            </div>
+                            {folders.filter(f => f.project_id === project.id).map(f => (
+                                <div
+                                    key={f.id}
+                                    role="option"
+                                    aria-selected={String(f.id) === String(selectedFolderId)}
+                                    className={`${styles.menuItem} ${styles.menuItemFolder}`}
+                                    onClick={() => handleSelectFolder(f.id)}
+                                >
+                                    {f.name}
+                                </div>
+                            ))}
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

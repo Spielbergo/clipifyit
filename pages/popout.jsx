@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+
 // Helper to fetch project/folder names from Supabase
 async function fetchProjectName(projectId) {
     if (!projectId) return '';
@@ -188,7 +189,7 @@ export default function PopOut() {
                 .insert([insertObj])
                 .select();
             if (!error && data) {
-                setClipboardItems(prev => [ ...(data || []), ...prev ]);
+                setClipboardItems(prev => [ ...prev, ...(data || []) ]);
             }
             return false;
         } else {
@@ -196,7 +197,7 @@ export default function PopOut() {
             if (clipboardItems.includes(text)) {
                 return true;
             }
-            setClipboardItems([text, ...clipboardItems]);
+            setClipboardItems([...clipboardItems, text]);
             return false;
         }
     };
