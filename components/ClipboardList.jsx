@@ -83,19 +83,35 @@ export default function ClipboardList({
     // Derive sorted view
     const displayItems = useMemo(() => {
         const items = [...filteredItems];
+        const getCreated = (it) => {
+            const t = it && it.created_at ? new Date(it.created_at).getTime() : null;
+            if (Number.isFinite(t)) return t;
+            // Fallback to order when created_at is missing
+            return Number(it?.order || 0);
+        };
         switch (sortMode) {
             case 'newest':
-                // Newest first: reverse base order
+                if (isPro) {
+                    return items.sort((a, b) => getCreated(b) - getCreated(a));
+                }
+                // Free: newest are last in base array; reverse
                 return items.slice().reverse();
+            case 'oldest':
+                if (isPro) {
+                    return items.sort((a, b) => getCreated(a) - getCreated(b));
+                }
+                // Free: base array is oldest-first already
+                return items;
             case 'az':
                 return items.sort((a, b) => getItemText(a).localeCompare(getItemText(b), undefined, { sensitivity: 'base' }));
             case 'za':
                 return items.sort((a, b) => getItemText(b).localeCompare(getItemText(a), undefined, { sensitivity: 'base' }));
-            case 'oldest':
+            case 'custom':
             default:
-                return items; // Oldest first (base order)
+                // Use underlying stored order as-is
+                return items;
         }
-    }, [filteredItems, sortMode]);
+    }, [filteredItems, sortMode, isPro]);
 
     // Keyboard shortcuts (paste/copy)
     // Use a ref to always get the latest clipboardItems for duplicate check
@@ -149,73 +165,55 @@ export default function ClipboardList({
         };
     }, [displayItems, selectedKeys, setClipboardItems, showCustomModal, editModalOpen, isPro, selectedProjectId, selectedFolderId, currentUserId]);
 
-    // Drag and drop (free version only) — only when sort is default
-    const handleDragStart = (index) => {
-        // Allow DnD only in base order (Oldest first)
-        if (sortMode !== 'oldest') return;
+    // Drag and drop across all sort modes; after manual sort switch to 'custom'
+    const handleDragStart = (event, index) => {
+        try {
+            if (event?.dataTransfer) {
+                event.dataTransfer.effectAllowed = 'move';
+                // Some browsers require setData to initiate DnD
+                event.dataTransfer.setData('text/plain', String(index));
+            }
+        } catch {}
         setDraggedIndex(index);
     };
 
     const handleDragOver = (event) => {
-        if (sortMode !== 'oldest') return;
         event.preventDefault();
     };
 
-    const handleDrop = async (dropIndex) => {
-        if (sortMode !== 'oldest') return;
+    const handleDrop = async (dropIndex, event) => {
+        if (event) {
+            try { event.preventDefault(); } catch {}
+        }
         if (draggedIndex === null) return;
+        // Reorder based on current visible list
+        const newDisplayOrder = [...displayItems];
+        const [draggedItem] = newDisplayOrder.splice(draggedIndex, 1);
+        newDisplayOrder.splice(dropIndex, 0, draggedItem);
 
-        // Work with a copy of the filtered items (default order)
-        const updatedFiltered = [...filteredItems];
-        const [draggedItem] = updatedFiltered.splice(draggedIndex, 1);
-        updatedFiltered.splice(dropIndex, 0, draggedItem);
-
-        if (isPro) {
-            // Pro version: update order for ALL items in the current project/folder
-            // 1. Get all items for this project/folder
-            let allQuery = supabase
-                .from('clipboard_items')
-                .select('*')
-                .eq('project_id', selectedProjectId);
-            if (selectedFolderId) {
-                allQuery = allQuery.eq('folder_id', selectedFolderId);
-            } else {
-                allQuery = allQuery.is('folder_id', null);
-            }
-            const { data: allItems, error: allError } = await allQuery;
-            if (allError) {
-                console.error('Failed to fetch all items for drag-and-drop:', allError);
-                setDraggedIndex(null);
-                return;
-            }
-
-            // 2. Build the reordered list
-            const filteredIndexes = filteredItems.map(fItem => allItems.findIndex(aItem => aItem.id === fItem.id));
-            let reordered = allItems.filter((item, idx) => !filteredIndexes.includes(idx));
-            let insertAt = allItems.findIndex(item => item.id === filteredItems[0]?.id);
-            if (insertAt === -1) insertAt = reordered.length;
-            reordered = [
-                ...reordered.slice(0, insertAt),
-                ...updatedFiltered,
-                ...reordered.slice(insertAt)
-            ];
-
-            // 3. Update order for all items in reordered list
+    if (isPro) {
+            // Persist order so that the top row has the highest order.
+            // Compute maxOrder across current list to keep numbers monotonic.
+            const currentMax = Math.max(0, ...clipboardItems.map(it => (typeof it === 'string' ? 0 : (Number(it.order) || 0))));
+            const base = currentMax + 1; // ensure we move forward
+            const size = newDisplayOrder.length;
             await Promise.all(
-                reordered.map((item, idx) =>
-                    supabase
+        newDisplayOrder.map((item, idx) => {
+            if (!item || !item.id) return Promise.resolve();
+                    const newOrder = base + (size - 1 - idx); // top gets biggest
+                    return supabase
                         .from('clipboard_items')
-                        .update({ order: idx })
-                        .eq('id', item.id)
-                )
+                        .update({ order: newOrder })
+                        .eq('id', item.id);
+                })
             );
 
-            // 4. Refetch clipboard items for this project/folder after all updates
+            // Refetch clipboard items for this project/folder after all updates
             let query = supabase
                 .from('clipboard_items')
                 .select('*')
                 .eq('project_id', selectedProjectId)
-                .order('order', { ascending: true, nullsLast: true });
+                .order('order', { ascending: false, nullsLast: true });
 
             if (selectedFolderId) {
                 query = query.eq('folder_id', selectedFolderId);
@@ -226,22 +224,20 @@ export default function ClipboardList({
             const { data, error } = await query;
             if (!error) setClipboardItems(data || []);
         } else {
-            // Free version: update local state only
-            // Remove all filteredItems from clipboardItems
-            let updated = clipboardItems.filter(item => !filteredItems.some(f => getItemText(f) === getItemText(item)));
-            // Find the index of the first filtered item in clipboardItems
-            let insertAt = clipboardItems.findIndex(i => getItemText(i) === getItemText(filteredItems[0]));
-            if (insertAt === -1) {
-                insertAt = updated.length;
-            }
-            updated = [
-                ...updated.slice(0, insertAt),
-                ...updatedFiltered,
-                ...updated.slice(insertAt)
-            ];
-            setClipboardItems(updated);
+            // Free: capture the new manual order for the full list (no project/folder filter in free)
+            setClipboardItems(newDisplayOrder);
         }
 
+        setDraggedIndex(null);
+        // Move into custom sort mode and notify controls to sync the dropdown
+        setSortMode('custom');
+        try {
+            const ev = new CustomEvent('clipboard-sort-change', { detail: 'custom' });
+            window.dispatchEvent(ev);
+        } catch {}
+    };
+
+    const handleDragEnd = () => {
         setDraggedIndex(null);
     };
 
@@ -321,14 +317,25 @@ export default function ClipboardList({
     // Remove single item
     const handleRemove = (item, index) => {
         if (isPro) {
-            if (!item.id) {
-                console.warn('Attempted to delete item with no id:', item);
+            // Resolve id if missing by matching text in current scope
+            let itemId = item?.id;
+            if (!itemId) {
+                const candidate = clipboardItems.find(it => (
+                    (typeof it !== 'string') &&
+                    it.text === getItemText(item) &&
+                    it.project_id === selectedProjectId &&
+                    (selectedFolderId ? it.folder_id === selectedFolderId : !it.folder_id)
+                ));
+                itemId = candidate?.id;
+            }
+            if (!itemId) {
+                console.warn('Attempted to delete item with no resolvable id:', item);
                 return;
             }
             supabase
                 .from('clipboard_items')
                 .delete()
-                .eq('id', item.id)
+                .eq('id', itemId)
                 .then(({ error }) => {
                     if (error) {
                         console.error('Error deleting item:', error);
@@ -338,7 +345,7 @@ export default function ClipboardList({
                         .from('clipboard_items')
                         .select('*')
                         .eq('project_id', selectedProjectId)
-                        .order('order', { ascending: true, nullsLast: true });
+                        .order('order', { ascending: false, nullsLast: true });
                     if (selectedFolderId) {
                         query = query.eq('folder_id', selectedFolderId);
                     } else {
@@ -433,10 +440,11 @@ export default function ClipboardList({
                         return (
                         <tr
                             key={getItemKey(item)}
-                            draggable={sortMode === 'newest'}
-                            onDragStart={() => handleDragStart(index)}
+                            draggable={true}
+                            onDragStart={(e) => handleDragStart(e, index)}
                             onDragOver={handleDragOver}
-                            onDrop={() => handleDrop(index)}
+                            onDrop={(e) => handleDrop(index, e)}
+                            onDragEnd={handleDragEnd}
                         >
                             <ClipboardItem
                                 index={index}
@@ -479,7 +487,14 @@ export default function ClipboardList({
                 </tfoot>
             </table>
             {/* Bulk delete confirmation modal */}
-            <Modal open={confirmBulkDeleteOpen} onClose={() => setConfirmBulkDeleteOpen(false)}>
+            <Modal
+                open={confirmBulkDeleteOpen}
+                onClose={() => setConfirmBulkDeleteOpen(false)}
+                onPrimary={async () => {
+                    await handleDeleteSelected();
+                    setConfirmBulkDeleteOpen(false);
+                }}
+            >
                 <h3 style={{ marginBottom: 12 }}>Delete selected items?</h3>
                 <p style={{ marginBottom: 16 }}>
                     You are about to delete {selectedKeys.length} item{selectedKeys.length === 1 ? '' : 's'}. This action cannot be undone.
@@ -499,17 +514,11 @@ export default function ClipboardList({
             </Modal>
 
             {/* Edit item modal */}
-            <Modal open={editModalOpen} onClose={closeEditModal}>
+            <Modal open={editModalOpen} onClose={closeEditModal} onPrimary={saveEditModal}>
                 <h3 style={{ marginBottom: 12 }}>Edit clipboard item</h3>
                 <textarea
                     value={editText}
                     onChange={(e) => setEditText(e.target.value)}
-                    onKeyDown={(e) => {
-                        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                            e.preventDefault();
-                            saveEditModal();
-                        }
-                    }}
                     style={{ width: '100%', minHeight: 180, background: '#1e1e1e', color: '#eee', border: '1px solid #444', borderRadius: 6, padding: 10 }}
                     autoFocus
                 />

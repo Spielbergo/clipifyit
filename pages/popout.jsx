@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
 // Helper to fetch project/folder names from Supabase
@@ -129,7 +129,7 @@ export default function PopOut() {
                     .from('clipboard_items')
                     .select('*')
                     .eq('project_id', projectId)
-                    .order('order', { ascending: true, nullsLast: true });
+                    .order('order', { ascending: false, nullsLast: true });
                 if (folderId) {
                     query = query.eq('folder_id', folderId);
                 } else {
@@ -137,6 +137,10 @@ export default function PopOut() {
                 }
                 const { data, error } = await query;
                 setClipboardItems(data || []);
+                try {
+                    const ev = new CustomEvent('clipboard-sort-change', { detail: 'custom' });
+                    window.dispatchEvent(ev);
+                } catch {}
             } else if (isFree) {
                 // Free: only if user is not logged in and projectId is ''
                 const storedItems = JSON.parse(localStorage.getItem('clipboardItems')) || [];
@@ -170,6 +174,57 @@ export default function PopOut() {
         }
     }, [clipboardItems, isFree, user, projectId]);
 
+    // Realtime sync for Pro popout
+    const rtPopoutRef = useRef(null);
+    useEffect(() => {
+        if (!isPro) return;
+        if (rtPopoutRef.current) {
+            try { supabase.removeChannel?.(rtPopoutRef.current); } catch {}
+            rtPopoutRef.current = null;
+        }
+        const channelName = `rt-popout-clipboard-${projectId}-${folderId || 'null'}`;
+        const channel = supabase
+            .channel(channelName)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'clipboard_items', filter: `project_id=eq.${projectId}` }, (payload) => {
+                try { console.debug('[Realtime][Popout]', payload.eventType, payload.new || payload.old); } catch {}
+                const row = payload.new || payload.old;
+                if (!row) return;
+                const isCurrentFolder = (folderId ? row.folder_id === folderId : !row.folder_id);
+                if (!isCurrentFolder) return;
+                setClipboardItems((prev) => {
+                    let next = prev.slice();
+                    switch (payload.eventType) {
+                        case 'INSERT': {
+                            const idx = next.findIndex(it => it.id === row.id);
+                            if (idx >= 0) next[idx] = { ...next[idx], ...row };
+                            else next = [row, ...next];
+                            break;
+                        }
+                        case 'UPDATE': {
+                            const idx = next.findIndex(it => it.id === row.id);
+                            if (idx >= 0) next[idx] = { ...next[idx], ...row };
+                            else next = [row, ...next];
+                            break;
+                        }
+                        case 'DELETE': {
+                            next = next.filter(it => it.id !== row.id);
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                    next.sort((a, b) => (Number(b.order || 0) - Number(a.order || 0)));
+                    return next;
+                });
+            })
+            .subscribe((status) => { try { console.debug('[Realtime][Popout] status:', status); } catch {} });
+        rtPopoutRef.current = channel;
+        return () => {
+            try { supabase.removeChannel?.(channel); } catch {}
+            if (rtPopoutRef.current === channel) rtPopoutRef.current = null;
+        };
+    }, [isPro, projectId, folderId]);
+
     // Add item handler
     const handleAddItem = async (text) => {
         if (isPro) {
@@ -177,19 +232,34 @@ export default function PopOut() {
             if (clipboardItems.some(item => (typeof item === 'string' ? item : item.text) === text)) {
                 return true;
             }
+            // Compute next highest order so item appears at the top (we fetch desc)
+            const maxOrder = Math.max(0, ...clipboardItems.map(it => Number((it && it.order) || 0)));
             const insertObj = {
                 project_id: projectId,
                 folder_id: folderId || null,
                 text,
                 created_at: new Date(),
-                order: clipboardItems.length,
+                order: maxOrder + 1,
+                user_id: user?.id || null,
             };
             const { data, error } = await supabase
                 .from('clipboard_items')
                 .insert([insertObj])
                 .select();
-            if (!error && data) {
-                setClipboardItems(prev => [ ...prev, ...(data || []) ]);
+            if (!error) {
+                // Refetch to ensure we have full rows with ids and correct order
+                let q = supabase
+                    .from('clipboard_items')
+                    .select('*')
+                    .eq('project_id', projectId)
+                    .order('order', { ascending: false, nullsLast: true });
+                if (folderId) q = q.eq('folder_id', folderId); else q = q.is('folder_id', null);
+                const { data: fresh } = await q;
+                setClipboardItems(fresh || []);
+                try {
+                    const ev = new CustomEvent('clipboard-sort-change', { detail: 'custom' });
+                    window.dispatchEvent(ev);
+                } catch {}
             }
             return false;
         } else {

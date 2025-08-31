@@ -26,43 +26,6 @@ const Contact = () => {
                 <div className={`${styles.blob} ${styles.blobB}`}></div>
 
                 <div className={styles.contactWrap}>
-                    <div className={styles.contactCard}>
-                        <h1 className={styles.heading}>Contact Us</h1>
-                        <p className={styles.subheading}>
-                            We'd love to hear from you! Fill out the form and we'll get back to you soon.
-                        </p>
-                        <form className={styles.form} onSubmit={handleSubmit}>
-                            <div className={styles.inputGroup}>
-                                <label htmlFor="name">Name</label>
-                                <input id="name" name="name" type="text" required autoComplete="off" />
-                            </div>
-                            <div className={styles.inputGroup}>
-                                <label htmlFor="email">Email</label>
-                                <input id="email" name="email" type="email" required autoComplete="off" />
-                            </div>
-                            <div className={styles.inputGroup}>
-                                <label htmlFor="message">Message</label>
-                                <textarea id="message" name="message" rows={5} required className={styles.inputTextarea} />
-                            </div>
-                            <button
-                                type="submit"
-                                className={styles.submitButton}
-                                disabled={submitted}
-                            >
-                                {submitted ? (
-                                    <span className={styles.loader}></span>
-                                ) : (
-                                    "Send Message"
-                                )}
-                            </button>
-                            {submitted && (
-                                <div className={styles.successMsg}>
-                                    Thank you! We'll be in touch soon.
-                                </div>
-                            )}
-                        </form>
-                    </div>
-
                     <aside className={styles.supportCard}>
                         <h2 className={styles.supportTitle}>
                             <FaLifeRing className={styles.socialIcon} /> Support
@@ -119,6 +82,42 @@ const Contact = () => {
                             <FaCheckCircle className={styles.socialIcon} /> Status: All systems operational
                         </p>
                     </aside>
+                    <div className={styles.contactCard}>
+                        <h1 className={styles.heading}>Contact Us</h1>
+                        <p className={styles.subheading}>
+                            We'd love to hear from you! Fill out the form and we'll get back to you soon.
+                        </p>
+                        <form className={styles.form} onSubmit={handleSubmit}>
+                            <div className={styles.inputGroup}>
+                                <label htmlFor="name">Name</label>
+                                <input id="name" name="name" type="text" required autoComplete="off" />
+                            </div>
+                            <div className={styles.inputGroup}>
+                                <label htmlFor="email">Email</label>
+                                <input id="email" name="email" type="email" required autoComplete="off" />
+                            </div>
+                            <div className={styles.inputGroup}>
+                                <label htmlFor="message">Message</label>
+                                <textarea id="message" name="message" rows={5} required className={styles.inputTextarea} />
+                            </div>
+                            <button
+                                type="submit"
+                                className={styles.submitButton}
+                                disabled={submitted}
+                            >
+                                {submitted ? (
+                                    <span className={styles.loader}></span>
+                                ) : (
+                                    "Send Message"
+                                )}
+                            </button>
+                            {submitted && (
+                                <div className={styles.successMsg}>
+                                    Thank you! We'll be in touch soon.
+                                </div>
+                            )}
+                        </form>
+                    </div>
                 </div>
             </div>
             <Footer />

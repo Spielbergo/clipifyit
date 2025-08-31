@@ -12,6 +12,14 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
     const [errorMessage, setErrorMessage] = useState('');
     const [showCustomModal, setShowCustomModal] = useState(false);
     const [sortMode, setSortMode] = useState('newest');
+    // Listen for external sort-mode broadcasts (e.g., 'custom' after manual drag)
+    useEffect(() => {
+        const handler = (e) => setSortMode(e.detail || 'newest');
+        if (typeof window !== 'undefined') window.addEventListener('clipboard-sort-change', handler);
+        return () => {
+            if (typeof window !== 'undefined') window.removeEventListener('clipboard-sort-change', handler);
+        };
+    }, []);
     // Notify parent when modal open/close changes
     useEffect(() => {
         if (onShowCustomModalChange) onShowCustomModalChange(showCustomModal);
@@ -159,6 +167,7 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
                     <option value="oldest">Oldest</option>
                     <option value="az">A → Z</option>
                     <option value="za">Z → A</option>
+                    <option value="custom">Custom</option>
                 </select>
                 {/* <FaChevronDown className={styles.pillChevron} aria-hidden="true" /> */}
             </div>
@@ -216,7 +225,7 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
             </div>
             <div className="no-selection-message">{errorMessage}</div>
 
-            <Modal open={showCustomModal} onClose={() => setShowCustomModal(false)}>
+            <Modal open={showCustomModal} onClose={() => setShowCustomModal(false)} onPrimary={handleAddCustom}>
                 <h3 style={{ marginBottom: 12 }}>Paste Custom Text</h3>
                 <textarea
                     ref={textareaRef}

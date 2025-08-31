@@ -115,6 +115,14 @@
   font-weight: 700;
 }
 
+.planBadge_offline {
+  background: linear-gradient(90deg, #455a64 0%, #90a4ae 100%);
+  color: #fff;
+  border-radius: 1em;
+  padding: 0.2em 1em;
+  font-weight: 700;
+}
+
 .error {
   color: #ff8a80;
   margin-top: 0.5em;

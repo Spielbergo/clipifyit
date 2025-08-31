@@ -26,7 +26,7 @@
   position: relative;
   width: min(1100px, 92vw);
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-columns: 0.9fr 1.1fr;
   gap: 24px;
   z-index: 1;
 }

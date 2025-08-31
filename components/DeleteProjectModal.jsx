@@ -1,7 +1,24 @@
+import { useEffect } from 'react';
 import styles from  './modal.module.css'
 
 export default function DeleteProjectModal({ open, onCancel, onConfirm, projectName }) {
   if (!open) return null;
+  // Shift+Enter confirms; Escape cancels
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => {
+      if (e.shiftKey && (e.key === 'Enter' || e.code === 'Enter')) {
+        e.preventDefault();
+        onConfirm?.();
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onCancel?.();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, onCancel, onConfirm]);
   return (
     <div className={styles.modal_overlay}>
       <div className="modal-content" style={{

@@ -86,7 +86,7 @@ export default function ProApp() {
                 .from('clipboard_items')
                 .select('*')
                 .eq('project_id', lastDeps.selectedProjectId)
-                .order('order', { ascending: true, nullsLast: true });
+                .order('order', { ascending: false, nullsLast: true });
 
             if (lastDeps.selectedFolderId) {
                 query = query.eq('folder_id', lastDeps.selectedFolderId);
@@ -98,6 +98,11 @@ export default function ProApp() {
             clearTimeout(loaderTimeout);
             setLoading(false);
             setClipboardItems(data || []);
+            // Default sort to 'custom' to reflect saved order per project/folder
+            try {
+                const ev = new CustomEvent('clipboard-sort-change', { detail: 'custom' });
+                window.dispatchEvent(ev);
+            } catch {}
             lastFetchedDepsRef.current = { ...lastDeps };
             console.log('[Clipboard Fetch] Data:', data, 'Error:', error);
         };
@@ -113,17 +118,74 @@ export default function ProApp() {
         return undefined;
     }, [user?.id, selectedProjectId, selectedFolderId]);
 
+    // Realtime: live sync clipboard items without extra fetches
+    const rtChannelRef = useRef(null);
+    useEffect(() => {
+        if (!user || !selectedProjectId) return;
+        // If an old channel exists, remove it first
+        if (rtChannelRef.current) {
+            try { supabase.removeChannel?.(rtChannelRef.current); } catch {}
+            rtChannelRef.current = null;
+        }
+        const channelName = `rt-clipboard-${selectedProjectId}-${selectedFolderId || 'null'}`;
+        const channel = supabase
+            .channel(channelName)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'clipboard_items', filter: `project_id=eq.${selectedProjectId}` }, (payload) => {
+                // Debug: verify realtime is firing
+                try { console.debug('[Realtime][Main]', payload.eventType, payload.new || payload.old); } catch {}
+                const row = payload.new || payload.old;
+                if (!row) return;
+                // Only handle current folder scope
+                const isCurrentFolder = (selectedFolderId ? row.folder_id === selectedFolderId : !row.folder_id);
+                if (!isCurrentFolder) return;
+                setClipboardItems((prev) => {
+                    let next = prev.slice();
+                    switch (payload.eventType) {
+                        case 'INSERT': {
+                            const idx = next.findIndex(it => it.id === row.id);
+                            if (idx >= 0) next[idx] = { ...next[idx], ...row };
+                            else next = [row, ...next]; // newest first
+                            break;
+                        }
+                        case 'UPDATE': {
+                            const idx = next.findIndex(it => it.id === row.id);
+                            if (idx >= 0) next[idx] = { ...next[idx], ...row };
+                            else next = [row, ...next];
+                            break;
+                        }
+                        case 'DELETE': {
+                            next = next.filter(it => it.id !== row.id);
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                    // Always keep descending by order (newest on top)
+                    next.sort((a, b) => (Number(b.order || 0) - Number(a.order || 0)));
+                    return next;
+                });
+            })
+            .subscribe((status) => {
+                try { console.debug('[Realtime][Main] status:', status); } catch {}
+            });
+        rtChannelRef.current = channel;
+        return () => {
+            try { supabase.removeChannel?.(channel); } catch {}
+            if (rtChannelRef.current === channel) rtChannelRef.current = null;
+        };
+    }, [user, selectedProjectId, selectedFolderId]);
+
     // Add item to the selected project's clipboard
     const handleAddItem = async (text) => {
         if (!user || !selectedProjectId) return;
         if (clipboardItems.some(item => item.text === text)) return true;
 
-        // Only count items in the current project/folder
+        // Compute next highest order in this project/folder so it appears at the top (we fetch desc)
         const currentItems = clipboardItems.filter(item =>
             item.project_id === selectedProjectId &&
             (selectedFolderId ? item.folder_id === selectedFolderId : !item.folder_id)
         );
-        const newOrder = currentItems.length;
+        const newOrder = Math.max(0, ...currentItems.map(it => Number((it && it.order) || 0))) + 1;
 
         console.log('Inserting:', {
             project_id: selectedProjectId,
@@ -149,8 +211,21 @@ export default function ProApp() {
             .select();
 
         console.log('Insert result:', data, error);
-
-    if (!error && data) setClipboardItems([...clipboardItems, ...(data || [])]);
+    if (!error) {
+            // Refetch current scope to ensure full, ordered list
+            let q = supabase
+                .from('clipboard_items')
+                .select('*')
+                .eq('project_id', selectedProjectId)
+                .order('order', { ascending: false, nullsLast: true });
+            if (selectedFolderId) q = q.eq('folder_id', selectedFolderId); else q = q.is('folder_id', null);
+            const { data: fresh } = await q;
+            setClipboardItems(fresh || []);
+            try {
+                const ev = new CustomEvent('clipboard-sort-change', { detail: 'custom' });
+                window.dispatchEvent(ev);
+            } catch {}
+        }
         return false;
     };
 

@@ -41,6 +41,17 @@
 	justify-content: space-between;
 }
 
+.read .item_button {
+	color: #888;
+}
+.read .item_title {
+	color: #999;
+}
+.read .item_excerpt,
+.read .item_date {
+	color: #777;
+}
+
 .item_button {
 	background: none;
 	border: none;

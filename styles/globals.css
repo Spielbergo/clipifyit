@@ -84,9 +84,8 @@ html, body {
 
 body {   
   /* min-height: 100vh; */
-  display: block; /* allow children to span full width */
-  /* Removed flex centering that was constraining width */
-  padding-top: 60px;       /* adjust if your navbar is 60px tall */
+  display: block; 
+  padding-top: 60px;
   box-sizing: border-box;
   margin: 0;
   font-family: Arial, sans-serif;
@@ -99,6 +98,7 @@ body {
 
 a {
   text-decoration: none;
+  color: var(--primary-color);
 }
 
 /* p {
@@ -172,7 +172,7 @@ textarea:focus {
 /* Popout: make controls sticky to the very top since nav is gone */
 body.popout .controls-container {
   top: 0 !important;
-  width: 100% !important; /* override global 101% so body padding is visible */
+  width: 100% !important; 
   padding: 0 15px;
 }
 

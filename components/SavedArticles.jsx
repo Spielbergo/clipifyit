@@ -43,7 +43,7 @@ export default function SavedArticles({ open, onClose }) {
   };
 
   return (
-    <Modal open={open} onClose={onClose}>
+    <Modal open={open} onClose={onClose} onPrimary={onClose}>
       <div style={{ display: 'flex', gap: 16, minHeight: 320 }}>
         <div style={{ flex: '0 0 280px', maxHeight: '70vh', overflow: 'auto', borderRight: '1px solid #333', paddingRight: 12 }}>
           <h3 style={{ marginTop: 0 }}>Saved Articles</h3>

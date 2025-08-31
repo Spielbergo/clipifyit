@@ -1,7 +1,22 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 export default function DeleteFolderModal({ open, onCancel, onConfirm, folderName }) {
   if (!open) return null;
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => {
+  if (e.shiftKey && (e.key === 'Enter' || e.code === 'Enter')) {
+        e.preventDefault();
+        onConfirm?.();
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onCancel?.();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, onCancel, onConfirm]);
   return (
     <div className="modal-overlay" style={{
       position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',

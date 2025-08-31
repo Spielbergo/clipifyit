@@ -266,7 +266,7 @@ export default function ClipboardItem({
                     </div>
                 )}
                 {/* Offline reader modal */}
-                <Modal open={isArticleModalOpen} onClose={() => setIsArticleModalOpen(false)}>
+                <Modal open={isArticleModalOpen} onClose={() => setIsArticleModalOpen(false)} onPrimary={() => setIsArticleModalOpen(false)}>
                     {articleState.loading ? (
                         <div>Fetching…</div>
                     ) : articleState.error ? (
@@ -300,14 +300,14 @@ export default function ClipboardItem({
                         <div>No content saved yet.</div>
                     )}
                 </Modal>
+                {/* Success popup notification for saved article (must be inside td to avoid hydration issues) */}
+                <div
+                    className="copied-message"
+                    style={{ display: showSavedMessage ? 'block' : 'none', position: 'absolute', right: 8, bottom: -24 }}
+                >
+                    Saved for offline!
+                </div>
             </td>
-            {/* Success popup notification for saved article */}
-            <div
-                className="copied-message"
-                style={{ display: showSavedMessage ? 'block' : 'none' }}
-            >
-                Saved for offline!
-            </div>
             {/* <td>
                 <span
                     style={{ cursor: 'grab' }}

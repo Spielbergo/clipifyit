@@ -18,6 +18,13 @@ export default function Saved() {
   const [isNarrow, setIsNarrow] = useState(true);
   const [articleModalOpen, setArticleModalOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null); // { url, title }
+  const [readUrls, setReadUrls] = useState(() => {
+    if (typeof window === 'undefined') return new Set();
+    try {
+      const raw = localStorage.getItem('saved_read_urls') || '[]';
+      return new Set(JSON.parse(raw));
+    } catch { return new Set(); }
+  });
 
   async function refresh() {
     try {
@@ -41,12 +48,16 @@ export default function Saved() {
             try {
               const a = await getArticle(it.url);
               const text = a?.html ? extractTextFromHTML(a.html) : (a?.text || '');
-              return { url: it.url, excerpt: summarize(text) };
-            } catch { return { url: it.url, excerpt: '' }; }
+              return { url: it.url, excerpt: summarize(text), readMin: computeReadTime(text) };
+            } catch { return { url: it.url, excerpt: '', readMin: 0 }; }
           })
         );
-        const map = Object.fromEntries(details.map(d => [d.url, d.excerpt]));
-        setItems(prev => (prev || []).map(it => ({ ...it, excerpt: map[it.url] || it.excerpt })));
+        const map = Object.fromEntries(details.map(d => [d.url, d]));
+        setItems(prev => (prev || []).map(it => ({
+          ...it,
+          excerpt: map[it.url]?.excerpt || it.excerpt,
+          readMin: typeof map[it.url]?.readMin === 'number' ? map[it.url].readMin : it.readMin
+        })));
       } catch {}
     } finally {
       setLoading(false);
@@ -54,6 +65,12 @@ export default function Saved() {
   }
 
   useEffect(() => { refresh(); }, []);
+
+  // Persist read URLs whenever it changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try { localStorage.setItem('saved_read_urls', JSON.stringify(Array.from(readUrls))); } catch {}
+  }, [readUrls]);
 
   // Responsive flag for mobile/tablet
   useEffect(() => {
@@ -133,11 +150,39 @@ export default function Saved() {
   return normalized.length > max ? normalized.slice(0, max) + '…' : normalized;
   }
 
+  function computeReadTime(text) {
+    const words = (text || '').trim().split(/\s+/).filter(Boolean).length;
+    const wpm = 220; // average reading speed
+    if (!words) return 1;
+    return Math.max(1, Math.round(words / wpm));
+  }
+
   const openItem = async (url) => {
     const a = await getArticle(url);
     if (a) setActive(a);
     if (isNarrow) setArticleModalOpen(true);
   };
+
+  // Mark current article as read after user scrolls a bit in the content pane
+  useEffect(() => {
+    if (!active) return;
+    // choose scroll container: wide view content pane or modal body
+    const container = document.querySelector(`.${styles.content}`) || document.querySelector(`.${styles.mobile_modal_body}`);
+    if (!container) return;
+    let marked = false;
+    const onScroll = () => {
+      if (marked) return;
+      const threshold = Math.max(120, container.clientHeight * 0.15); // 120px or 15% of view
+      if (container.scrollTop > threshold) {
+        marked = true;
+        setReadUrls(prev => new Set(prev).add(active.url));
+      }
+    };
+    container.addEventListener('scroll', onScroll, { passive: true });
+    // Also mark as read if user clicks Next/Previous quickly and scroll is already beyond threshold
+    onScroll();
+    return () => container.removeEventListener('scroll', onScroll);
+  }, [active, isNarrow]);
 
   const prevArticle = async () => {
     if (!active) return;
@@ -173,9 +218,12 @@ export default function Saved() {
           items.length ? (
             <ul className={styles.list}>
               {items.map(it => (
-                <li key={it.url} className={styles.list_item}>
+                <li key={it.url} className={`${styles.list_item} ${readUrls.has(it.url) ? styles.read : ''}`}>
                   <button className={styles.item_button} onClick={() => openItem(it.url)}>
                     <div className={styles.item_title}>{it.title || it.url}</div>
+                    {typeof it.readMin === 'number' && it.readMin > 0 && (
+                      <div className={styles.item_date} aria-label="Estimated read time">⏱ {it.readMin} min read</div>
+                    )}
                     {it.excerpt ? (
                       <div className={styles.item_excerpt}>{it.excerpt}</div>
                     ) : (
@@ -214,6 +262,17 @@ export default function Saved() {
           ) : active ? (
             <div>
               <h3 className={styles.article_title}>{active.title || 'Saved article'}</h3>
+              {(() => {
+                const text = active?.html ? extractTextFromHTML(active.html) : (active?.text || '');
+                const mins = computeReadTime(text);
+                const savedTs = active?.savedAt ? new Date(active.savedAt).toLocaleString() : null;
+                return (
+                  <div className={styles.item_date} style={{ marginBottom: 6 }}>
+                    <span aria-label="Estimated read time">⏱ {mins} min read</span>
+                    {savedTs ? <span> • Saved {savedTs}</span> : null}
+                  </div>
+                );
+              })()}
               <div className={styles.article_url}>{active.url}</div>
               {active.html ? (
                 <div className={styles.article_reader} dangerouslySetInnerHTML={{ __html: active.html }} />
@@ -224,7 +283,7 @@ export default function Saved() {
           ) : <div className={styles.empty_hint}>Select a saved article to read</div>}
         </div>
       )}
-  <Modal open={showInstallHelp} onClose={() => setShowInstallHelp(false)}>
+  <Modal open={showInstallHelp} onClose={() => setShowInstallHelp(false)} onPrimary={() => setShowInstallHelp(false)}>
         <div>
           <h3 className={styles.install_title}>Install Clipify It</h3>
           <p className={styles.install_text}>{installHelpText || 'Use your browser’s Install option to add the app to your device.'}</p>
@@ -235,7 +294,7 @@ export default function Saved() {
       </Modal>
 
       {/* Delete confirmation */}
-  <Modal open={!!confirmDelete} onClose={() => setConfirmDelete(null)}>
+  <Modal open={!!confirmDelete} onClose={() => setConfirmDelete(null)} onPrimary={async () => { if (confirmDelete?.url) await handleDelete(confirmDelete.url); setConfirmDelete(null); }}>
         <div>
           <h3 className={styles.install_title}>Delete saved article?</h3>
           <p className={styles.install_text}>This will remove the saved copy from this device:</p>
@@ -253,7 +312,7 @@ export default function Saved() {
       </Modal>
 
       {/* Mobile/Tablet reading modal */}
-  <Modal open={isNarrow && articleModalOpen} onClose={() => setArticleModalOpen(false)} hideClose>
+  <Modal open={isNarrow && articleModalOpen} onClose={() => setArticleModalOpen(false)} onPrimary={() => setArticleModalOpen(false)} hideClose>
         <div className={styles.mobile_modal_container}>
           <div className={styles.mobile_modal_header}>
             <div className={styles.mobile_header_title}>{active?.title || 'Saved article'}</div>
@@ -262,6 +321,17 @@ export default function Saved() {
           <div className={styles.mobile_modal_body}>
             {active ? (
               <>
+                {(() => {
+                  const text = active?.html ? extractTextFromHTML(active.html) : (active?.text || '');
+                  const mins = computeReadTime(text);
+                  const savedTs = active?.savedAt ? new Date(active.savedAt).toLocaleString() : null;
+                  return (
+                    <div className={styles.item_date} style={{ marginBottom: 6 }}>
+                      <span aria-label="Estimated read time">⏱ {mins} min read</span>
+                      {savedTs ? <span> • Saved {savedTs}</span> : null}
+                    </div>
+                  );
+                })()}
                 <div className={styles.article_url}>{active.url}</div>
                 {active.html ? (
                   <div className={styles.article_reader} dangerouslySetInnerHTML={{ __html: active.html }} />

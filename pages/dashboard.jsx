@@ -27,6 +27,7 @@ export default function Dashboard() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const { plan: subPlan, subscription_status, isActive } = useSubscription();
+  const [isOffline, setIsOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false);
   const [subDetails, setSubDetails] = useState(null);
   const [subLoading, setSubLoading] = useState(false);
   const [subErr, setSubErr] = useState("");
@@ -56,6 +57,22 @@ export default function Dashboard() {
       }
     })();
     }, [user, router]);
+
+  // Track online/offline to show an Offline badge
+  useEffect(() => {
+    const on = () => setIsOffline(false);
+    const off = () => setIsOffline(true);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', on);
+      window.addEventListener('offline', off);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('online', on);
+        window.removeEventListener('offline', off);
+      }
+    };
+  }, []);
 
   // Load Stripe subscription details for richer UI
   useEffect(() => {
@@ -223,6 +240,9 @@ export default function Dashboard() {
             <span className={styles[`planBadge_${(isActive ? (subPlan || 'pro') : 'free')}`]}>
               {isActive ? ((subPlan || 'pro').toUpperCase()) : 'FREE'}
             </span>
+            {isOffline && (
+              <span style={{ marginLeft: 8 }} className={styles.planBadge_offline}>OFFLINE</span>
+            )}
           </div>
           <div className={styles.planRow}>
             <span>Status:</span>
@@ -369,7 +389,7 @@ export default function Dashboard() {
             Delete My Account
           </button>
         </div>
-        <Modal open={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
+  <Modal open={showDeleteModal} onClose={() => setShowDeleteModal(false)} onPrimary={confirmDelete}>
           <h3>Delete account?</h3>
           <p>This will permanently delete your account and all associated data. This action cannot be undone.</p>
           <div className={styles.planActions}>
