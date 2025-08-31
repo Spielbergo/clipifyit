@@ -36,7 +36,7 @@
 .table th,
 .table td {
   border: none;
-  padding: 12px 10px;
+  padding: 12px 0 12px 10px;
 }
 
 /* Make checkboxes vertically centered */

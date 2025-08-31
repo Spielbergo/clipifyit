@@ -202,7 +202,8 @@ export default function ProApp() {
             text,
             created_at: new Date(),
             user_id: user.id,
-            order: newOrder
+            order: newOrder,
+            // Optional: name could be set later via edit modal
         };
 
         const { data, error } = await supabase
@@ -240,13 +241,32 @@ export default function ProApp() {
     };
 
     // Edit item in the selected project's clipboard
-    const handleSaveItem = async (id, newText) => {
+    const handleSaveItem = async (id, newText, newName, newLabelColor, completed) => {
         if (!user || !selectedProjectId) return;
-        await supabase
+        const updateObj = { text: newText };
+        const allowNameColumn = (typeof window !== 'undefined') ? (localStorage.getItem('clipboard_name_db_disabled') !== '1') : true;
+        if (allowNameColumn && typeof newName !== 'undefined') updateObj.name = (newName === null ? null : (newName || null));
+        const allowLabelColumn = (typeof window !== 'undefined') ? (localStorage.getItem('clipboard_label_db_disabled') !== '1') : true;
+        if (allowLabelColumn && typeof newLabelColor !== 'undefined') updateObj.label_color = (newLabelColor === null ? null : (newLabelColor || null));
+        const allowCompletedColumn = (typeof window !== 'undefined') ? (localStorage.getItem('clipboard_completed_db_disabled') !== '1') : true;
+        if (allowCompletedColumn && typeof completed !== 'undefined') updateObj.completed = !!completed;
+        const { error: updError } = await supabase
             .from('clipboard_items')
-            .update({ text: newText })
+            .update(updateObj)
             .eq('id', id);
-        setClipboardItems(clipboardItems.map(item => item.id === id ? { ...item, text: newText } : item));
+        if (updError) {
+            const msg = String(updError.message || updError.details || '');
+            if (/column\s+.*name.*\s+does not exist/i.test(msg)) {
+                try { localStorage.setItem('clipboard_name_db_disabled', '1'); } catch {}
+            }
+            if (/column\s+.*label_color.*\s+does not exist/i.test(msg)) {
+                try { localStorage.setItem('clipboard_label_db_disabled', '1'); } catch {}
+            }
+            if (/column\s+.*completed.*\s+does not exist/i.test(msg)) {
+                try { localStorage.setItem('clipboard_completed_db_disabled', '1'); } catch {}
+            }
+        }
+        setClipboardItems(clipboardItems.map(item => item.id === id ? { ...item, text: newText, name: (typeof newName !== 'undefined') ? (newName === null ? null : (newName || null)) : item.name, label_color: (typeof newLabelColor !== 'undefined') ? (newLabelColor === null ? null : (newLabelColor || null)) : item.label_color, completed: (typeof completed !== 'undefined') ? !!completed : item.completed } : item));
     };
 
     // Clear all items in the selected project's clipboard

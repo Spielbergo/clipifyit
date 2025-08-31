@@ -139,6 +139,7 @@ textarea:focus {
   flex-direction: row;
   /* min-height: 100vh; */
   background-color: var(--primary-bg-color);
+  width: 108%;
 }
 
 .app-wrapper {

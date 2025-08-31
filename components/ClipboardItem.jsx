@@ -8,6 +8,9 @@ import { saveArticle, getArticle, hasArticle } from '../lib/offlineDB';
 export default function ClipboardItem({
     index,
     text,
+    name,
+    labelColor,
+    completed,
     isSelected,
     onToggleSelect,
     onRemove,
@@ -118,6 +121,19 @@ export default function ClipboardItem({
 
     const isLikelyUrl = (v) => /^(https?:\/\/|www\.)\S+$/i.test((v||'').trim());
 
+    // Map labelColor keywords to visual styles
+    const getLabelVisual = (c) => {
+        switch ((c || '').toLowerCase()) {
+            case 'blue':   return { bg: '#0c86f7ff', border: '#274461', text: '#0b1015' };
+            case 'green':  return { bg: '#21b421ff', border: '#2e5939', text: '#0b1015' };
+            case 'purple': return { bg: '#6525bfff', border: '#4b2e83', text: '#0b1015' };
+            case 'orange': return { bg: '#ff8401ff', border: '#8a4b16', text: '#0b1015' };
+            case 'red':    return { bg: '#f40707ff', border: '#7a1f1f', text: '#0b1015' };
+            case 'gray':   return { bg: '#5a5a5a', border: '#6e6e6e', text: '#0b1015' };
+            default:       return { bg: '#094384ff', border: '#274461', text: '#cfe8ff' };
+        }
+    };
+
     async function handleDownloadArticle() {
         const url = safeText.startsWith('http') ? safeText : `https://${safeText}`;
         setArticleState(s => ({ ...s, loading: true, error: '' }));
@@ -181,6 +197,41 @@ export default function ClipboardItem({
                     />
                 ) : (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {name ? (
+                            <span
+                                title={name}
+                                style={{
+                                    maxWidth: 180,
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    fontWeight: 600,
+                                    color: getLabelVisual(labelColor).text,
+                                    background: getLabelVisual(labelColor).bg,
+                                    border: `1px solid ${getLabelVisual(labelColor).border}`,
+                                    borderRadius: 6,
+                                    padding: '2px 6px',
+                                    flex: '0 0 auto',
+                                    opacity: completed ? 0.6 : 1,
+                                    textDecoration: completed ? 'line-through' : undefined
+                                }}
+                            >
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                    {/* <span
+                                        aria-hidden="true"
+                                        style={{
+                                            display: 'inline-block',
+                                            width: 8,
+                                            height: 8,
+                                            borderRadius: '50%',
+                                            background: getLabelVisual(labelColor).border,
+                                            boxShadow: `0 0 0 1px ${getLabelVisual(labelColor).bg}`
+                                        }}
+                                    /> */}
+                                    <span>{name}</span>
+                                </span>
+                            </span>
+                        ) : null}
                         {resolveCssColor(safeText) ? (
                             <span
                                 title={safeText.trim()}
@@ -196,7 +247,7 @@ export default function ClipboardItem({
                                 }}
                             />
                         ) : null}
-                        <span style={{ whiteSpace: 'pre-wrap', color: confirmRemove ? '#888' : undefined, textDecoration: confirmRemove ? 'line-through' : undefined, opacity: confirmRemove ? 0.6 : 1, flex: 1 }}>{linkify(safeText)}</span>
+                        <span style={{ whiteSpace: 'pre-wrap', color: (confirmRemove || completed) ? '#888' : undefined, textDecoration: (confirmRemove || completed) ? 'line-through' : undefined, opacity: (confirmRemove || completed) ? 0.6 : 1, flex: 1 }}>{linkify(safeText)}</span>
                         {/* Inline right offline button for URL (Pro only) */}
                         {canOffline && isLikelyUrl(safeText) && (
                             <button

@@ -28,30 +28,147 @@ export default function ClipboardList({
     // New: edit modal state
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [editText, setEditText] = useState('');
+    // New: optional item name shown in edit modal
+    const [editName, setEditName] = useState('');
+    // New: optional label color
+    const [editLabelColor, setEditLabelColor] = useState('');
     const editTargetRef = useRef({ item: null, index: -1 });
     // Signal to close inline editor for the item saved via modal
     const [inlineCloseSignal, setInlineCloseSignal] = useState(null);
 
+    // Persisted map of names keyed by stable key (id for Pro, text for Free)
+    const [itemNames, setItemNames] = useState({});
+    const [itemColors, setItemColors] = useState({});
+    const [itemCompleted, setItemCompleted] = useState({});
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem('clipboard_item_names_v1');
+            if (raw) setItemNames(JSON.parse(raw) || {});
+            const rawC = localStorage.getItem('clipboard_item_label_colors_v1');
+            if (rawC) setItemColors(JSON.parse(rawC) || {});
+            const rawD = localStorage.getItem('clipboard_item_completed_v1');
+            if (rawD) setItemCompleted(JSON.parse(rawD) || {});
+        } catch {}
+    }, []);
+    useEffect(() => {
+        try { localStorage.setItem('clipboard_item_names_v1', JSON.stringify(itemNames || {})); } catch {}
+    }, [itemNames]);
+    useEffect(() => {
+        try { localStorage.setItem('clipboard_item_label_colors_v1', JSON.stringify(itemColors || {})); } catch {}
+    }, [itemColors]);
+    useEffect(() => {
+        try { localStorage.setItem('clipboard_item_completed_v1', JSON.stringify(itemCompleted || {})); } catch {}
+    }, [itemCompleted]);
+
     const openEditModal = (item, index) => {
         editTargetRef.current = { item, index };
         setEditText(getItemText(item));
+        // Seed name/color: Pro reads from row fields with cache fallback; Free reads from local maps
+        const key = getStableKey(item);
+        if (isPro && typeof item !== 'string') {
+            const cached = (itemNames && key in itemNames) ? (itemNames[key] || '') : '';
+            setEditName(item?.name ?? cached);
+            const cachedColor = (itemColors && key in itemColors) ? (itemColors[key] || '') : '';
+            setEditLabelColor(item?.label_color ?? cachedColor ?? '');
+        } else {
+            setEditName((itemNames && key in itemNames) ? (itemNames[key] || '') : '');
+            setEditLabelColor((itemColors && key in itemColors) ? (itemColors[key] || '') : '');
+        }
         setEditModalOpen(true);
     };
     const closeEditModal = () => {
         setEditModalOpen(false);
         setEditText('');
+        setEditName('');
+        setEditLabelColor('');
         editTargetRef.current = { item: null, index: -1 };
+    };
+    // Toggle completed state from within the edit modal (shared by button and shortcut)
+    const handleToggleCompleteFromModal = () => {
+        const { item } = editTargetRef.current || {};
+        if (!item) return;
+        const key = getStableKey(item);
+        const isCompleted = (isPro && typeof item !== 'string')
+            ? (item.completed ?? ((itemCompleted && key in itemCompleted) ? itemCompleted[key] : false))
+            : ((itemCompleted && key in itemCompleted) ? itemCompleted[key] : false);
+
+        const nextVal = !isCompleted;
+        // Persist for Pro via DB through onSaveItem convention if available
+        if (onSaveItem && item && typeof item !== 'string') {
+            onSaveItem(item.id, getItemText(item), undefined, undefined, nextVal);
+        }
+        // Update caches/UI
+        setItemCompleted(prev => ({ ...(prev || {}), [key]: nextVal }));
+        if (isPro && typeof item !== 'string') {
+            setClipboardItems(prev => prev.map(it => (it.id === item.id ? { ...it, completed: nextVal } : it)));
+        }
+        // Close any inline editor for this item in the list
+        setInlineCloseSignal({ key, nonce: Date.now() });
+        setEditModalOpen(false);
     };
     const saveEditModal = () => {
         const { item, index } = editTargetRef.current || {};
         if (item && index >= 0) {
-            handleSave(item, index, editText);
+            const trimmedName = (editName || '').trim();
+            const chosenColor = (editLabelColor || '').trim();
+            handleSave(
+                item,
+                index,
+                editText,
+                trimmedName === '' ? null : trimmedName,
+                chosenColor === '' ? null : chosenColor
+            );
             // Ask the matching inline editor (if open) to close
-            const key = getStableKey(item);
-            setInlineCloseSignal({ key, nonce: Date.now() });
+            const oldKey = getStableKey(item);
+            setInlineCloseSignal({ key: oldKey, nonce: Date.now() });
+            // Persist name locally as cache for both Free and Pro
+            if (typeof trimmedName !== 'undefined') {
+                setItemNames(prev => {
+                    const next = { ...(prev || {}) };
+                    if (typeof item === 'string') {
+                        // Free: key is text; re-key to new text
+                        delete next[oldKey];
+                        if (trimmedName) next[editText] = trimmedName; else delete next[editText];
+                    } else {
+                        // Pro: id-based; stable key unchanged
+                        if (trimmedName) next[oldKey] = trimmedName; else delete next[oldKey];
+                    }
+                    return next;
+                });
+            }
+            // Persist color locally as cache for both Free and Pro
+            if (typeof chosenColor !== 'undefined') {
+                setItemColors(prev => {
+                    const next = { ...(prev || {}) };
+                    if (typeof item === 'string') {
+                        delete next[oldKey];
+                        if (chosenColor) next[editText] = chosenColor; else delete next[editText];
+                    } else {
+                        if (chosenColor) next[oldKey] = chosenColor; else delete next[oldKey];
+                    }
+                    return next;
+                });
+            }
         }
         closeEditModal();
     };
+
+    // Modal-specific keyboard shortcut: Ctrl/Cmd+M to toggle complete
+    useEffect(() => {
+        if (!editModalOpen) return;
+        const onKey = (e) => {
+            try {
+                const isCmdOrCtrl = e.metaKey || e.ctrlKey;
+                if (isCmdOrCtrl && !e.altKey && !e.shiftKey && (e.key || '').toLowerCase() === 'm') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleToggleCompleteFromModal();
+                }
+            } catch {}
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [editModalOpen]);
 
     // Listen for sort changes from Controls
     useEffect(() => {
@@ -311,6 +428,12 @@ export default function ClipboardList({
             // Free: remove by key (text)
             setClipboardItems(clipboardItems.filter(it => !selectedKeys.includes(getStableKey(it))));
         }
+        // Remove names for deleted items
+        setItemNames(prev => {
+            const next = { ...(prev || {}) };
+            for (const k of selectedKeys) delete next[k];
+            return next;
+        });
         setSelectedKeys([]);
     };
 
@@ -332,6 +455,7 @@ export default function ClipboardList({
                 console.warn('Attempted to delete item with no resolvable id:', item);
                 return;
             }
+            const nameKey = getStableKey(item);
             supabase
                 .from('clipboard_items')
                 .delete()
@@ -340,6 +464,12 @@ export default function ClipboardList({
                     if (error) {
                         console.error('Error deleting item:', error);
                     }
+                    // Remove any cached name for this item
+                    setItemNames(prev => {
+                        const next = { ...(prev || {}) };
+                        delete next[nameKey];
+                        return next;
+                    });
                     // Refetch clipboard items for this project/folder
                     let query = supabase
                         .from('clipboard_items')
@@ -359,6 +489,12 @@ export default function ClipboardList({
             // Free: remove by matching text to find original index
             const key = getStableKey(item);
             setClipboardItems(clipboardItems.filter(it => getStableKey(it) !== key));
+            // Also drop stored name for this item
+            setItemNames(prev => {
+                const next = { ...(prev || {}) };
+                delete next[key];
+                return next;
+            });
         }
     };
 
@@ -379,9 +515,10 @@ export default function ClipboardList({
     };
 
     // Save (edit) item
-    const handleSave = (item, index, newText) => {
+    const handleSave = (item, index, newText, newName, newLabelColor) => {
         if (onSaveItem) {
-            onSaveItem(item.id, newText);
+            // Pro path: update text and optionally name in DB
+            onSaveItem(item.id, newText, newName, newLabelColor);
         } else if (setClipboardItems) {
             // Free: find original index by key
             const key = getStableKey(item);
@@ -390,6 +527,25 @@ export default function ClipboardList({
                 const updatedItems = [...clipboardItems];
                 updatedItems[originalIndex] = newText;
                 setClipboardItems(updatedItems);
+                // Optionally persist name in local map for Free
+        if (typeof newName !== 'undefined') {
+                    setItemNames(prev => {
+                        const next = { ...(prev || {}) };
+                        // Re-key if the text changed (key is text)
+                        delete next[key];
+            if (newName) next[newText] = newName; else delete next[newText];
+                        return next;
+                    });
+                }
+                // Optionally persist label color in local map for Free
+        if (typeof newLabelColor !== 'undefined') {
+                    setItemColors(prev => {
+                        const next = { ...(prev || {}) };
+                        delete next[key];
+            if (newLabelColor) next[newText] = newLabelColor; else delete next[newText];
+                        return next;
+                    });
+                }
             }
         }
     };
@@ -449,6 +605,9 @@ export default function ClipboardList({
                             <ClipboardItem
                                 index={index}
                                 text={getItemText(item)}
+                                name={(isPro && typeof item !== 'string') ? ((item.name ?? ((itemNames && stableKey in itemNames) ? itemNames[stableKey] : '')) || '') : ((itemNames && stableKey in itemNames) ? itemNames[stableKey] : '')}
+                                labelColor={(isPro && typeof item !== 'string') ? ((item.label_color ?? ((itemColors && stableKey in itemColors) ? itemColors[stableKey] : '')) || '') : ((itemColors && stableKey in itemColors) ? itemColors[stableKey] : '')}
+                                completed={(isPro && typeof item !== 'string') ? (item.completed ?? ((itemCompleted && stableKey in itemCompleted) ? itemCompleted[stableKey] : false)) : ((itemCompleted && stableKey in itemCompleted) ? itemCompleted[stableKey] : false)}
                                 isSelected={selectedKeys.includes(stableKey)}
                                 onToggleSelect={(e) => handleToggleSelect(item, index, e)}
                                 onRemove={() => handleRemove(item, index)}
@@ -458,6 +617,16 @@ export default function ClipboardList({
                                     // Open modal seeded with the current inline text
                                     editTargetRef.current = { item, index };
                                     setEditText(typeof currentText === 'string' ? currentText : getItemText(item));
+                                    const key = getStableKey(item);
+                                    if (isPro && typeof item !== 'string') {
+                                        const cached = (itemNames && key in itemNames) ? (itemNames[key] || '') : '';
+                                        setEditName(item?.name ?? cached);
+                                        const cachedColor = (itemColors && key in itemColors) ? (itemColors[key] || '') : '';
+                                        setEditLabelColor(item?.label_color ?? cachedColor ?? '');
+                                    } else {
+                                        setEditName((itemNames && key in itemNames) ? (itemNames[key] || '') : '');
+                                        setEditLabelColor((itemColors && key in itemColors) ? (itemColors[key] || '') : '');
+                                    }
                                     setEditModalOpen(true);
                                 }}
                                 // Close inline editor when modal save happens for this item
@@ -516,15 +685,53 @@ export default function ClipboardList({
             {/* Edit item modal */}
             <Modal open={editModalOpen} onClose={closeEditModal} onPrimary={saveEditModal}>
                 <h3 style={{ marginBottom: 12 }}>Edit clipboard item</h3>
+                {/* Name + Label Color */}
+                <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                    <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        placeholder="Name (optional)"
+                        style={{ flex: 1, background: '#1e1e1e', color: '#eee', border: '1px solid #444', borderRadius: 6, padding: 10 }}
+                    />
+                    <select
+                        value={editLabelColor}
+                        onChange={(e) => setEditLabelColor(e.target.value)}
+                        title="Label color"
+                        style={{ minWidth: 140, background: '#1e1e1e', color: '#eee', border: '1px solid #444', borderRadius: 6, padding: 10 }}
+                    >
+                        <option value="">Default</option>
+                        <option value="blue">Blue</option>
+                        <option value="green">Green</option>
+                        <option value="purple">Purple</option>
+                        <option value="orange">Orange</option>
+                        <option value="red">Red</option>
+                        <option value="gray">Gray</option>
+                    </select>
+                </div>
                 <textarea
                     value={editText}
                     onChange={(e) => setEditText(e.target.value)}
-                    style={{ width: '100%', minHeight: 180, background: '#1e1e1e', color: '#eee', border: '1px solid #444', borderRadius: 6, padding: 10 }}
+                    style={{ width: '97%', minHeight: 180, background: '#1e1e1e', color: '#eee', border: '1px solid #444', borderRadius: 6, padding: 10 }}
                     autoFocus
                 />
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
-                    <button onClick={closeEditModal}>Cancel</button>
-                    <button onClick={saveEditModal} style={{ backgroundColor: 'var(--primary-color)', color: '#fff' }}>Save</button>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginTop: 12 }}>
+                    <div>
+                        {(() => {
+                            const { item } = editTargetRef.current || {};
+                            const key = item ? getStableKey(item) : null;
+                            const isCompleted = item ? ((isPro && typeof item !== 'string') ? (item.completed ?? ((itemCompleted && key in itemCompleted) ? itemCompleted[key] : false)) : ((itemCompleted && key in itemCompleted) ? itemCompleted[key] : false)) : false;
+                            return (
+                <button onClick={handleToggleCompleteFromModal} title={(isCompleted ? 'Mark as active' : 'Mark as complete') + ' (Ctrl/Cmd+M)'}>
+                                    {isCompleted ? 'Mark as active' : 'Mark as complete'}
+                                </button>
+                            );
+                        })()}
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                        <button onClick={closeEditModal}>Cancel</button>
+                        <button onClick={saveEditModal} style={{ backgroundColor: 'var(--primary-color)', color: '#fff' }}>Save</button>
+                    </div>
                 </div>
             </Modal>
 
