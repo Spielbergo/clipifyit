@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { listArticles, getArticle, deleteArticle } from '../lib/offlineDB';
 import { useAuth } from '../contexts/AuthContext';
 import Modal from '../components/Modal.component';
 import styles from '../styles/saved.module.css';
 import { FiTrash2 } from 'react-icons/fi';
+import SearchBar from '../components/SearchBar.component';
+import SortBar from '../components/SortBar.component';
 
 export default function Saved() {
   const [items, setItems] = useState([]);
@@ -18,6 +20,8 @@ export default function Saved() {
   const [isNarrow, setIsNarrow] = useState(true);
   const [articleModalOpen, setArticleModalOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null); // { url, title }
+  const [query, setQuery] = useState('');
+  const [sortMode, setSortMode] = useState('latest'); // 'alpha' | 'descAlpha' | 'oldest' | 'latest'
   const [readUrls, setReadUrls] = useState(() => {
     if (typeof window === 'undefined') return new Set();
     try {
@@ -192,8 +196,8 @@ export default function Saved() {
 
   const nextArticle = async () => {
     if (!active) return;
-    const idx = items.findIndex(it => it.url === active.url);
-    if (idx >= 0 && idx < items.length - 1) openItem(items[idx + 1].url);
+  const idx = visibleItems.findIndex(it => it.url === active.url);
+  if (idx >= 0 && idx < visibleItems.length - 1) openItem(visibleItems[idx + 1].url);
   };
 
   const handleDelete = async (url) => {
@@ -201,6 +205,38 @@ export default function Saved() {
     if (active?.url === url) setActive(null);
     refresh();
   };
+
+  const visibleItems = useMemo(() => {
+    let arr = Array.isArray(items) ? [...items] : [];
+    const q = (query || '').trim().toLowerCase();
+    if (q) {
+      arr = arr.filter((it) => {
+        const t = (it?.title || '').toLowerCase();
+        const u = (it?.url || '').toLowerCase();
+        return t.includes(q) || u.includes(q);
+      });
+    }
+    const getTime = (it) => {
+      const t = new Date(it?.savedAt || it?.fetchedAt || 0).getTime();
+      return Number.isFinite(t) ? t : 0;
+    };
+    switch (sortMode) {
+      case 'alpha':
+        arr.sort((a, b) => (a?.title || a?.url || '').localeCompare(b?.title || b?.url || '', undefined, { sensitivity: 'base' }));
+        break;
+      case 'descAlpha':
+        arr.sort((a, b) => (b?.title || b?.url || '').localeCompare(a?.title || a?.url || '', undefined, { sensitivity: 'base' }));
+        break;
+      case 'oldest':
+        arr.sort((a, b) => getTime(a) - getTime(b));
+        break;
+      case 'latest':
+      default:
+        arr.sort((a, b) => getTime(b) - getTime(a));
+        break;
+    }
+    return arr;
+  }, [items, query, sortMode]);
 
 
   return (
@@ -214,10 +250,15 @@ export default function Saved() {
             </button>
           )}
         </div>
+        {/* Search + Sort controls below header */}
+        <div style={{ padding: '0 0 6px 0' }}>
+          <SearchBar value={query} onChange={setQuery} onClear={() => setQuery('')} />
+          <SortBar sortMode={sortMode} setSortMode={setSortMode} />
+        </div>
         {loading ? 'Loading…' : (
           items.length ? (
             <ul className={styles.list}>
-              {items.map(it => (
+              {visibleItems.length ? visibleItems.map(it => (
                 <li key={it.url} className={`${styles.list_item} ${readUrls.has(it.url) ? styles.read : ''}`}>
                   <button className={styles.item_button} onClick={() => openItem(it.url)}>
                     <div className={styles.item_title}>{it.title || it.url}</div>
@@ -234,7 +275,9 @@ export default function Saved() {
                     <FiTrash2 />
                   </button>
                 </li>
-              ))}
+              )) : (
+                <li className={styles.list_item} style={{ justifyContent: 'center', color: '#888' }}>No results.</li>
+              )}
             </ul>
           ) : <div>No saved articles found.</div>
         )}
