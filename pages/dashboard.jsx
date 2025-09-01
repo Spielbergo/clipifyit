@@ -31,6 +31,14 @@ export default function Dashboard() {
   const [subDetails, setSubDetails] = useState(null);
   const [subLoading, setSubLoading] = useState(false);
   const [subErr, setSubErr] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const [exportingCsv, setExportingCsv] = useState(false);
+  const [exportingJson, setExportingJson] = useState(false);
+  // Export filters
+  const [exportProjects, setExportProjects] = useState([]);
+  const [selectedExportProjectId, setSelectedExportProjectId] = useState('');
+  const [exportFolders, setExportFolders] = useState([]);
+  const [selectedExportFolderId, setSelectedExportFolderId] = useState('');
 
   useEffect(() => {
     if (user === undefined) return;
@@ -94,7 +102,37 @@ export default function Dashboard() {
     return () => { ignore = true; };
   }, [user?.id]);
 
-    if (loading || user === undefined) {
+  // Load projects list for export filters (must be before early return)
+  useEffect(() => {
+    if (!user?.id) return;
+    let ignore = false;
+    (async () => {
+      const { data } = await supabase
+        .from('projects')
+        .select('id,name,created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      if (!ignore) setExportProjects(data || []);
+    })();
+    return () => { ignore = true; };
+  }, [user?.id]);
+
+  // Load folders when a project is selected (must be before early return)
+  useEffect(() => {
+    if (!user?.id || !selectedExportProjectId) { setExportFolders([]); return; }
+    let ignore = false;
+    (async () => {
+      const { data } = await supabase
+        .from('folders')
+        .select('id,name,project_id,created_at')
+        .eq('project_id', selectedExportProjectId)
+        .order('created_at', { ascending: true });
+      if (!ignore) setExportFolders(data || []);
+    })();
+    return () => { ignore = true; };
+  }, [user?.id, selectedExportProjectId]);
+
+  if (loading || user === undefined) {
         return (
             <div className={styles.loadingWrap}>
               <Loader size={48} />
@@ -196,6 +234,262 @@ export default function Dashboard() {
     }
   }; 
 
+  
+
+  // Shared loader for export data
+  const loadExportData = async ({ projectId, folderId } = {}) => {
+    // 1) Fetch projects (all or one)
+    let projQuery = supabase
+      .from('projects')
+      .select('id,name,created_at')
+      .eq('user_id', user.id);
+    if (projectId) projQuery = projQuery.eq('id', projectId);
+    projQuery = projQuery.order('created_at', { ascending: false });
+    const { data: projects, error: projErr } = await projQuery;
+    if (projErr) throw projErr;
+    if (!projects || projects.length === 0) {
+      return { projects: [], folders: [], items: [] };
+    }
+    const projectIds = projects.map(p => p.id);
+    // 2) Folders
+    let foldQuery = supabase
+      .from('folders')
+      .select('id,project_id,name,created_at');
+    if (projectIds.length === 1) foldQuery = foldQuery.eq('project_id', projectIds[0]);
+    else foldQuery = foldQuery.in('project_id', projectIds);
+    const { data: folders, error: foldErr } = await foldQuery;
+    if (foldErr) throw foldErr;
+    // 3) Items (wide select with graceful fallback)
+    let items = [];
+    let itemsErr = null;
+    {
+      let q = supabase
+        .from('clipboard_items')
+        .select('id,project_id,folder_id,text,name,label_color,completed,order,created_at,updated_at');
+      if (projectIds.length === 1) q = q.eq('project_id', projectIds[0]);
+      else q = q.in('project_id', projectIds);
+      if (folderId) {
+        if (folderId === '__NO_FOLDER__') q = q.is('folder_id', null);
+        else q = q.eq('folder_id', folderId);
+      }
+      q = q.order('order', { ascending: false, nullsLast: true });
+      const { data, error } = await q;
+      items = data || [];
+      itemsErr = error || null;
+    }
+    if (itemsErr) {
+      let q2 = supabase
+        .from('clipboard_items')
+        .select('id,project_id,folder_id,text,order,created_at');
+      if (projectIds.length === 1) q2 = q2.eq('project_id', projectIds[0]);
+      else q2 = q2.in('project_id', projectIds);
+      if (folderId) {
+        if (folderId === '__NO_FOLDER__') q2 = q2.is('folder_id', null);
+        else q2 = q2.eq('folder_id', folderId);
+      }
+      q2 = q2.order('order', { ascending: false, nullsLast: true });
+      const { data, error } = await q2;
+      if (error) throw error;
+      items = data || [];
+    }
+    return { projects, folders: folders || [], items };
+  };
+
+  // Export all clipboard items to an Excel workbook with one sheet per project and per folder
+  const exportAllToExcel = async () => {
+    if (!user?.id) return;
+    try {
+      setExporting(true);
+      setToastMessage('Preparing export…');
+      setShowToast(true);
+      const projectId = selectedExportProjectId || undefined;
+      const folderId = selectedExportFolderId || undefined;
+      const { projects, folders, items } = await loadExportData({ projectId, folderId });
+      if (!projects.length) {
+        setToastMessage('No projects found to export');
+        setTimeout(() => setShowToast(false), 2000);
+        return;
+      }
+
+      // Build workbook on client
+      const XLSX = await import('xlsx');
+      const wb = XLSX.utils.book_new();
+
+      const usedNames = new Set();
+      const sanitize = (name) => {
+        let n = (name || 'Sheet').replace(/[\\\\\\/\\:?*\\[\\]]/g, ' ').trim();
+        if (n.length > 31) n = n.slice(0, 31).trim();
+        let base = n || 'Sheet';
+        let candidate = base;
+        let i = 2;
+        while (usedNames.has(candidate)) {
+          const suffix = ` (${i++})`;
+          candidate = (base.slice(0, Math.max(0, 31 - suffix.length)) + suffix).trim();
+        }
+        usedNames.add(candidate);
+        return candidate;
+      };
+      const addSheet = (sheetName, rows) => {
+        const ws = XLSX.utils.json_to_sheet(rows);
+        XLSX.utils.book_append_sheet(wb, ws, sanitize(sheetName));
+      };
+
+      for (const p of projects) {
+        const pid = p.id;
+        const pName = p.name || 'Untitled Project';
+        const wantOnlyNoFolder = !!projectId && folderId === '__NO_FOLDER__';
+        const wantOnlySpecificFolder = !!projectId && folderId && folderId !== '__NO_FOLDER__';
+
+        if (!wantOnlySpecificFolder) {
+          // Include No Folder sheet when not explicitly targeting a specific folder
+          const topItems = (items || []).filter(it => it.project_id === pid && !it.folder_id);
+          const topRows = topItems.map(it => ({
+            Text: it.text || '',
+            Name: it.name || '',
+            'Label Color': it.label_color || '',
+            Completed: it.completed ? 'Yes' : '',
+            'Created At': it.created_at ? new Date(it.created_at).toLocaleString() : '',
+            Order: it.order != null ? it.order : ''
+          }));
+          addSheet(`${pName} — No Folder`, topRows);
+        }
+
+        // Folder sheets
+        const pFolders = (folders || []).filter(f => f.project_id === pid);
+        for (const f of pFolders) {
+          if (wantOnlyNoFolder) continue; // skip all folders when only No Folder requested
+          if (wantOnlySpecificFolder && f.id !== folderId) continue; // only the selected folder
+          const fItems = (items || []).filter(it => it.folder_id === f.id);
+          const rows = fItems.map(it => ({
+            Text: it.text || '',
+            Name: it.name || '',
+            'Label Color': it.label_color || '',
+            Completed: it.completed ? 'Yes' : '',
+            'Created At': it.created_at ? new Date(it.created_at).toLocaleString() : '',
+            Order: it.order != null ? it.order : ''
+          }));
+          addSheet(`${pName} — ${f.name || 'Folder'}`, rows);
+        }
+      }
+
+      const ts = new Date();
+      const y = ts.getFullYear();
+      const m = String(ts.getMonth() + 1).padStart(2, '0');
+      const d = String(ts.getDate()).padStart(2, '0');
+      const fileName = `clipifyit-export-${y}${m}${d}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+
+      setToastMessage('Export created');
+      setTimeout(() => setShowToast(false), 2000);
+    } catch (e) {
+      console.error('Export failed', e);
+      setToastMessage('Export failed');
+      setTimeout(() => setShowToast(false), 2500);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Export a flat CSV with Project and Folder columns
+  const exportAllToCSV = async () => {
+    if (!user?.id) return;
+    try {
+      setExportingCsv(true);
+      setToastMessage('Preparing CSV…');
+      setShowToast(true);
+      const projectId = selectedExportProjectId || undefined;
+      const folderId = selectedExportFolderId || undefined;
+      const { projects, folders, items } = await loadExportData({ projectId, folderId });
+      if (!projects.length) {
+        setToastMessage('No projects found to export');
+        setTimeout(() => setShowToast(false), 2000);
+        return;
+      }
+      const projectById = Object.fromEntries((projects || []).map(p => [p.id, p]));
+      const folderById = Object.fromEntries((folders || []).map(f => [f.id, f]));
+
+      const headers = ['Project', 'Folder', 'Text', 'Name', 'Label Color', 'Completed', 'Created At', 'Order'];
+      const escape = (v) => {
+        const s = (v == null ? '' : String(v));
+        if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+        return s;
+      };
+      const lines = [headers.join(',')];
+      for (const it of (items || [])) {
+        const pName = projectById[it.project_id]?.name || '';
+        const fName = it.folder_id ? (folderById[it.folder_id]?.name || '') : '';
+        const row = [
+          escape(pName),
+          escape(fName),
+          escape(it.text || ''),
+          escape(it.name || ''),
+          escape(it.label_color || ''),
+          escape(it.completed ? 'Yes' : ''),
+          escape(it.created_at ? new Date(it.created_at).toLocaleString() : ''),
+          escape(it.order != null ? it.order : '')
+        ];
+        lines.push(row.join(','));
+      }
+      const csv = lines.join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const ts = new Date();
+      const y = ts.getFullYear();
+      const m = String(ts.getMonth() + 1).padStart(2, '0');
+      const d = String(ts.getDate()).padStart(2, '0');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `clipifyit-export-${y}${m}${d}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setToastMessage('CSV exported');
+      setTimeout(() => setShowToast(false), 2000);
+    } catch (e) {
+      console.error('CSV export failed', e);
+      setToastMessage('CSV export failed');
+      setTimeout(() => setShowToast(false), 2500);
+    } finally {
+      setExportingCsv(false);
+    }
+  };
+
+  // Export JSON (filtered by project/folder, if selected)
+  const exportAllToJSON = async () => {
+    if (!user?.id) return;
+    try {
+      setExportingJson(true);
+      setToastMessage('Preparing JSON…');
+      setShowToast(true);
+      const projectId = selectedExportProjectId || undefined;
+      const folderId = selectedExportFolderId || undefined;
+      const payload = await loadExportData({ projectId, folderId });
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const ts = new Date();
+      const y = ts.getFullYear();
+      const m = String(ts.getMonth() + 1).padStart(2, '0');
+      const d = String(ts.getDate()).padStart(2, '0');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `clipifyit-export-${y}${m}${d}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setToastMessage('JSON exported');
+      setTimeout(() => setShowToast(false), 2000);
+    } catch (e) {
+      console.error('JSON export failed', e);
+      setToastMessage('JSON export failed');
+      setTimeout(() => setShowToast(false), 2500);
+    } finally {
+      setExportingJson(false);
+    }
+  };
+
   return (
     <>
       <HeroSection
@@ -267,7 +561,7 @@ export default function Dashboard() {
         </div>
 
         {/* Billing details */}
-        <div className={styles.card}>
+  <div className={styles.card}>
           <h2>Billing</h2>
           {subLoading ? (
             <div className={styles.loadingInline}><Loader size={24} /></div>
@@ -381,6 +675,52 @@ export default function Dashboard() {
               <button onClick={openPortal}>Manage Subscription</button>
             </div>
           )}
+        </div>
+
+        {/* Data Export */}
+        <div className={styles.card}>
+          <h2>Export</h2>
+          <p>Download your clipboard items grouped by project and folder as an Excel workbook or CSV. Optionally filter by project/folder.</p>
+          <div className={styles.planActions} style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <select
+                value={selectedExportProjectId}
+                onChange={(e) => { setSelectedExportProjectId(e.target.value); setSelectedExportFolderId(''); }}
+                title="Project filter"
+              >
+                <option value="">All projects</option>
+                {exportProjects.map(p => (
+                  <option key={p.id} value={p.id}>{p.name || 'Untitled Project'}</option>
+                ))}
+              </select>
+              <select
+                value={selectedExportFolderId}
+                onChange={(e) => setSelectedExportFolderId(e.target.value)}
+                disabled={!selectedExportProjectId}
+                title="Folder filter"
+              >
+                <option value="">All folders</option>
+                <option value="__NO_FOLDER__">No folder items</option>
+                {exportFolders.map(f => (
+                  <option key={f.id} value={f.id}>{f.name || 'Folder'}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className={styles.planActions}>
+            <button onClick={exportAllToExcel} disabled={exporting} aria-disabled={exporting}>
+              {exporting ? 'Exporting…' : 'Export (.xlsx, multi-tab)'}
+            </button>
+            <button onClick={exportAllToCSV} disabled={exportingCsv} aria-disabled={exportingCsv}>
+              {exportingCsv ? 'Exporting…' : 'Export CSV (flat)'}
+            </button>
+            <button onClick={exportAllToJSON} disabled={exportingJson} aria-disabled={exportingJson}>
+              {exportingJson ? 'Exporting…' : 'Export JSON'}
+            </button>
+          </div>
+          <div className={styles.note} style={{ color: '#999', fontSize: 13, marginTop: 6 }}>
+            Note: CSV files don’t support tabs. Use the Excel export to get one sheet per project and folder.
+          </div>
         </div>
 
         <div className={styles.card}>
