@@ -158,7 +158,7 @@ textarea:focus {
 
 .controls-container {
   position: sticky;
-  top: 95px;
+  top: 98px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -455,7 +455,7 @@ button:active {
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
-  max-width: 140px; /* Adjust as needed for your sidebar width */
+  max-width: 175px; /* Adjust as needed for your sidebar width */
   height: 28px;
   display: inline-block;
   vertical-align: middle;

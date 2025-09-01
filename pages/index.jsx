@@ -160,7 +160,7 @@ export default function Home() {
 
       {/* DEMO IMAGES */}
       <section className={styles.demoSection}>
-        <span className={styles.demoBlobA} />
+        {/* <span className={styles.demoBlobA} /> */}
         <span className={styles.demoBlobB} />
         <div className={styles.demoWrap}>
           <div className={styles.demoHeader}>

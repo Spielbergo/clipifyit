@@ -179,10 +179,17 @@
 }
 
 .heroPreview {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: none;
 }
+
+@media screen and (min-width: 1281px) {
+  .heroPreview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
 .previewOuter {
   perspective: 1200px;
 }
@@ -690,7 +697,7 @@
   filter: blur(40px);
   opacity: 0.6;
   transform: rotate(10deg);
-  z-index: 0;
+  z-index: 1;
 }
 .hiwBlobB {
   position: absolute;
@@ -703,7 +710,7 @@
   filter: blur(40px);
   opacity: 0.4;
   transform: rotate(-8deg);
-  z-index: 0;
+  z-index: 1;
 }
 
 @media (max-width: 900px) {
@@ -1103,7 +1110,7 @@
   filter: blur(40px);
   opacity: 0.4;
   transform: rotate(-8deg);
-  z-index: 0;
+  z-index: 1;
 }
 
 @media (max-width: 900px) {
