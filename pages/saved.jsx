@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { listArticles, getArticle, deleteArticle } from '../lib/offlineDB';
+import { listArticles, getArticle, deleteArticle, saveArticle, hasArticle } from '../lib/offlineDB';
 import { useAuth } from '../contexts/AuthContext';
 import Modal from '../components/Modal.component';
 import styles from '../styles/saved.module.css';
@@ -69,6 +69,55 @@ export default function Saved() {
   }
 
   useEffect(() => { refresh(); }, []);
+
+  // Ingest share-target params: ?url=... or ?shareUrl=... or ?shareText=...
+  useEffect(() => {
+    (async () => {
+      try {
+        if (typeof window === 'undefined') return;
+        const u = new URL(window.location.href);
+        const sharedUrl = u.searchParams.get('url') || u.searchParams.get('shareUrl');
+        const sharedText = u.searchParams.get('shareText');
+        const candidate = (sharedUrl && sharedUrl.trim()) || '';
+        const isHttp = /^https?:\/\//i.test(candidate);
+        if (isHttp && !(await hasArticle(candidate))) {
+          // Fetch server-side reader view and store locally
+          const resp = await fetch('/api/offline/fetch-article', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: candidate })
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            await saveArticle({ url: candidate, title: data.title || candidate, html: data.html || '', text: data.text || '' });
+            await refresh();
+            setActive(await getArticle(candidate));
+          }
+        } else if (sharedText && /^https?:\/\//i.test(sharedText.trim())) {
+          const asUrl = sharedText.trim();
+          if (!(await hasArticle(asUrl))) {
+            const resp = await fetch('/api/offline/fetch-article', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url: asUrl })
+            });
+            if (resp.ok) {
+              const data = await resp.json();
+              await saveArticle({ url: asUrl, title: data.title || asUrl, html: data.html || '', text: data.text || '' });
+              await refresh();
+              setActive(await getArticle(asUrl));
+            }
+          }
+        }
+      } catch {}
+      finally {
+        try {
+          const clean = window.location.origin + '/saved';
+          window.history.replaceState({}, '', clean);
+        } catch {}
+      }
+    })();
+  // We want this to run once on initial load
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Persist read URLs whenever it changes
   useEffect(() => {

@@ -18,6 +18,22 @@ export default function FreeApp() {
         localStorage.setItem('clipboardItems', JSON.stringify(clipboardItems));
     }, [clipboardItems]);
 
+    // Android PWA share-target ingestion for Free mode as well
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const url = new URL(window.location.href);
+        const params = url.searchParams;
+        const shareText = params.get('shareText');
+        const shareUrl = params.get('shareUrl');
+        const shareTitle = params.get('shareTitle');
+        const payload = shareText || shareUrl || shareTitle;
+        if (!payload) return;
+        handleAddItem(payload);
+        // Clean query so it doesn't repeat
+        router.replace('/app', undefined, { shallow: true });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     const handleAddItem = (text) => {
         if (clipboardItems.includes(text)) {
             return true;

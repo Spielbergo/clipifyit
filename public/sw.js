@@ -23,6 +23,34 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
+  // Handle Web Share Target: Android PWA share sheet posts here
+  try {
+    const url = new URL(request.url);
+    if (request.method === 'POST' && url.pathname === '/share-target') {
+      event.respondWith((async () => {
+        try {
+          const formData = await request.clone().formData();
+          const title = (formData.get('title') || '').toString();
+          const text = (formData.get('text') || '').toString();
+          const sharedUrl = (formData.get('url') || '').toString();
+          const params = new URLSearchParams();
+          if (title) params.set('shareTitle', title);
+          if (text) params.set('shareText', text);
+          if (sharedUrl) {
+            params.set('shareUrl', sharedUrl);
+            params.set('url', sharedUrl); // saved.jsx listens for `url`
+          }
+          // Redirect to Saved Articles with payload; 303 ensures a GET
+          const qs = params.toString();
+          return Response.redirect(qs ? `/saved?${qs}` : '/saved', 303);
+        } catch (e) {
+          return Response.redirect('/saved', 303);
+        }
+      })());
+      return;
+    }
+  } catch {}
+
   // Handle Next static assets with stale-while-revalidate
   if (request.url.includes('/_next/')) {
     event.respondWith((async () => {

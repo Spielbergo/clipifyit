@@ -100,6 +100,28 @@ export default function ProApp() {
         } catch {}
     }, [selectedFolderId]);
 
+    // Android PWA share-target ingestion: handle /app?shareText=...&shareUrl=...
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        if (!user || !selectedProjectId) return; // wait until ready
+        const url = new URL(window.location.href);
+        const params = url.searchParams;
+        const shareText = params.get('shareText');
+        const shareUrl = params.get('shareUrl');
+        const shareTitle = params.get('shareTitle');
+        const payload = shareText || shareUrl || shareTitle;
+        if (!payload) return;
+        (async () => {
+            try {
+                await handleAddItem(payload);
+            } finally {
+                // Clean query so it doesn't repeat on refresh/back
+                router.replace('/app', undefined, { shallow: true });
+            }
+        })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user, selectedProjectId]);
+
     // Load clipboard items for the selected project
     const fetchCountRef = useRef(0);
     const prevVisibilityRef = useRef(typeof document !== 'undefined' ? document.visibilityState : 'visible');
