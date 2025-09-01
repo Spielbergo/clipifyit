@@ -26,7 +26,23 @@ function FolderTree({
       {folders
         .filter(folder => folder.parent_id === parentId && folder.project_id === projectId)
         .map(folder => (
-          <li key={folder.id} style={{ marginBottom: 2 }}>
+          <li
+            key={folder.id}
+            style={{ marginBottom: 2 }}
+            onDragOver={(e) => { try { e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'move'; } catch {} }}
+            onDrop={(e) => {
+              try {
+                e.preventDefault();
+                e.stopPropagation();
+                const str = e.dataTransfer.getData('application/x-clipify-ids');
+                if (!str) return;
+                const payload = JSON.parse(str);
+                const detail = { ids: payload.ids || [], targetProjectId: folder.project_id, targetFolderId: folder.id };
+                const ev = new CustomEvent('clipboard-move-request', { detail });
+                window.dispatchEvent(ev);
+              } catch {}
+            }}
+          >
             {activeRenamingFolderId === folder.id ? (
               <form
                 style={{ display: 'flex', alignItems: 'center' }}
@@ -489,6 +505,20 @@ export default function ProjectsSidebar({
                   }}
                   onMouseEnter={() => setHoveredProjectId(project.id)}
                   onMouseLeave={() => setHoveredProjectId(null)}
+                
+        onDragOver={(e) => { try { e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'move'; } catch {} }}
+                onDrop={(e) => {
+                  try {
+          e.preventDefault();
+          e.stopPropagation();
+                    const str = e.dataTransfer.getData('application/x-clipify-ids');
+                    if (!str) return;
+                    const payload = JSON.parse(str);
+                    const detail = { ids: payload.ids || [], targetProjectId: project.id, targetFolderId: null };
+                    const ev = new CustomEvent('clipboard-move-request', { detail });
+                    window.dispatchEvent(ev);
+                  } catch {}
+                }}
                 >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   {renamingId === project.id ? (

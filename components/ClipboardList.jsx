@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { saveArticle, getArticle } from '../lib/offlineDB';
 
 import ClipboardItem from './ClipboardItem';
 import styles from './clipboard-list.module.css';
@@ -24,6 +25,17 @@ export default function ClipboardList({
     const [sortMode, setSortMode] = useState('newest');
     const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
     const [lastClickedIndex, setLastClickedIndex] = useState(null);
+    // Actions dropdown state
+    const [actionsOpen, setActionsOpen] = useState(false);
+    const actionsBtnRef = useRef(null);
+    // Move modal state (Pro only)
+    const [moveModalOpen, setMoveModalOpen] = useState(false);
+    const [projects, setProjects] = useState([]);
+    const [foldersByProject, setFoldersByProject] = useState({});
+    const [targetProjectId, setTargetProjectId] = useState(null);
+    const [targetFolderId, setTargetFolderId] = useState(null);
+    const [isMoving, setIsMoving] = useState(false);
+    const [moveError, setMoveError] = useState('');
 
     // New: edit modal state
     const [editModalOpen, setEditModalOpen] = useState(false);
@@ -35,6 +47,9 @@ export default function ClipboardList({
     const editTargetRef = useRef({ item: null, index: -1 });
     // Signal to close inline editor for the item saved via modal
     const [inlineCloseSignal, setInlineCloseSignal] = useState(null);
+    // Signal rows that certain URLs were saved offline so icons flip immediately
+    const [offlineSavedSignal, setOfflineSavedSignal] = useState(null);
+    const [bulkSaving, setBulkSaving] = useState(false);
 
     // Persisted map of names keyed by stable key (id for Pro, text for Free)
     const [itemNames, setItemNames] = useState({});
@@ -59,6 +74,23 @@ export default function ClipboardList({
     useEffect(() => {
         try { localStorage.setItem('clipboard_item_completed_v1', JSON.stringify(itemCompleted || {})); } catch {}
     }, [itemCompleted]);
+
+    // Close actions menu on outside click / ESC
+    useEffect(() => {
+        if (!actionsOpen) return;
+        const onDoc = (e) => {
+            try {
+                if (!actionsBtnRef.current) { setActionsOpen(false); return; }
+                if (!actionsBtnRef.current.closest) { setActionsOpen(false); return; }
+                const root = actionsBtnRef.current.closest('td') || actionsBtnRef.current;
+                if (root && !root.contains(e.target)) setActionsOpen(false);
+            } catch { setActionsOpen(false); }
+        };
+        const onKey = (e) => { if (e.key === 'Escape') setActionsOpen(false); };
+        document.addEventListener('mousedown', onDoc);
+        document.addEventListener('keydown', onKey);
+        return () => { document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onKey); };
+    }, [actionsOpen]);
 
     const openEditModal = (item, index) => {
         editTargetRef.current = { item, index };
@@ -88,6 +120,7 @@ export default function ClipboardList({
         const { item } = editTargetRef.current || {};
         if (!item) return;
         const key = getStableKey(item);
+
         const isCompleted = (isPro && typeof item !== 'string')
             ? (item.completed ?? ((itemCompleted && key in itemCompleted) ? itemCompleted[key] : false))
             : ((itemCompleted && key in itemCompleted) ? itemCompleted[key] : false);
@@ -197,6 +230,9 @@ export default function ClipboardList({
     // React key (prefer stable id/text)
     const getItemKey = (item) => getStableKey(item);
 
+    // URL detection for bulk saved-articles action
+    const isLikelyUrl = (v) => /^(https?:\/\/|www\.)\S+$/i.test(((typeof v === 'string' ? v : getItemText(v)) || '').trim());
+
     // Derive sorted view
     const displayItems = useMemo(() => {
         const items = [...filteredItems];
@@ -282,6 +318,117 @@ export default function ClipboardList({
         };
     }, [displayItems, selectedKeys, setClipboardItems, showCustomModal, editModalOpen, isPro, selectedProjectId, selectedFolderId, currentUserId]);
 
+    // Open move modal: seed defaults to current container
+    const openMoveModal = () => {
+        if (!isPro) return;
+        setMoveError('');
+        setTargetProjectId(selectedProjectId || null);
+        setTargetFolderId(selectedFolderId || null);
+        setMoveModalOpen(true);
+    };
+
+    // Load projects for current user when move modal opens (Pro)
+    useEffect(() => {
+        if (!isPro || !moveModalOpen || !currentUserId) return;
+        let cancelled = false;
+        (async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('projects')
+                    .select('id,name')
+                    .eq('user_id', currentUserId)
+                    .order('name', { ascending: true });
+                if (!cancelled && !error) setProjects(data || []);
+            } catch {}
+        })();
+        return () => { cancelled = true; };
+    }, [isPro, moveModalOpen, currentUserId]);
+
+    // Load folders for selected target project when needed
+    useEffect(() => {
+        if (!isPro || !moveModalOpen || !targetProjectId) return;
+        if (foldersByProject[targetProjectId]) return; // cached
+        let cancelled = false;
+        (async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('folders')
+                    .select('id,name,project_id')
+                    .eq('project_id', targetProjectId)
+                    .order('name', { ascending: true });
+                if (!cancelled && !error) {
+                    setFoldersByProject(prev => ({ ...(prev || {}), [targetProjectId]: data || [] }));
+                }
+            } catch {}
+        })();
+        return () => { cancelled = true; };
+    }, [isPro, moveModalOpen, targetProjectId, foldersByProject]);
+
+    // Execute move
+    const handleMoveSelected = async () => {
+        if (!isPro) return;
+        if (!targetProjectId) {
+            setMoveError('Please select a target project.');
+            return;
+        }
+        const selectedItems = displayItems.filter(it => selectedKeys.includes(getStableKey(it)));
+        const idsToMove = selectedItems.map(it => it?.id).filter(Boolean);
+        if (idsToMove.length === 0) {
+            setMoveError('Nothing to move.');
+            return;
+        }
+        setIsMoving(true);
+        setMoveError('');
+        try {
+            // Get current max order in the destination container
+            let q = supabase
+                .from('clipboard_items')
+                .select('order')
+                .eq('project_id', targetProjectId)
+                .order('order', { ascending: false, nullsLast: true })
+                .limit(1);
+            if (targetFolderId) {
+                q = q.eq('folder_id', targetFolderId);
+            } else {
+                q = q.is('folder_id', null);
+            }
+            const { data: maxRows } = await q;
+            const currentMax = Math.max(0, ...(Array.isArray(maxRows) && maxRows.length > 0 ? [Number(maxRows[0]?.order) || 0] : [0]));
+
+            // Update each item (set project, folder, and bump order so moved items appear on top)
+            await Promise.all(idsToMove.map((id, idx) => {
+                const newOrder = currentMax + 1 + idx;
+                let upd = supabase
+                    .from('clipboard_items')
+                    .update({ project_id: targetProjectId, folder_id: targetFolderId || null, order: newOrder })
+                    .eq('id', id);
+                return upd;
+            }));
+
+            // Refresh current container list after move
+            let refetch = supabase
+                .from('clipboard_items')
+                .select('*')
+                .eq('project_id', selectedProjectId)
+                .order('order', { ascending: false, nullsLast: true });
+            if (selectedFolderId) {
+                refetch = refetch.eq('folder_id', selectedFolderId);
+            } else {
+                refetch = refetch.is('folder_id', null);
+            }
+            const { data: refreshed, error: fetchErr } = await refetch;
+            if (!fetchErr && Array.isArray(refreshed) && setClipboardItems) {
+                setClipboardItems(refreshed);
+            }
+            setSelectedKeys([]);
+            setMoveModalOpen(false);
+        } catch (e) {
+            setMoveError(e?.message || 'Failed to move items.');
+        } finally {
+            setIsMoving(false);
+        }
+    };
+
     // Drag and drop across all sort modes; after manual sort switch to 'custom'
     const handleDragStart = (event, index) => {
         try {
@@ -289,6 +436,28 @@ export default function ClipboardList({
                 event.dataTransfer.effectAllowed = 'move';
                 // Some browsers require setData to initiate DnD
                 event.dataTransfer.setData('text/plain', String(index));
+                // Provide a richer payload for cross-project/folder moves (Pro only)
+                try {
+                    if (isPro) {
+                        const draggedItem = displayItems[index];
+                        const draggedKey = getStableKey(draggedItem);
+                        // If multiple selected and includes the dragged row, move the whole selection; otherwise just the dragged row
+                        const keys = (selectedKeys && selectedKeys.includes(draggedKey)) ? selectedKeys.slice() : [draggedKey];
+                        // Map keys to ids (filter out any without ids)
+                        const ids = keys
+                            .map(k => {
+                                const it = displayItems.find(ii => getStableKey(ii) === k) || clipboardItems.find(ii => getStableKey(ii) === k);
+                                return (it && typeof it !== 'string') ? it.id : null;
+                            })
+                            .filter(Boolean);
+                        const payload = {
+                            ids,
+                            sourceProjectId: selectedProjectId || null,
+                            sourceFolderId: selectedFolderId || null,
+                        };
+                        event.dataTransfer.setData('application/x-clipify-ids', JSON.stringify(payload));
+                    }
+                } catch {}
             }
         } catch {}
         setDraggedIndex(index);
@@ -577,6 +746,97 @@ export default function ClipboardList({
         }
     };
 
+    // Bulk save selected URL items as offline articles (Pro only)
+    const handleSaveSelectedArticles = async () => {
+        if (!isPro) return;
+        if (selectedKeys.length === 0) { showErrorNotification(); return; }
+        const items = displayItems.filter(it => selectedKeys.includes(getStableKey(it)));
+        if (items.length === 0) return;
+        // Ensure all are URLs (guard; menu should already hide otherwise)
+        const allUrls = items.every(it => isLikelyUrl(getItemText(it)));
+        if (!allUrls) { showErrorNotification('Only URL items can be saved.'); return; }
+
+        setBulkSaving(true);
+        try {
+            const savedUrls = [];
+            for (const it of items) {
+                const raw = getItemText(it);
+                const url = raw.startsWith('http') ? raw : `https://${raw}`;
+                try {
+                    const cached = await getArticle(url);
+                    if (cached) { savedUrls.push(url); continue; }
+                    const resp = await fetch('/api/offline/fetch-article', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url })
+                    });
+                    const json = await resp.json();
+                    if (!resp.ok) throw new Error(json?.error || 'Fetch failed');
+                    const article = { url, title: json.title, text: json.text, html: json.html || null, alts: json.alts || [], fetchedAt: json.fetchedAt };
+                    await saveArticle(article);
+                    savedUrls.push(url);
+                } catch (e) {
+                    // Continue with others; optionally log
+                    try { console.warn('Save article failed for', url, e); } catch {}
+                }
+            }
+            if (savedUrls.length > 0) {
+                setOfflineSavedSignal({ urls: savedUrls, nonce: Date.now() });
+            }
+        } finally {
+            setBulkSaving(false);
+            setActionsOpen(false);
+        }
+    };
+
+    // Bulk toggle complete for selected items (Pro updates DB; Free updates local cache)
+    const handleToggleCompleteSelected = async () => {
+        if (selectedKeys.length === 0) {
+            showErrorNotification();
+            return;
+        }
+        const items = displayItems.filter(it => selectedKeys.includes(getStableKey(it)));
+        if (items.length === 0) return;
+        // Determine target state: if any not completed -> complete all; else mark all active
+        const anyNotCompleted = items.some(it => {
+            const key = getStableKey(it);
+            const isCompleted = (isPro && typeof it !== 'string')
+                ? (it.completed ?? ((itemCompleted && key in itemCompleted) ? itemCompleted[key] : false))
+                : ((itemCompleted && key in itemCompleted) ? itemCompleted[key] : false);
+            return !isCompleted;
+        });
+        const nextVal = anyNotCompleted; // true if any not completed, else false
+
+        // Update caches/UI immediately
+        setItemCompleted(prev => {
+            const next = { ...(prev || {}) };
+            for (const it of items) {
+                const key = getStableKey(it);
+                next[key] = nextVal;
+            }
+            return next;
+        });
+        if (isPro) {
+            // Update local list row objects
+            setClipboardItems(prev => prev.map(row => {
+                const key = getStableKey(row);
+                if (selectedKeys.includes(key) && typeof row !== 'string') {
+                    return { ...row, completed: nextVal };
+                }
+                return row;
+            }));
+            // Persist to DB via onSaveItem convention
+            if (onSaveItem) {
+                await Promise.all(
+                    items
+                        .map(it => (typeof it !== 'string' ? it : null))
+                        .filter(Boolean)
+                        .map(it => onSaveItem(it.id, getItemText(it), undefined, undefined, nextVal))
+                );
+            }
+        }
+    };
+
     return (
         <div className={`table-wrapper ${styles.listRoot}`}>
             <table className={styles.table}>
@@ -632,6 +892,7 @@ export default function ClipboardList({
                                 // Close inline editor when modal save happens for this item
                                 stableKey={stableKey}
                                 inlineCloseSignal={inlineCloseSignal}
+                                        offlineSavedSignal={offlineSavedSignal}
                                 // Gate offline article features to Pro
                                 canOffline={!!isPro}
                             />
@@ -643,11 +904,47 @@ export default function ClipboardList({
                     <tr>
                         <td colSpan="6">
                             {selectedKeys.length > 0 ? (
-                                <>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
                                     <button onClick={handleSelectAll}>Deselect All</button>
-                                    <button onClick={handleCopySelected} style={{ marginLeft: 8 }}>Copy Selected</button>
-                                    <button onClick={() => setConfirmBulkDeleteOpen(true)} style={{ marginLeft: 8, backgroundColor: '#f44336' }}>Delete Selected</button>
-                                </>
+                                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                                        <button ref={actionsBtnRef} onClick={() => setActionsOpen(v => !v)}>
+                                            Actions ▾
+                                        </button>
+                                        {actionsOpen && (
+                                            <div style={{ position: 'absolute', zIndex: 1000, minWidth: 200, background: '#222', border: '1px solid #444', borderRadius: 6, padding: 6, right: 0, bottom: '100%', marginBottom: 8, boxShadow: '0 6px 18px rgba(0,0,0,0.35)' }}>
+                                                <button onClick={() => { setActionsOpen(false); handleCopySelected(); }} style={{ display: 'block', width: '96%', textAlign: 'left', padding: '8px 10px' }}>Copy selected</button>
+                                                <button onClick={() => { setActionsOpen(false); handleToggleCompleteSelected(); }} style={{ display: 'block', width: '96%', textAlign: 'left', padding: '8px 10px' }}>
+                                                    {(() => {
+                                                        const items = displayItems.filter(it => selectedKeys.includes(getStableKey(it)));
+                                                        const anyNotCompleted = items.some(it => {
+                                                            const key = getStableKey(it);
+                                                            const isCompleted = (isPro && typeof it !== 'string')
+                                                                ? (it.completed ?? ((itemCompleted && key in itemCompleted) ? itemCompleted[key] : false))
+                                                                : ((itemCompleted && key in itemCompleted) ? itemCompleted[key] : false);
+                                                            return !isCompleted;
+                                                        });
+                                                        return anyNotCompleted ? 'Mark as complete' : 'Mark as active';
+                                                    })()}
+                                                </button>
+                                                {isPro && (
+                                                    <button onClick={() => { setActionsOpen(false); openMoveModal(); }} style={{ display: 'block', width: '96%', textAlign: 'left', padding: '8px 10px' }}>Move selected…</button>
+                                                )}
+                                                {(() => {
+                                                    if (!isPro) return null;
+                                                    const items = displayItems.filter(it => selectedKeys.includes(getStableKey(it)));
+                                                    const allUrls = items.length > 0 && items.every(it => isLikelyUrl(getItemText(it)));
+                                                    if (!allUrls) return null;
+                                                    return (
+                                                        <button disabled={bulkSaving} onClick={() => { handleSaveSelectedArticles(); }} style={{ display: 'block', width: '96%', textAlign: 'left', padding: '8px 10px' }}>
+                                                            {bulkSaving ? 'Saving…' : 'Save selected articles'}
+                                                        </button>
+                                                    );
+                                                })()}
+                                                <button onClick={() => { setActionsOpen(false); setConfirmBulkDeleteOpen(true); }} style={{ display: 'block', width: '96%', textAlign: 'left', padding: '8px 10px', color: '#ff8a80' }}>Delete selected</button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             ) : (
                                 <button onClick={handleSelectAll}>Select All</button>
                             )}
@@ -681,6 +978,60 @@ export default function ClipboardList({
                     </button>
                 </div>
             </Modal>
+
+            {/* Move selected items modal (Pro only) */}
+            {isPro && (
+                <Modal
+                    open={moveModalOpen}
+                    onClose={() => setMoveModalOpen(false)}
+                    onPrimary={handleMoveSelected}
+                >
+                    <h3 style={{ marginBottom: 12 }}>Move {selectedKeys.length} item{selectedKeys.length === 1 ? '' : 's'}</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            <span>Project</span>
+                            <select
+                                value={targetProjectId || ''}
+                                onChange={(e) => {
+                                    const pid = e.target.value || null;
+                                    setTargetProjectId(pid);
+                                    // Reset folder selection on project change
+                                    setTargetFolderId(null);
+                                }}
+                                style={{ background: '#1e1e1e', color: '#eee', border: '1px solid #444', borderRadius: 6, padding: 10 }}
+                            >
+                                <option value="" disabled>Select a project…</option>
+                                {projects.map(p => (
+                                    <option key={p.id} value={p.id}>{p.name || 'Untitled'}</option>
+                                ))}
+                            </select>
+                        </label>
+                        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            <span>Folder (optional)</span>
+                            <select
+                                value={targetFolderId || ''}
+                                onChange={(e) => setTargetFolderId(e.target.value || null)}
+                                disabled={!targetProjectId}
+                                style={{ background: '#1e1e1e', color: '#eee', border: '1px solid #444', borderRadius: 6, padding: 10 }}
+                            >
+                                <option value="">No folder</option>
+                                {(foldersByProject[targetProjectId] || []).map(f => (
+                                    <option key={f.id} value={f.id}>{f.name || 'Untitled folder'}</option>
+                                ))}
+                            </select>
+                        </label>
+                        {moveError ? (
+                            <div style={{ color: '#ff8a80' }}>{moveError}</div>
+                        ) : null}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
+                        <button onClick={() => setMoveModalOpen(false)}>Cancel</button>
+                        <button onClick={handleMoveSelected} disabled={isMoving} style={{ backgroundColor: 'var(--primary-color)', color: '#fff' }}>
+                            {isMoving ? 'Moving…' : 'Move'}
+                        </button>
+                    </div>
+                </Modal>
+            )}
 
             {/* Edit item modal */}
             <Modal open={editModalOpen} onClose={closeEditModal} onPrimary={saveEditModal}>

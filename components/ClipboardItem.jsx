@@ -19,6 +19,7 @@ export default function ClipboardItem({
     onExpandEdit,
     stableKey,
     inlineCloseSignal,
+    offlineSavedSignal,
     canOffline = false,
     ...props
 }) {
@@ -41,6 +42,16 @@ export default function ClipboardItem({
             setIsEditing(false);
         }
     }, [inlineCloseSignal, stableKey]);
+
+    // React to bulk-saved signal to flip icon to "read" immediately
+    useEffect(() => {
+        if (!offlineSavedSignal) return;
+        if (!isLikelyUrl(safeText)) return;
+        const url = safeText.startsWith('http') ? safeText : `https://${safeText}`;
+        if (offlineSavedSignal.urls?.includes(url)) {
+            setArticleState(s => ({ ...s, has: true }));
+        }
+    }, [offlineSavedSignal, safeText]);
 
     const handleSave = () => {
         setIsEditing(false);

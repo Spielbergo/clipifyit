@@ -230,6 +230,52 @@ export default function ProApp() {
         return false;
     };
 
+    // Cross-project/folder DnD move handler
+    useEffect(() => {
+    const onMoveRequest = async (e) => {
+            try {
+        const { ids, targetProjectId, targetFolderId } = e.detail || {};
+                if (!user || !Array.isArray(ids) || ids.length === 0 || !targetProjectId) return;
+        // De-dup and sanitize ids
+        const cleanIds = Array.from(new Set(ids.filter(Boolean)));
+        if (cleanIds.length === 0) return;
+                // Compute destination max order
+                let q = supabase
+                    .from('clipboard_items')
+                    .select('order')
+                    .eq('project_id', targetProjectId)
+                    .order('order', { ascending: false, nullsLast: true })
+                    .limit(1);
+                if (targetFolderId) q = q.eq('folder_id', targetFolderId); else q = q.is('folder_id', null);
+                const { data: maxRows } = await q;
+                const currentMax = Math.max(0, ...(Array.isArray(maxRows) && maxRows.length > 0 ? [Number(maxRows[0]?.order) || 0] : [0]));
+                // Update each id
+        await Promise.all(cleanIds.map((id, idx) => {
+                    const newOrder = currentMax + 1 + idx;
+                    return supabase
+                        .from('clipboard_items')
+            .update({ project_id: targetProjectId, folder_id: targetFolderId ? targetFolderId : null, order: newOrder })
+                        .eq('id', id);
+                }));
+                // If moving out of the current scope, refetch current scope; otherwise realtime should reflect changes
+                if (selectedProjectId) {
+                    let refetch = supabase
+                        .from('clipboard_items')
+                        .select('*')
+                        .eq('project_id', selectedProjectId)
+                        .order('order', { ascending: false, nullsLast: true });
+                    if (selectedFolderId) refetch = refetch.eq('folder_id', selectedFolderId); else refetch = refetch.is('folder_id', null);
+                    const { data: refreshed } = await refetch;
+                    setClipboardItems(refreshed || []);
+                }
+            } catch (err) {
+                console.error('Move request failed', err);
+            }
+        };
+        window.addEventListener('clipboard-move-request', onMoveRequest);
+        return () => window.removeEventListener('clipboard-move-request', onMoveRequest);
+    }, [user, selectedProjectId, selectedFolderId]);
+
     // Remove item from the selected project's clipboard
     const handleRemoveItem = async (id) => {
         if (!user || !selectedProjectId) return;
