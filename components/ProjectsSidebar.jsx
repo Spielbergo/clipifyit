@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { FiChevronsDown, FiChevronsUp } from 'react-icons/fi';
 
 import SortBar from './SortBar.component';
 import SearchBar from './SearchBar.component';
@@ -165,6 +166,19 @@ export default function ProjectsSidebar({
   const lastDeletedFolderIdRef = useRef(null);
   const prevFoldersByProjectRef = useRef({});
 
+  // Compute global expand/collapse state
+  const allExpanded = projects.length > 0 && projects.every(p => collapsedProjects[p.id] === false);
+  const anyCollapsed = projects.some(p => collapsedProjects[p.id]);
+
+  const toggleAllProjects = () => {
+    setCollapsedProjects(prev => {
+      const expand = projects.some(p => prev[p.id]); // if any collapsed, expand all; else collapse all
+      const next = { ...(prev || {}) };
+      projects.forEach(p => { next[p.id] = expand ? false : true; });
+      return next;
+    });
+  };
+
   useEffect(() => {
     // Group incoming folders by project
     const grouped = folders.reduce((acc, f) => {
@@ -308,10 +322,6 @@ export default function ProjectsSidebar({
       return next;
     });
   }, [projects]);
-
-
-
-
   // console.log('Projects:', projects);
   // console.log('Folders:', folders);
   
@@ -319,13 +329,25 @@ export default function ProjectsSidebar({
     <>
       <aside className={`projects-sidebar${expanded ? ' expanded' : ''}`}>
         <div className='sidebar-header--container'>
-          <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12 }}>
-            <span style={{ fontWeight: 600, fontSize: 18 }}>Projects</span>
-            {onClose && (
-              <button className="close-btn" onClick={onClose} style={{ fontSize: 22, background: 'none', border: 'none', cursor: 'pointer' }}>
-                ×
+          <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, width: '93%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontWeight: 600, fontSize: 18 }}>Projects</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button
+                onClick={toggleAllProjects}
+                title={anyCollapsed ? 'Expand all projects' : 'Collapse all projects'}
+                aria-label={anyCollapsed ? 'Expand all projects' : 'Collapse all projects'}
+                style={{ background: 'none', border: '1px solid #444', borderRadius: 4, color: '#ccc', cursor: 'pointer', padding: '4px 8px' }}
+              >
+                {anyCollapsed ? <FiChevronsDown size={16} /> : <FiChevronsUp size={16} />}
               </button>
-            )}
+              {onClose && (
+                <button className="close-btn" onClick={onClose} style={{ fontSize: 22, background: 'none', border: 'none', cursor: 'pointer' }}>
+                  ×
+                </button>
+              )}
+            </div>
           </div>
           {/* Sort Toggle */}
           <SortBar sortMode={sortMode} setSortMode={setSortMode} />

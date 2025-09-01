@@ -59,6 +59,47 @@ export default function ProApp() {
         };
     }, []);
 
+    // Persist and restore user's last selected project/folder locally (no cloud required)
+    useEffect(() => {
+        if (!user || !Array.isArray(projects) || projects.length === 0) return;
+        try {
+            const savedProjectId = localStorage.getItem('clip_last_project') || '';
+            if (!selectedProjectId) {
+                if (savedProjectId && projects.some(p => p.id === savedProjectId)) {
+                    setSelectedProjectId(savedProjectId);
+                } else if (projects.length > 0) {
+                    // Fall back to the first project if nothing saved
+                    setSelectedProjectId(projects[0].id);
+                }
+            }
+        } catch {}
+    }, [user, projects]);
+
+    useEffect(() => {
+        try {
+            if (selectedProjectId) localStorage.setItem('clip_last_project', selectedProjectId);
+        } catch {}
+    }, [selectedProjectId]);
+
+    useEffect(() => {
+        if (!user || !selectedProjectId) return;
+        try {
+            const savedFolderId = localStorage.getItem('clip_last_folder') || '';
+            // Only restore if none is selected yet and the saved folder belongs to the current project
+            if (!selectedFolderId && savedFolderId && folders.some(f => f.id === savedFolderId && f.project_id === selectedProjectId)) {
+                setSelectedFolderId(savedFolderId);
+            }
+        } catch {}
+    }, [user, selectedProjectId, folders, selectedFolderId, setSelectedFolderId]);
+
+    useEffect(() => {
+        try {
+            // Only persist when a concrete folder is selected; don't clear on null so we remember
+            // the last folder per user between project switches and page navigations.
+            if (selectedFolderId) localStorage.setItem('clip_last_folder', selectedFolderId);
+        } catch {}
+    }, [selectedFolderId]);
+
     // Load clipboard items for the selected project
     const fetchCountRef = useRef(0);
     const prevVisibilityRef = useRef(typeof document !== 'undefined' ? document.visibilityState : 'visible');
@@ -362,7 +403,22 @@ export default function ProApp() {
                 .order('created_at', { ascending: false });
             if (!error) {
                 setProjects(data || []);
-                if (!selectedProjectId && data && data.length > 0) setSelectedProjectId(data[0].id);
+                if (data && data.length > 0) {
+                    let savedProjectId = null;
+                    try { savedProjectId = localStorage.getItem('clip_last_project') || null; } catch {}
+                    const savedValid = savedProjectId && data.some(p => p.id === savedProjectId);
+                    // Choose initial selection:
+                    // 1) Saved project if valid; else 2) keep current if still present; else 3) latest (first in list)
+                    if (!selectedProjectId) {
+                        const nextProj = savedValid ? savedProjectId : data[0].id;
+                        setSelectedProjectId(nextProj);
+                        // Note: folder restoration is handled by a separate effect
+                        // that validates the saved folder belongs to the selected project.
+                    } else if (!data.some(p => p.id === selectedProjectId)) {
+                        const nextProj = savedValid ? savedProjectId : data[0].id;
+                        setSelectedProjectId(nextProj);
+                    }
+                }
             }
         };
         fetchProjects();

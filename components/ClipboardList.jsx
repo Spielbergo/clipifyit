@@ -50,6 +50,8 @@ export default function ClipboardList({
     // Signal rows that certain URLs were saved offline so icons flip immediately
     const [offlineSavedSignal, setOfflineSavedSignal] = useState(null);
     const [bulkSaving, setBulkSaving] = useState(false);
+    const [showSavedToast, setShowSavedToast] = useState(false);
+    const [savedToastText, setSavedToastText] = useState('');
 
     // Persisted map of names keyed by stable key (id for Pro, text for Free)
     const [itemNames, setItemNames] = useState({});
@@ -730,6 +732,13 @@ export default function ClipboardList({
         setTimeout(() => setShowErrorMessage(false), 2000);
     };
 
+    const showSavedNotification = (count) => {
+        const plural = count === 1 ? '' : 's';
+        setSavedToastText(`Saved ${count} article${plural} for offline`);
+        setShowSavedToast(true);
+        setTimeout(() => setShowSavedToast(false), 2000);
+    };
+
     // Copy selected items
     const handleCopySelected = async () => {
         if (selectedKeys.length === 0) {
@@ -782,6 +791,7 @@ export default function ClipboardList({
             }
             if (savedUrls.length > 0) {
                 setOfflineSavedSignal({ urls: savedUrls, nonce: Date.now() });
+                showSavedNotification(savedUrls.length);
             }
         } finally {
             setBulkSaving(false);
@@ -1097,6 +1107,12 @@ export default function ClipboardList({
                 style={{ display: showErrorMessage ? 'block' : 'none' }}
             >
                 {showErrorMessage}
+            </div>
+            <div
+                className="copied-message"
+                style={{ display: showSavedToast ? 'block' : 'none' }}
+            >
+                {savedToastText}
             </div>
         </div>
     );
