@@ -14,6 +14,7 @@ export default function Saved() {
   const { user } = useAuth();
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [installAvailable, setInstallAvailable] = useState(false);
+  const [installDebug, setInstallDebug] = useState('');
   const [isStandalone, setIsStandalone] = useState(false);
   const [showInstallHelp, setShowInstallHelp] = useState(false);
   const [installHelpText, setInstallHelpText] = useState('');
@@ -151,14 +152,22 @@ export default function Saved() {
       e.preventDefault();
       setDeferredPrompt(e);
       setInstallAvailable(true);
+      setInstallDebug('beforeinstallprompt event fired');
     }
     function onAppInstalled() {
       setDeferredPrompt(null);
       setInstallAvailable(false);
       setIsStandalone(true);
+      setInstallDebug('App installed');
     }
     window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
     window.addEventListener('appinstalled', onAppInstalled);
+    // Debug: check manifest and SW
+    setTimeout(() => {
+      if (!window.matchMedia('(display-mode: standalone)').matches && !window.navigator.standalone) {
+        if (!window.deferredPrompt) setInstallDebug('No beforeinstallprompt event. PWA may already be installed, or criteria not met.');
+      }
+    }, 2000);
     return () => {
       window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
       window.removeEventListener('appinstalled', onAppInstalled);
@@ -299,7 +308,15 @@ export default function Saved() {
             </button>
           )}
         </div>
-        {/* Search + Sort controls below header */}
+        {/* Install tip if not available */}
+        {!installAvailable && !isStandalone && (
+          <div style={{ color: '#b00', background: '#fffbe6', border: '1px solid #ffe58f', borderRadius: 6, padding: '8px 12px', margin: '8px 0', fontSize: 15 }}>
+            <b>Install not available?</b><br />
+            Make sure you are using Chrome or Edge, not in Incognito, and have visited this page a few times.<br />
+            If you already installed, open the app from your home screen.<br />
+            <span style={{ color: '#888', fontSize: 13 }}>Debug: {installDebug}</span>
+          </div>
+        )}
         <div style={{ padding: '0 0 6px 0' }}>
           <SearchBar value={query} onChange={setQuery} onClear={() => setQuery('')} />
           <SortBar sortMode={sortMode} setSortMode={setSortMode} />
