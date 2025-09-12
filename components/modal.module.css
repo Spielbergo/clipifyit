@@ -10,6 +10,8 @@
 }
 
 .modal_content {
+  position: relative;
+  top: -25px;
   background: #222;
   padding: 24px 24px 16px 24px;
   border-radius: 8px;
