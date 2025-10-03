@@ -62,6 +62,13 @@
               radial-gradient(circle at 70% 70%, #78d1ff, transparent 60%);
   transform: rotate(-8deg);
 }
+
+@media screen and (max-width: 1280px) {
+  .blobTwo {
+    display: none;
+  }
+}
+
 .blobThree {
   top: 40%;
   left: -140px;
@@ -80,6 +87,14 @@
   grid-template-columns: 1.1fr 0.9fr;
   gap: 56px;
   align-items: center;
+}
+
+@media screen and (max-width: 1281px) {
+  .heroGrid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  
 }
 
 .brandRow {
@@ -1140,4 +1155,38 @@
   .previewCard {
     animation: none;
   }
+}
+
+/* Keep desktop layout but make decorative blobs responsive and clipped on small screens */
+@media screen and (max-width: 640px) {
+  /* Slightly reduce hero padding but preserve layout */
+  .heroModern {
+    padding-left: 16px;
+    padding-right: 16px;
+    min-height: auto;
+  }
+
+  /* Make blobs scale down responsively using min()/clamp() so they don't force overflow */
+  .blobOne, .blobTwo, .blobThree,
+  .hiwBlobA, .hiwBlobB,
+  .demoBlobA, .demoBlobB {
+    width: min(520px, 70vw);
+    height: min(520px, 70vw);
+    /* keep original visual weight but allow clipping */
+    max-width: 1000px;
+    max-height: 1000px;
+  }
+
+  /* Shift blobs a bit toward center so their negative offsets clip instead of pushing layout */
+  .blobOne { left: calc(-80px + 6vw); }
+  .blobThree { left: calc(-140px + 6vw); }
+  .blobTwo { right: calc(-120px + 6vw); }
+
+  /* Ensure the hero background container clips overflow */
+  .heroBg, .hiwSection, .demoSection {
+    overflow: hidden;
+  }
+
+  /* Keep preview hidden on very small screens to save space but don't alter desktop */
+  .heroPreview { display: none; }
 }

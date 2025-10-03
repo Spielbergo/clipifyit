@@ -10,9 +10,10 @@
 
 .testimonialGrid {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 36px;
-  flex-wrap: wrap;
+  width: 100%;
   margin-top: 32px;
 }
 
@@ -21,8 +22,8 @@
   border-radius: 18px;
   box-shadow: 0 12px 60px #0006, inset 0 1px 0 #4365a533;
   padding: 44px 32px 32px 32px;
-  width: 340px;
-  max-width: 92vw;
+  width: 100%;
+  max-width: 340px;
   text-align: left;
   display: flex;
   flex-direction: column;
@@ -123,8 +124,8 @@
     align-items: center;
     gap: 24px;
   }
-  .testimonialCard {
+  /* .testimonialCard {
     width: 95vw;
     max-width: 98vw;
-  }
+  } */
 }
