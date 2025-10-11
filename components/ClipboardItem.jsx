@@ -24,24 +24,11 @@ export default function ClipboardItem({
     ...props
 }) {
     const safeText = typeof text === 'string' ? text : (text ? String(text) : '');
-    const [isEditing, setIsEditing] = useState(false);
-    const [editedText, setEditedText] = useState(safeText);
     const [isCopied, setIsCopied] = useState(false);
     const [confirmRemove, setConfirmRemove] = useState(false);
     const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
     const [articleState, setArticleState] = useState({ has: false, loading: false, data: null, error: '' });
     const [showSavedMessage, setShowSavedMessage] = useState(false);
-
-    useEffect(() => {
-        setEditedText(safeText);
-    }, [safeText]);
-
-    useEffect(() => {
-        if (!inlineCloseSignal || !stableKey) return;
-        if (inlineCloseSignal.key === stableKey) {
-            setIsEditing(false);
-        }
-    }, [inlineCloseSignal, stableKey]);
 
     // React to bulk-saved signal to flip icon to "read" immediately
     useEffect(() => {
@@ -52,18 +39,6 @@ export default function ClipboardItem({
             setArticleState(s => ({ ...s, has: true }));
         }
     }, [offlineSavedSignal, safeText]);
-
-    const handleSave = () => {
-        setIsEditing(false);
-        if (onSave) {
-            onSave(index, editedText);
-        }
-    };
-
-    const handleCancel = () => {
-        setEditedText(text);
-        setIsEditing(false);
-    };
 
     const handleCopy = () => {
         if (onCopy) {
@@ -256,18 +231,11 @@ export default function ClipboardItem({
                 />
             </td>
             <td>
-                {isEditing ? (
-                    <textarea
-                        value={editedText}
-                        onChange={(e) => setEditedText(e.target.value)}
-                        style={{ width: '97%', color: confirmRemove ? '#888' : undefined, textDecoration: confirmRemove ? 'line-through' : undefined, opacity: confirmRemove ? 0.6 : 1 }}
-                    />
-                ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {name ? (
-                            <span
-                                title={name}
-                                style={{
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {name ? (
+                        <span
+                            title={name}
+                            style={{
                                     maxWidth: 180,
                                     overflow: 'hidden',
                                     textOverflow: 'ellipsis',
@@ -333,40 +301,24 @@ export default function ClipboardItem({
                             </button>
                         )}
                     </div>
-                )}
             </td>
             {/* Edit, Copy, Remove buttons in a flex row, with Remove confirmation overlayed */}
             <td colSpan={3} style={{ position: 'relative', minWidth: 160 }}>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'flex-start' }}>
                     {/* Edit button */}
-                    {!isEditing && !confirmRemove && (
-                        <button onClick={() => setIsEditing(true)} title="Edit">
+                    {!confirmRemove && (
+                        <button onClick={() => onExpandEdit && onExpandEdit(safeText)} title="Edit">
                             <FaEdit />
                         </button>
                     )}
-                    {/* Offline action moved to left edge inside text cell */}
-                    {/* Save/Cancel + Expand buttons while editing */}
-                    {isEditing && (
-                        <>
-                            <button onClick={handleSave} title="Save">
-                                <FaCheck />
-                            </button>
-                            <button onClick={handleCancel} title="Cancel">
-                                <FaTimes />
-                            </button>
-                            <button onClick={() => onExpandEdit && onExpandEdit(editedText)} title="Expand editor">
-                                ⤢
-                            </button>
-                        </>
-                    )}
                     {/* Copy button */}
-                    {!isEditing && !confirmRemove && (
+                    {!confirmRemove && (
                         <button onClick={handleCopy} title="Copy">
                             {isCopied ? <FaCheck /> : <FaCopy />}
                         </button>
                     )}
                     {/* Remove button or confirmation overlay */}
-                    {!isEditing && !confirmRemove && (
+                    {!confirmRemove && (
                         <button onClick={() => setConfirmRemove(true)} title="Remove">
                             <FaTimes />
                         </button>

@@ -95,6 +95,19 @@
   border: 1px solid #3a3a3a;
 } */
 
+/* Mobile: Stack labels above text to save horizontal space */
+@media screen and (max-width: 767px) {
+  .table td:nth-child(2) > div {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+  }
+  
+  .table td:nth-child(2) > div > span:first-child {
+    margin-bottom: 2px;
+  }
+}
+
 @media screen and (min-width: 768px) {
   .listRoot {
     padding: 12px;
