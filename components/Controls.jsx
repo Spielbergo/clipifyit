@@ -25,6 +25,7 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
         if (onShowCustomModalChange) onShowCustomModalChange(showCustomModal);
     }, [showCustomModal, onShowCustomModalChange]);
     const [customText, setCustomText] = useState('');
+    const [splitLines, setSplitLines] = useState(false);
     const textareaRef = useRef(null);
     // Handle CTRL+V/CMD+V for modal paste
     useEffect(() => {
@@ -76,17 +77,22 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
 
     const handleAddCustom = async () => {
         if (customText.trim()) {
-            const result = await onAddItem(customText.trim());
-            if (result === true) {
-                setErrorMessage("Duplicate content cannot be added!");
-                const errorElement = document.querySelector('.no-selection-message');
-                if (errorElement) {
-                    errorElement.style.display = 'block';
-                    setTimeout(() => {
-                        errorElement.style.display = 'none';
-                    }, 2000);
+            if (splitLines) {
+                const lines = customText.split('\n').filter(line => line.trim());
+                let duplicateCount = 0;
+                for (const line of lines) {
+                    const result = await onAddItem(line.trim());
+                    if (result === true) duplicateCount++;
                 }
-                return;
+                if (duplicateCount > 0) {
+                    showErrorNotification(`${duplicateCount} duplicate item(s) were skipped.`);
+                }
+            } else {
+                const result = await onAddItem(customText.trim());
+                if (result === true) {
+                    showErrorNotification("Duplicate content cannot be added!");
+                    return;
+                }
             }
             setCustomText('');
             setShowCustomModal(false);
@@ -244,9 +250,28 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
                     placeholder="Type or paste your text here..."
                     autoFocus
                 />
-                <div className={styles.modal_buttons}>
-                    <button onClick={() => setShowCustomModal(false)}>Cancel</button>
-                    <button onClick={handleAddCustom} disabled={!customText.trim()}>Add</button>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ marginBottom: 12 }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#fff' }}>
+                            <input 
+                                type="checkbox" 
+                                checked={splitLines}
+                                onChange={(e) => setSplitLines(e.target.checked)}
+                                style={{
+                                    accentColor: '#4fc3f7'
+                                }}
+                            />
+                            Split lines into separate items
+                        </label>
+                    </div>
+                    <div className={styles.modal_buttons}>
+                        <button onClick={() => setShowCustomModal(false)}>Cancel</button>
+                        <button onClick={handleAddCustom} disabled={!customText.trim()}>
+                            Add{splitLines && customText.split('\n').filter(line => line.trim()).length > 1 
+                                ? ` ${customText.split('\n').filter(line => line.trim()).length} Items` 
+                                : ''}
+                        </button>
+                    </div>
                 </div>
             </Modal>
         </div>
