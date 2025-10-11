@@ -173,6 +173,13 @@
 	font-size: 12px;
 	color: #999;
 	margin-bottom: 8px;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.article_url:hover {
+	color: #666;
+	text-decoration: underline;
 }
 
 .article_reader {
@@ -315,5 +322,155 @@
 	}
 	to {
 		transform: rotate(360deg);
+	}
+}
+
+/* Bulk Management Modal Styles */
+.manage_modal_container {
+	/* max-width: 600px; */
+	width: 100%;
+}
+
+.manage_articles_list {
+	max-height: 400px;
+	overflow-y: auto;
+	border: 1px solid #333;
+	border-radius: 6px;
+	background: #1a1a1a;
+	margin-bottom: 20px;
+	/* Custom scrollbar styling to match site */
+	scrollbar-width: thin;
+	scrollbar-color: #6599a6 #222;
+}
+
+/* Chrome, Edge, Safari scrollbar */
+.manage_articles_list::-webkit-scrollbar {
+	width: 10px;
+	background: #222;
+}
+
+.manage_articles_list::-webkit-scrollbar-thumb {
+	background: #6599a6;
+	border-radius: 8px;
+	border: 2px solid #222;
+}
+
+.manage_articles_list::-webkit-scrollbar-thumb:hover {
+	background: #4fc3f7;
+}
+
+.manage_articles_list::-webkit-scrollbar-track {
+	background: #222;
+}
+
+.manage_article_item {
+	padding: 12px 16px;
+	border-bottom: 1px solid #333;
+}
+
+.manage_article_item:last-child {
+	border-bottom: none;
+}
+
+.manage_article_item:hover {
+	background: #2a2a2a;
+}
+
+.manage_article_title {
+	font-size: 14px;
+	font-weight: 500;
+	margin-bottom: 4px;
+	line-height: 1.3;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.manage_article_url {
+	font-size: 12px;
+	color: #999;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.manage_actions {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.manage_actions_group {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.manage_action_btn {
+	padding: 8px 16px;
+	border: 1px solid #555;
+	background: #333;
+	color: #fff;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 14px;
+	transition: all 0.2s ease;
+	flex: 1;
+	min-width: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.manage_action_btn:hover:not(:disabled) {
+	background: #444;
+	border-color: #666;
+}
+
+.manage_action_btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.manage_action_btn.delete_btn {
+	background: #722;
+	border-color: #933;
+}
+
+.manage_action_btn.delete_btn:hover:not(:disabled) {
+	background: #833;
+	border-color: #a44;
+}
+
+@media (max-width: 768px) {
+	.manage_actions_group {
+		flex-direction: column;
+	}
+	
+	.manage_action_btn {
+		flex: none;
+		font-size: 13px;
+		padding: 10px 12px;
+		white-space: normal;
+		word-wrap: break-word;
+		line-height: 1.3;
+		min-height: 40px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+	}
+	
+	.manage_modal_container {
+		margin: 0 -8px;
+	}
+}
+
+@media (max-width: 480px) {
+	.manage_action_btn {
+		font-size: 12px;
+		padding: 8px 10px;
+		width: 100%;
+		min-height: 44px;
 	}
 }

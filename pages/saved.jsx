@@ -27,6 +27,9 @@ export default function Saved() {
   const [showToast, setShowToast] = useState(false);
   const [toastIsError, setToastIsError] = useState(false);
   const [isProcessingPaste, setIsProcessingPaste] = useState(false);
+  const [showManageModal, setShowManageModal] = useState(false);
+  const [selectedArticles, setSelectedArticles] = useState(new Set());
+  const [selectAll, setSelectAll] = useState(false);
   const [query, setQuery] = useState('');
   const [sortMode, setSortMode] = useState('latest'); // 'alpha' | 'descAlpha' | 'oldest' | 'latest'
   const [readUrls, setReadUrls] = useState(() => {
@@ -345,6 +348,76 @@ export default function Saved() {
     }
   };
 
+  // Bulk management functions
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedArticles(new Set());
+      setSelectAll(false);
+    } else {
+      setSelectedArticles(new Set(items.map(item => item.url)));
+      setSelectAll(true);
+    }
+  };
+
+  const handleSelectArticle = (url) => {
+    const newSelected = new Set(selectedArticles);
+    if (newSelected.has(url)) {
+      newSelected.delete(url);
+    } else {
+      newSelected.add(url);
+    }
+    setSelectedArticles(newSelected);
+    setSelectAll(newSelected.size === items.length);
+  };
+
+  const handleBulkMarkRead = () => {
+    setReadUrls(prev => {
+      const newSet = new Set(prev);
+      selectedArticles.forEach(url => newSet.add(url));
+      return newSet;
+    });
+    showToastMessage(`Marked ${selectedArticles.size} articles as read`);
+    setShowManageModal(false);
+    setSelectedArticles(new Set());
+    setSelectAll(false);
+  };
+
+  const handleBulkMarkUnread = () => {
+    setReadUrls(prev => {
+      const newSet = new Set(prev);
+      selectedArticles.forEach(url => newSet.delete(url));
+      return newSet;
+    });
+    showToastMessage(`Marked ${selectedArticles.size} articles as unread`);
+    setShowManageModal(false);
+    setSelectedArticles(new Set());
+    setSelectAll(false);
+  };
+
+  const handleBulkDelete = async (deleteFromClipboard = false) => {
+    try {
+      for (const url of selectedArticles) {
+        await deleteArticle(url);
+        if (deleteFromClipboard) {
+          // Call the delete API for clipboard items too
+          await fetch('/api/offline/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url })
+          });
+        }
+      }
+      await refresh();
+      showToastMessage(`Deleted ${selectedArticles.size} articles${deleteFromClipboard ? ' from saved and clipboard' : ''}`);
+      setShowManageModal(false);
+      setSelectedArticles(new Set());
+      setSelectAll(false);
+    } catch (error) {
+      console.error('Error deleting articles:', error);
+      showToastMessage('Error deleting articles', true);
+    }
+  };
+
   function extractTextFromHTML(html) {
     if (!html) return '';
     try {
@@ -475,11 +548,16 @@ export default function Saved() {
   <div className={`${styles.sidebar} saved_sidebar`}>
         <div className={styles.header_row}>
           <h2 className={styles.title}>Saved Articles</h2>
-          {!isStandalone && (
-            <button onClick={handleInstall} title="Install app">
-              Install
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={() => setShowManageModal(true)} title="Manage articles">
+              Manage
             </button>
-          )}
+            {!isStandalone && (
+              <button onClick={handleInstall} title="Install app">
+                Install
+              </button>
+            )}
+          </div>
         </div>
         {/* Install tip if not available */}
         {!installAvailable && !isStandalone && (
@@ -567,7 +645,14 @@ export default function Saved() {
                   </div>
                 );
               })()}
-              <div className={styles.article_url}>{active.url}</div>
+              <a 
+                href={active.url} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className={styles.article_url}
+              >
+                {active.url}
+              </a>
               {active.html ? (
                 <div className={styles.article_reader} dangerouslySetInnerHTML={{ __html: active.html }} />
               ) : (
@@ -644,7 +729,14 @@ export default function Saved() {
                     </div>
                   );
                 })()}
-                <div className={styles.article_url}>{active.url}</div>
+                <a 
+                  href={active.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className={styles.article_url}
+                >
+                  {active.url}
+                </a>
                 {active.html ? (
                   <div className={styles.article_reader} dangerouslySetInnerHTML={{ __html: active.html }} />
                 ) : (
@@ -658,6 +750,92 @@ export default function Saved() {
           <div className={styles.mobile_modal_footer}>
             <button onClick={prevArticle} disabled={!active || items.findIndex(it => it.url === active.url) <= 0}>Previous</button>
             <button onClick={nextArticle} disabled={!active || items.findIndex(it => it.url === active.url) >= items.length - 1}>Next</button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Bulk Management Modal */}
+      <Modal open={showManageModal} onClose={() => {setShowManageModal(false); setSelectedArticles(new Set()); setSelectAll(false);}}>
+        <div className={styles.manage_modal_container}>
+          <h3 style={{ margin: '0 0 16px 0' }}>Manage Articles</h3>
+          
+          {/* Select All Checkbox */}
+          <div style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #333' }}>
+            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={selectAll}
+                onChange={handleSelectAll}
+                style={{ marginRight: '8px' }}
+              />
+              <span>Select All ({items.length} articles)</span>
+            </label>
+            {selectedArticles.size > 0 && (
+              <div style={{ fontSize: '14px', color: '#999', marginTop: '4px' }}>
+                {selectedArticles.size} selected
+              </div>
+            )}
+          </div>
+
+          {/* Articles List */}
+          <div className={styles.manage_articles_list}>
+            {items.map(item => (
+              <div key={item.url} className={styles.manage_article_item}>
+                <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', width: '100%' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedArticles.has(item.url)}
+                    onChange={() => handleSelectArticle(item.url)}
+                    style={{ marginRight: '12px', flexShrink: 0 }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className={styles.manage_article_title}>
+                      {item.title || item.url}
+                      {readUrls.has(item.url) && (
+                        <span style={{ color: '#666', fontSize: '12px', marginLeft: '8px' }}>(read)</span>
+                      )}
+                    </div>
+                    <div className={styles.manage_article_url}>{item.url}</div>
+                  </div>
+                </label>
+              </div>
+            ))}
+          </div>
+
+          {/* Action Buttons */}
+          <div className={styles.manage_actions}>
+            <div className={styles.manage_actions_group}>
+              <button 
+                onClick={handleBulkMarkRead}
+                disabled={selectedArticles.size === 0}
+                className={styles.manage_action_btn}
+              >
+                Mark as Read ({selectedArticles.size})
+              </button>
+              <button 
+                onClick={handleBulkMarkUnread}
+                disabled={selectedArticles.size === 0}
+                className={styles.manage_action_btn}
+              >
+                Mark as Unread ({selectedArticles.size})
+              </button>
+            </div>
+            <div className={styles.manage_actions_group}>
+              <button 
+                onClick={() => handleBulkDelete(false)}
+                disabled={selectedArticles.size === 0}
+                className={`${styles.manage_action_btn} ${styles.delete_btn}`}
+              >
+                Delete from Saved ({selectedArticles.size})
+              </button>
+              <button 
+                onClick={() => handleBulkDelete(true)}
+                disabled={selectedArticles.size === 0}
+                className={`${styles.manage_action_btn} ${styles.delete_btn}`}
+              >
+                Delete from Saved + Clipboard ({selectedArticles.size})
+              </button>
+            </div>
           </div>
         </div>
       </Modal>
