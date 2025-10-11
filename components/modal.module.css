@@ -26,11 +26,25 @@
 
 .modal_close {
   position: absolute;
-  top: 8px;
+  top: 12px;
   right: 12px;
-  background-color: transparent !important;
-  border: none;
-  color: #fff;
-  font-size: 24px;
+  background: #333;
+  border: 1px solid #555;
+  color: #ccc;
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  z-index: 100;
+}
+
+.modal_close:hover {
+  background: #444;
+  border-color: #666;
+  color: #fff;
 }

@@ -85,7 +85,8 @@ export default function ClipboardItem({
     };
 
     function linkify(str) {
-        const urlRegex = /((https?:\/\/|www\.)[^\s]+)/g;
+        // Updated regex to better handle URLs with query params, UTM tracking, PDFs, etc.
+        const urlRegex = /(https?:\/\/[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.?[a-zA-Z]{2,}(:[0-9]{1,5})?(\/[^\s]*)?|www\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.?[a-zA-Z]{2,}(:[0-9]{1,5})?(\/[^\s]*)?)/gi;
         const parts = [];
         let lastIndex = 0;
         let match;
@@ -99,18 +100,54 @@ export default function ClipboardItem({
             // Add the link
             let url = match[0];
             let href = url.startsWith('http') ? url : `https://${url}`;
-            parts.push(
-                <a
-                    key={key++}
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: '#1976d2', wordBreak: 'break-all' }}
-                    title='Open link in new tab'
-                >
-                    {url}
-                </a>
-            );
+            
+            // Check if it's a PDF file for special handling
+            const isPdf = /\.pdf(\?|#|$)/i.test(url);
+            const linkTitle = isPdf ? 'Open PDF in new tab' : 'Open link in new tab';
+            
+            if (isPdf) {
+                // For PDFs, render with badge only
+                parts.push(
+                    <span key={key++} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', position: 'relative' }}>
+                        <a
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: '#1976d2', wordBreak: 'break-all' }}
+                            title={linkTitle}
+                        >
+                            {url}
+                        </a>
+                        {/* PDF badge on the right */}
+                        <span style={{
+                            backgroundColor: '#DC382D',
+                            color: 'white',
+                            fontSize: '9px',
+                            fontWeight: 'bold',
+                            padding: '6px 6px 5px 5px',
+                            borderRadius: '30%',
+                            marginLeft: '4px',
+                            textTransform: 'uppercase',
+                            lineHeight: '1'
+                        }}>
+                            PDF
+                        </span>
+                    </span>
+                );
+            } else {
+                parts.push(
+                    <a
+                        key={key++}
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: '#1976d2', wordBreak: 'break-all' }}
+                        title={linkTitle}
+                    >
+                        {url}
+                    </a>
+                );
+            }
             lastIndex = match.index + url.length;
         }
         // Add any remaining text
@@ -130,7 +167,26 @@ export default function ClipboardItem({
         return s.color ? v : null;
     }
 
-    const isLikelyUrl = (v) => /^(https?:\/\/|www\.)\S+$/i.test((v||'').trim());
+    const isLikelyUrl = (v) => {
+        const text = (v || '').trim();
+        if (!text) return false;
+        
+        // Handle www. prefixes
+        if (text.startsWith('www.')) return true;
+        
+        // Check for PDF files specifically
+        if (/\.pdf(\?|#|$)/i.test(text)) return true;
+        
+        // More comprehensive URL pattern that handles:
+        // - Query parameters (?param=value)
+        // - Fragments (#section)
+        // - UTM tracking parameters
+        // - Port numbers
+        // - Various TLDs
+        const urlPattern = /^https?:\/\/[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.?[a-zA-Z]{2,}(:[0-9]{1,5})?(\/[^\s]*)?$/i;
+        
+        return urlPattern.test(text);
+    };
 
     // Map labelColor keywords to visual styles
     const getLabelVisual = (c) => {
@@ -259,8 +315,8 @@ export default function ClipboardItem({
                             />
                         ) : null}
                         <span style={{ whiteSpace: 'pre-wrap', color: (confirmRemove || completed) ? '#888' : undefined, textDecoration: (confirmRemove || completed) ? 'line-through' : undefined, opacity: (confirmRemove || completed) ? 0.6 : 1, flex: 1 }}>{linkify(safeText)}</span>
-                        {/* Inline right offline button for URL (Pro only) */}
-                        {canOffline && isLikelyUrl(safeText) && (
+                        {/* Inline right offline button for URL (Pro only) - exclude PDFs */}
+                        {canOffline && isLikelyUrl(safeText) && !(/\.pdf(\?|#|$)/i.test(safeText)) && (
                             <button
                                 onClick={handleDownloadArticle}
                                 title={articleState.loading ? 'Saving…' : (articleState.has ? 'Read saved article' : 'Save for offline')}
@@ -334,22 +390,91 @@ export default function ClipboardItem({
                     ) : articleState.error ? (
                         <div style={{ color: '#ff8a80' }}>{articleState.error}</div>
                     ) : articleState.data ? (
-                        <div style={{ maxHeight: '70vh', overflow: 'auto' }}>
-                            <h3 style={{ marginTop: 0 }}>{articleState.data.title || 'Saved article'}</h3>
-                            {articleState.data.html ? (
-                                <div className="article-reader" style={{ lineHeight: 1.6, textAlign: 'left' }} dangerouslySetInnerHTML={{ __html: articleState.data.html }} />
-                            ) : (
-                                <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, textAlign: 'left' }}>{articleState.data.text}</p>
-                            )}
-                            {articleState.data.alts?.length ? (
-                                <details style={{ marginTop: 12 }}>
-                                    <summary>Image alt text ({articleState.data.alts.length})</summary>
-                                    <ul>
-                                        {articleState.data.alts.map((a, i) => <li key={i}>{a}</li>)}
-                                    </ul>
-                                </details>
-                            ) : null}
+                        <div className="article-modal-container">
+                            {/* Fixed header with title */}
+                            <div className="article-modal-header">
+                                <h3 className="article-modal-title">{articleState.data.title || 'Saved article'}</h3>
+                            </div>
+                            
+                            {/* Scrollable content */}
+                            <div className="article-modal-content">
+                                {articleState.data.html ? (
+                                    <div className="article-reader" style={{ lineHeight: 1.6, textAlign: 'left' }} dangerouslySetInnerHTML={{ __html: articleState.data.html }} />
+                                ) : (
+                                    <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, textAlign: 'left' }}>{articleState.data.text}</p>
+                                )}
+                                {articleState.data.alts?.length ? (
+                                    <details style={{ marginTop: 12 }}>
+                                        <summary>Image alt text ({articleState.data.alts.length})</summary>
+                                        <ul>
+                                            {articleState.data.alts.map((a, i) => <li key={i}>{a}</li>)}
+                                        </ul>
+                                    </details>
+                                ) : null}
+                            </div>
+                            
                             <style jsx>{`
+                              .article-modal-container {
+                                display: flex;
+                                flex-direction: column;
+                                height: 70vh;
+                                max-height: 70vh;
+                              }
+                              
+                              .article-modal-header {
+                                padding: 0 0 16px 0;
+                                border-bottom: 1px solid #333;
+                                margin-bottom: 16px;
+                                flex-shrink: 0;
+                                position: sticky;
+                                top: 0;
+                                background: #222;
+                                z-index: 10;
+                              }
+                              
+                              .article-modal-title {
+                                margin: 0;
+                                font-size: 18px;
+                                font-weight: 600;
+                                padding-right: 40px;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                white-space: nowrap;
+                              }
+                              
+                              .article-modal-content {
+                                flex: 1;
+                                overflow-y: auto;
+                                padding-right: 8px;
+                                margin-right: -8px;
+                              }
+                              
+                              /* Custom scrollbar styling */
+                              .article-modal-content::-webkit-scrollbar {
+                                width: 8px;
+                              }
+                              
+                              .article-modal-content::-webkit-scrollbar-track {
+                                background: #222;
+                                border-radius: 4px;
+                              }
+                              
+                              .article-modal-content::-webkit-scrollbar-thumb {
+                                background: #444;
+                                border-radius: 4px;
+                                border: 1px solid #333;
+                              }
+                              
+                              .article-modal-content::-webkit-scrollbar-thumb:hover {
+                                background: #555;
+                              }
+                              
+                              /* Firefox scrollbar */
+                              .article-modal-content {
+                                scrollbar-width: thin;
+                                scrollbar-color: #444 #222;
+                              }
+                              
                               .article-reader { text-align: left; }
                               .article-reader p { margin: 0 0 1em; }
                               .article-reader ul, .article-reader ol { padding-left: 1.25rem; margin: 0 0 1em; }

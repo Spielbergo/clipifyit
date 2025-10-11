@@ -3,7 +3,7 @@ import { listArticles, getArticle, deleteArticle, saveArticle, hasArticle } from
 import { useAuth } from '../contexts/AuthContext';
 import Modal from '../components/Modal.component';
 import styles from '../styles/saved.module.css';
-import { FiTrash2 } from 'react-icons/fi';
+import { FiTrash2, FiMail } from 'react-icons/fi';
 import SearchBar from '../components/SearchBar.component';
 import SortBar from '../components/SortBar.component';
 
@@ -264,6 +264,14 @@ export default function Saved() {
     refresh();
   };
 
+  const handleMarkAsUnread = (url) => {
+    setReadUrls(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(url);
+      return newSet;
+    });
+  };
+
   const visibleItems = useMemo(() => {
     let arr = Array.isArray(items) ? [...items] : [];
     const q = (query || '').trim().toLowerCase();
@@ -317,7 +325,7 @@ export default function Saved() {
             <span style={{ color: '#888', fontSize: 13 }}>Debug: {installDebug}</span>
           </div>
         )}
-        <div style={{ padding: '0 0 6px 0' }}>
+        <div style={{ padding: '0 0 6px 0' }} className='button_transparent'>
           <SearchBar value={query} onChange={setQuery} onClear={() => setQuery('')} />
           <SortBar sortMode={sortMode} setSortMode={setSortMode} />
         </div>
@@ -337,9 +345,21 @@ export default function Saved() {
                       <div className={styles.item_date}>{new Date(it.savedAt || Date.now()).toLocaleString()}</div>
                     )}
                   </button>
-                  <button className={styles.delete_btn} onClick={() => setConfirmDelete({ url: it.url, title: it.title || it.url })} aria-label="Delete">
-                    <FiTrash2 />
-                  </button>
+                  <div className={styles.item_actions}>
+                    {readUrls.has(it.url) && (
+                      <button 
+                        className={styles.unread_btn} 
+                        onClick={() => handleMarkAsUnread(it.url)} 
+                        aria-label="Mark as unread"
+                        title="Mark as unread"
+                      >
+                        <FiMail size={16} />
+                      </button>
+                    )}
+                    <button className={styles.delete_btn} onClick={() => setConfirmDelete({ url: it.url, title: it.title || it.url })} aria-label="Delete">
+                      <FiTrash2 size={16} />
+                    </button>
+                  </div>
                 </li>
               )) : (
                 <li className={styles.list_item} style={{ justifyContent: 'center', color: '#888' }}>No results.</li>
@@ -411,8 +431,8 @@ export default function Saved() {
           <div className={styles.install_actions}>
             <button onClick={() => setConfirmDelete(null)}>Cancel</button>
             <button
-              className={styles.delete_btn}
               onClick={async () => { if (confirmDelete?.url) await handleDelete(confirmDelete.url); setConfirmDelete(null); }}
+              style={{ backgroundColor: '#d32f2f', color: '#fff' }}
             >
               Delete
             </button>

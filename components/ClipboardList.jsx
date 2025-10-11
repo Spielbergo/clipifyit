@@ -233,7 +233,26 @@ export default function ClipboardList({
     const getItemKey = (item) => getStableKey(item);
 
     // URL detection for bulk saved-articles action
-    const isLikelyUrl = (v) => /^(https?:\/\/|www\.)\S+$/i.test(((typeof v === 'string' ? v : getItemText(v)) || '').trim());
+    const isLikelyUrl = (v) => {
+        const text = ((typeof v === 'string' ? v : getItemText(v)) || '').trim();
+        if (!text) return false;
+        
+        // Handle www. prefixes
+        if (text.startsWith('www.')) return true;
+        
+        // Check for PDF files specifically
+        if (/\.pdf(\?|#|$)/i.test(text)) return true;
+        
+        // More comprehensive URL pattern that handles:
+        // - Query parameters (?param=value)
+        // - Fragments (#section)
+        // - UTM tracking parameters
+        // - Port numbers
+        // - Various TLDs
+        const urlPattern = /^https?:\/\/[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.?[a-zA-Z]{2,}(:[0-9]{1,5})?(\/[^\s]*)?$/i;
+        
+        return urlPattern.test(text);
+    };
 
     // Derive sorted view
     const displayItems = useMemo(() => {

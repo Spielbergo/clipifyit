@@ -24,7 +24,7 @@ export default function Modal({ open, onClose, onPrimary, children, hideClose = 
     <div className={styles.modal_overlay} onClick={onClose}>
       <div className={styles.modal_content} onClick={e => e.stopPropagation()}>
         {!hideClose && (
-          <button className={styles.modal_close} onClick={onClose} aria-label="Close">&times;</button>
+          <button className={styles.modal_close} onClick={onClose} aria-label="Close">✕</button>
         )}
         {children}
       </div>

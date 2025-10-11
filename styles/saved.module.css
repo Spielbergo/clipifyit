@@ -12,7 +12,7 @@
 }
 
 .sidebar {
-	flex: 0 0 280px;
+	flex: 0 0 375px;
 	height: calc(100vh - 100px); /* Adjusted from max-height */
 	overflow: auto;
 	border-right: 1px solid #333;
@@ -86,17 +86,49 @@
 	color: #999;
 }
 
-.delete_btn {
-	background: transparent;
-	color: #d74b4b;
-	border: none;
+.item_actions {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
 	flex: 0 0 auto;
+}
+
+.unread_btn {
+	background: none;
+	color: #6599a6;
+	border: none;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	/* width: 32px;
-	height: 32px; */
-	border-radius: 6px;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	cursor: pointer;
+	font-size: 16px;
+	transition: color 0.2s ease;
+}
+
+.unread_btn:hover {
+	color: #7bb3c7;
+}
+
+.delete_btn {
+	background: none;
+	color: #d74b4b;
+	border: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	cursor: pointer;
+	font-size: 16px;
+	transition: color 0.2s ease;
+}
+
+.delete_btn:hover {
+	color: #d74b4b;
 }
 
 .content {

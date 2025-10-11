@@ -260,8 +260,8 @@ td {
 }
 
 td a {
-  color: #fff !important;
-  text-decoration: underline;
+  color: var(--primary-color) !important;
+  /* text-decoration: underline; */
 }
 
 td button {
@@ -455,12 +455,13 @@ button:active {
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
-  max-width: 175px; /* Adjust as needed for your sidebar width */
+  /* max-width: 175px;  */
   height: 28px;
   display: inline-block;
   vertical-align: middle;
 }
 
+.dark-mode .button_transparent button,
 .dark-mode .projects-sidebar button {
   padding: 8px;
   background: transparent;
