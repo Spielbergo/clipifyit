@@ -185,6 +185,8 @@
 .article_reader h1, .article_reader h2, .article_reader h3 { margin: 1.2em 0 0.6em; }
 .article_reader pre { background: #111; border: 1px solid #333; border-radius: 6px; padding: 10px; overflow: auto; }
 
+.article_reader h1 { line-height: 1.2;}
+
 .article_text {
 	white-space: pre-wrap;
 	line-height: 1.6;
@@ -286,5 +288,32 @@
 		flex: 1 1 auto;
 		border-right: none;
 		max-height: none;
+	}
+}
+
+/* Toast notification */
+.toast {
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+	font-size: 14px;
+	max-width: 300px;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
 	}
 }

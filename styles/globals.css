@@ -380,6 +380,10 @@ button:active {
   display: none;
 }
 
+.copied-message.error {
+  background: #f44336;
+}
+
 .no-selection-message {
   position: fixed;
   bottom: 50px;
@@ -701,5 +705,15 @@ input:checked + .slider:before {
 
   .controls-container {
     top: 70px;
+  }
+}
+
+/* Spinner animation for loading states */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { listArticles, getArticle, deleteArticle, saveArticle, hasArticle } from '../lib/offlineDB';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import Modal from '../components/Modal.component';
 import styles from '../styles/saved.module.css';
 import { FiTrash2, FiMail } from 'react-icons/fi';
@@ -21,6 +22,11 @@ export default function Saved() {
   const [isNarrow, setIsNarrow] = useState(true);
   const [articleModalOpen, setArticleModalOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null); // { url, title }
+  const [deleteFromClipboard, setDeleteFromClipboard] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [showToast, setShowToast] = useState(false);
+  const [toastIsError, setToastIsError] = useState(false);
+  const [isProcessingPaste, setIsProcessingPaste] = useState(false);
   const [query, setQuery] = useState('');
   const [sortMode, setSortMode] = useState('latest'); // 'alpha' | 'descAlpha' | 'oldest' | 'latest'
   const [readUrls, setReadUrls] = useState(() => {
@@ -174,6 +180,59 @@ export default function Saved() {
     };
   }, []);
 
+  // Paste event listener for URLs
+  useEffect(() => {
+    const handlePaste = async (e) => {
+      // Don't intercept paste if user is typing in an input field
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      try {
+        const pastedText = e.clipboardData.getData('text/plain').trim();
+        
+        if (!pastedText) {
+          showToastMessage('Please paste some text or a URL', true);
+          return;
+        }
+
+        // Check if it's a PDF first (before URL validation)
+        if (isPdfUrl(pastedText)) {
+          showToastMessage('PDFs are not available for saving right now', true);
+          return;
+        }
+
+        // Check if it's a valid URL
+        if (!isValidUrl(pastedText)) {
+          showToastMessage('Please paste a valid URL (not plain text)', true);
+          return;
+        }
+
+        // Normalize the URL for duplicate checking
+        const url = pastedText.startsWith('http') ? pastedText : `https://${pastedText}`;
+        
+        // Check for duplicates
+        if (await hasArticle(url)) {
+          showToastMessage('Article already saved', true);
+          return;
+        }
+
+        // Show loading state and handle the URL
+        setIsProcessingPaste(true);
+        showToastMessage('Processing URL...');
+        await handlePasteUrl(pastedText);
+      } catch (error) {
+        console.error('Error handling paste:', error);
+        showToastMessage('Error processing pasted content', true);
+      } finally {
+        setIsProcessingPaste(false);
+      }
+    };
+
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, []);
+
   const handleInstall = async () => {
     try {
       if (deferredPrompt) {
@@ -192,6 +251,98 @@ export default function Saved() {
       );
       setShowInstallHelp(true);
     } catch {}
+  };
+
+  const showToastMessage = (message, isError = false) => {
+    setToastMessage(message);
+    setToastIsError(isError);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
+  const isValidUrl = (text) => {
+    try {
+      // First, eliminate obvious non-URLs
+      // Plain text without dots or spaces with multiple words
+      if (text.includes(' ') && !text.includes('.')) {
+        return false;
+      }
+      
+      // Must contain at least a dot and valid domain structure
+      if (!/\w+\.\w{2,}/i.test(text)) {
+        return false;
+      }
+      
+      // Check if it's already a full URL
+      if (/^https?:\/\//i.test(text)) {
+        try {
+          new URL(text);
+          return true;
+        } catch {
+          return false;
+        }
+      }
+      
+      // Check if it starts with www.
+      if (text.startsWith('www.')) {
+        try {
+          new URL(`https://${text}`);
+          return true;
+        } catch {
+          return false;
+        }
+      }
+      
+      // Check if it looks like a domain (word.word format)
+      if (/^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+/.test(text)) {
+        try {
+          new URL(`https://${text}`);
+          return true;
+        } catch {
+          return false;
+        }
+      }
+      
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
+  const isPdfUrl = (text) => {
+    return /\.pdf(\?|#|$)/i.test(text);
+  };
+
+  const handlePasteUrl = async (text) => {
+    try {
+      const url = text.startsWith('http') ? text : `https://${text}`;
+      
+      // Duplicate check is now done in the paste handler
+      // Fetch and save the article
+      const resp = await fetch('/api/offline/fetch-article', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+
+      if (resp.ok) {
+        const data = await resp.json();
+        await saveArticle({
+          url,
+          title: data.title || url,
+          html: data.html || '',
+          text: data.text || '',
+          savedAt: Date.now()
+        });
+        await refresh();
+        showToastMessage('Article saved successfully!');
+      } else {
+        showToastMessage('Failed to fetch article', true);
+      }
+    } catch (error) {
+      console.error('Error saving pasted URL:', error);
+      showToastMessage('Error saving article', true);
+    }
   };
 
   function extractTextFromHTML(html) {
@@ -261,6 +412,20 @@ export default function Saved() {
   const handleDelete = async (url) => {
     await deleteArticle(url);
     if (active?.url === url) setActive(null);
+    
+    // Also delete from clipboard items if checkbox is checked
+    if (deleteFromClipboard && user) {
+      try {
+        await supabase
+          .from('clipboard_items')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('text', url);
+      } catch (error) {
+        console.error('Error deleting from clipboard:', error);
+      }
+    }
+    
     refresh();
   };
 
@@ -423,15 +588,33 @@ export default function Saved() {
       </Modal>
 
       {/* Delete confirmation */}
-  <Modal open={!!confirmDelete} onClose={() => setConfirmDelete(null)} onPrimary={async () => { if (confirmDelete?.url) await handleDelete(confirmDelete.url); setConfirmDelete(null); }}>
+  <Modal open={!!confirmDelete} onClose={() => { setConfirmDelete(null); setDeleteFromClipboard(false); }} onPrimary={async () => { if (confirmDelete?.url) await handleDelete(confirmDelete.url); setConfirmDelete(null); setDeleteFromClipboard(false); }}>
         <div>
           <h3 className={styles.install_title}>Delete saved article?</h3>
           <p className={styles.install_text}>This will remove the saved copy from this device:</p>
           {confirmDelete?.title ? <p className={styles.install_text}><strong>{confirmDelete.title}</strong></p> : null}
+          
+          {/* Checkbox to also delete from clipboard */}
+          {user && (
+            <div style={{ margin: '16px 0', padding: '12px', backgroundColor: '#2a2a2a', borderRadius: '6px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={deleteFromClipboard}
+                  onChange={(e) => setDeleteFromClipboard(e.target.checked)}
+                  style={{ margin: '0' }}
+                />
+                <span style={{ fontSize: '14px', color: '#ccc' }}>
+                  Also delete from your clipboard items
+                </span>
+              </label>
+            </div>
+          )}
+          
           <div className={styles.install_actions}>
-            <button onClick={() => setConfirmDelete(null)}>Cancel</button>
+            <button onClick={() => { setConfirmDelete(null); setDeleteFromClipboard(false); }}>Cancel</button>
             <button
-              onClick={async () => { if (confirmDelete?.url) await handleDelete(confirmDelete.url); setConfirmDelete(null); }}
+              onClick={async () => { if (confirmDelete?.url) await handleDelete(confirmDelete.url); setConfirmDelete(null); setDeleteFromClipboard(false); }}
               style={{ backgroundColor: '#d32f2f', color: '#fff' }}
             >
               Delete
@@ -478,6 +661,30 @@ export default function Saved() {
           </div>
         </div>
       </Modal>
+
+      {/* Toast notification using existing global style */}
+      <div
+        className={`copied-message ${toastIsError ? 'error' : ''}`}
+        style={{ 
+          display: showToast ? 'block' : 'none',
+          alignItems: 'center',
+          gap: '8px'
+        }}
+      >
+        {isProcessingPaste && (
+          <div style={{
+            display: 'inline-block',
+            width: '16px',
+            height: '16px',
+            border: '2px solid #ffffff40',
+            borderTop: '2px solid white',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            marginRight: '8px'
+          }}></div>
+        )}
+        {toastMessage}
+      </div>
     </main>
   );
 }
