@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import ClipboardList from '../ClipboardList';
 import Controls from '../Controls';
+import FreeSidebar from '../FreeSideBar';
 import { useRouter } from 'next/router';
 
 export default function FreeApp() {
@@ -81,6 +82,9 @@ export default function FreeApp() {
 
     return (
         <div className="app-main">
+            
+            <FreeSidebar />
+
             <div className="app-wrapper">
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', margin: '24px 0 12px 0', gap: 12 }}>
                     <h2 style={{ margin: 0, fontWeight: 600, fontSize: 24, textAlign: 'left' }}>Clipify It Free</h2>
