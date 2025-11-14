@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import ClipboardList from '../ClipboardList';
 import Controls from '../Controls';
-import FreeSidebar from '../FreeSideBar';
+import FreeSidebar from '../FreeSidebar';
 import { useRouter } from 'next/router';
 
 export default function FreeApp() {
