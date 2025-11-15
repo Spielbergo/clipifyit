@@ -41,9 +41,9 @@
 
 .collapseAllBtn {
   background: none;
-  border: 1px solid #444;
+  border: 1px solid var(--project-button-bg);
   border-radius: 4px;
-  color: #ccc;
+  color: var(--project-button-color);
   cursor: pointer;
   padding: 4px 8px;
 }
@@ -169,12 +169,12 @@
 }
 
 .projectToggleActive {
-  color: #ccc;
+  color: var(--project-toggle-active);
   cursor: pointer;
 }
 
 .projectToggleInactive {
-  color: #444;
+  color: var(--project-toggle-in-active);
   cursor: default;
 }
 

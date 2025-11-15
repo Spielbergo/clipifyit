@@ -933,16 +933,16 @@ export default function ClipboardList({
                     <tr>
                         <td colSpan="6">
                             {selectedKeys.length > 0 ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
+                                <div className={styles.actionsRow}>
                                     <button onClick={handleSelectAll}>Deselect All</button>
-                                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                                    <div className={styles.actionsDropdownWrap}>
                                         <button ref={actionsBtnRef} onClick={() => setActionsOpen(v => !v)}>
                                             Actions ▾
                                         </button>
                                         {actionsOpen && (
-                                            <div style={{ position: 'absolute', zIndex: 1000, minWidth: 200, background: '#222', border: '1px solid #444', borderRadius: 6, padding: 6, right: 0, bottom: '100%', marginBottom: 8, boxShadow: '0 6px 18px rgba(0,0,0,0.35)' }}>
-                                                <button onClick={() => { setActionsOpen(false); handleCopySelected(); }} style={{ display: 'block', width: '96%', textAlign: 'left', padding: '8px 10px' }}>Copy selected</button>
-                                                <button onClick={() => { setActionsOpen(false); handleToggleCompleteSelected(); }} style={{ display: 'block', width: '96%', textAlign: 'left', padding: '8px 10px' }}>
+                                            <div className={styles.actionsDropdown}>
+                                                <button onClick={() => { setActionsOpen(false); handleCopySelected(); }}>Copy selected</button>
+                                                <button onClick={() => { setActionsOpen(false); handleToggleCompleteSelected(); }}>
                                                     {(() => {
                                                         const items = displayItems.filter(it => selectedKeys.includes(getStableKey(it)));
                                                         const anyNotCompleted = items.some(it => {
@@ -956,7 +956,7 @@ export default function ClipboardList({
                                                     })()}
                                                 </button>
                                                 {isPro && (
-                                                    <button onClick={() => { setActionsOpen(false); openMoveModal(); }} style={{ display: 'block', width: '96%', textAlign: 'left', padding: '8px 10px' }}>Move selected…</button>
+                                                    <button onClick={() => { setActionsOpen(false); openMoveModal(); }}>Move selected…</button>
                                                 )}
                                                 {(() => {
                                                     if (!isPro) return null;
@@ -964,12 +964,12 @@ export default function ClipboardList({
                                                     const allUrls = items.length > 0 && items.every(it => isLikelyUrl(getItemText(it)));
                                                     if (!allUrls) return null;
                                                     return (
-                                                        <button disabled={bulkSaving} onClick={() => { handleSaveSelectedArticles(); }} style={{ display: 'block', width: '96%', textAlign: 'left', padding: '8px 10px' }}>
+                                                        <button disabled={bulkSaving} onClick={() => { handleSaveSelectedArticles(); }}>
                                                             {bulkSaving ? 'Saving…' : 'Save selected articles'}
                                                         </button>
                                                     );
                                                 })()}
-                                                <button onClick={() => { setActionsOpen(false); setConfirmBulkDeleteOpen(true); }} style={{ display: 'block', width: '96%', textAlign: 'left', padding: '8px 10px', color: '#ff8a80' }}>Delete selected</button>
+                                                <button onClick={() => { setActionsOpen(false); setConfirmBulkDeleteOpen(true); }} className={styles.dropdownDeleteButton}>Delete selected</button>
                                             </div>
                                         )}
                                     </div>
@@ -990,18 +990,18 @@ export default function ClipboardList({
                     setConfirmBulkDeleteOpen(false);
                 }}
             >
-                <h3 style={{ marginBottom: 12 }}>Delete selected items?</h3>
-                <p style={{ marginBottom: 16 }}>
+                <h3 className={styles.modalHeading}>Delete selected items?</h3>
+                <p className={styles.modalParagraph}>
                     You are about to delete {selectedKeys.length} item{selectedKeys.length === 1 ? '' : 's'}. This action cannot be undone.
                 </p>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                <div className={styles.flexEndRow}>
                     <button onClick={() => setConfirmBulkDeleteOpen(false)}>Cancel</button>
                     <button
                         onClick={async () => {
                             await handleDeleteSelected();
                             setConfirmBulkDeleteOpen(false);
                         }}
-                        style={{ backgroundColor: '#d32f2f' }}
+                        className={styles.dangerButton}
                     >
                         Delete
                     </button>
@@ -1015,9 +1015,9 @@ export default function ClipboardList({
                     onClose={() => setMoveModalOpen(false)}
                     onPrimary={handleMoveSelected}
                 >
-                    <h3 style={{ marginBottom: 12 }}>Move {selectedKeys.length} item{selectedKeys.length === 1 ? '' : 's'}</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <h3 className={styles.modalHeading}>Move {selectedKeys.length} item{selectedKeys.length === 1 ? '' : 's'}</h3>
+                    <div className={styles.moveForm}>
+                        <label className={styles.formLabel}>
                             <span>Project</span>
                             <select
                                 value={targetProjectId || ''}
@@ -1027,7 +1027,7 @@ export default function ClipboardList({
                                     // Reset folder selection on project change
                                     setTargetFolderId(null);
                                 }}
-                                style={{ background: '#1e1e1e', color: '#eee', border: '1px solid #444', borderRadius: 6, padding: 10 }}
+                                className={styles.formSelect}
                             >
                                 <option value="" disabled>Select a project…</option>
                                 {projects.map(p => (
@@ -1035,13 +1035,13 @@ export default function ClipboardList({
                                 ))}
                             </select>
                         </label>
-                        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label className={styles.formLabel}>
                             <span>Folder (optional)</span>
                             <select
                                 value={targetFolderId || ''}
                                 onChange={(e) => setTargetFolderId(e.target.value || null)}
                                 disabled={!targetProjectId}
-                                style={{ background: '#1e1e1e', color: '#eee', border: '1px solid #444', borderRadius: 6, padding: 10 }}
+                                className={styles.formSelect}
                             >
                                 <option value="">No folder</option>
                                 {(foldersByProject[targetProjectId] || []).map(f => (
@@ -1050,12 +1050,12 @@ export default function ClipboardList({
                             </select>
                         </label>
                         {moveError ? (
-                            <div style={{ color: '#ff8a80' }}>{moveError}</div>
+                            <div className={styles.formError}>{moveError}</div>
                         ) : null}
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
+                    <div className={`${styles.flexEndRow} ${styles.mt16}`}>
                         <button onClick={() => setMoveModalOpen(false)}>Cancel</button>
-                        <button onClick={handleMoveSelected} disabled={isMoving} style={{ backgroundColor: 'var(--primary-color)', color: '#fff' }}>
+                        <button onClick={handleMoveSelected} disabled={isMoving} className={styles.primaryButton}>
                             {isMoving ? 'Moving…' : 'Move'}
                         </button>
                     </div>
@@ -1064,21 +1064,23 @@ export default function ClipboardList({
 
             {/* Edit item modal */}
             <Modal open={editModalOpen} onClose={closeEditModal} onPrimary={saveEditModal}>
-                <h3 style={{ marginBottom: 12 }}>Edit clipboard item</h3>
+                <h3 className={styles.modalHeading}>Edit clipboard item</h3>
                 {/* Name + Label Color */}
-                <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                <div className={styles.editTopRow}>
                     <input
                         type="text"
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
                         placeholder="Name (optional)"
-                        style={{ flex: 1, background: '#1e1e1e', color: '#eee', border: '1px solid #444', borderRadius: 6, padding: 10 }}
+                        className={styles.formInput}
+                        style={{ flex: 1 }}
                     />
                     <select
                         value={editLabelColor}
                         onChange={(e) => setEditLabelColor(e.target.value)}
                         title="Label color"
-                        style={{ minWidth: 140, background: '#1e1e1e', color: '#eee', border: '1px solid #444', borderRadius: 6, padding: 10 }}
+                        className={styles.formSelect}
+                        style={{ minWidth: 140 }}
                     >
                         <option value="">Default</option>
                         <option value="blue">Blue</option>
@@ -1092,10 +1094,10 @@ export default function ClipboardList({
                 <textarea
                     value={editText}
                     onChange={(e) => setEditText(e.target.value)}
-                    style={{ width: '97%', minHeight: 180, background: '#1e1e1e', color: '#eee', border: '1px solid #444', borderRadius: 6, padding: 10 }}
+                    className={styles.editTextarea}
                     autoFocus
                 />
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginTop: 12 }}>
+                <div className={styles.editFooterRow}>
                     <div>
                         {(() => {
                             const { item } = editTargetRef.current || {};
@@ -1108,28 +1110,25 @@ export default function ClipboardList({
                             );
                         })()}
                     </div>
-                    <div style={{ display: 'flex', gap: 8 }}>
+                    <div className={styles.editFooterActions}>
                         <button onClick={closeEditModal}>Cancel</button>
-                        <button onClick={saveEditModal} style={{ backgroundColor: 'var(--primary-color)', color: '#fff' }}>Save</button>
+                        <button onClick={saveEditModal} className={styles.primaryButton}>Save</button>
                     </div>
                 </div>
             </Modal>
 
             <div
-                className="copied-message"
-                style={{ display: showCopiedMessage ? 'block' : 'none' }}
+                className={`copied-message ${showCopiedMessage ? styles.visible : ''}`}
             >
                 Copied to clipboard!
             </div>
             <div
-                className="no-selection-message"
-                style={{ display: showErrorMessage ? 'block' : 'none' }}
+                className={`no-selection-message ${showErrorMessage ? styles.visible : ''}`}
             >
                 {showErrorMessage}
             </div>
             <div
-                className="copied-message"
-                style={{ display: showSavedToast ? 'block' : 'none' }}
+                className={`copied-message ${showSavedToast ? styles.visible : ''}`}
             >
                 {savedToastText}
             </div>

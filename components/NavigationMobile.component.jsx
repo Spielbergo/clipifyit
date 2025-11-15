@@ -123,9 +123,9 @@ const Navigation = () => {
                 Get a Quote
               </Button>
             </li> */}
-            <li>
+            {/* <li>
               <DarkModeToggle />
-            </li>
+            </li> */}
             {user && (
           <li className={styles.userMenuContainer} ref={dropdownRef}>
             <button
@@ -149,6 +149,9 @@ const Navigation = () => {
                 </li>
                 <li>
                   <LogoutButton onAfterLogout={() => setDropdownOpen(false)} />
+                </li>
+                <li>
+                  <DarkModeToggle />
                 </li>
               </ul>
             )}

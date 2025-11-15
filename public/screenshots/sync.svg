@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="750" viewBox="0 0 1200 750" role="img" aria-label="Clipify It - Sync screenshot illustration">
+  <defs>
+    <linearGradient id="bg3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1020"/>
+      <stop offset="100%" stop-color="#0a1834"/>
+    </linearGradient>
+    <linearGradient id="accent3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4fc3f7"/>
+      <stop offset="100%" stop-color="#00bcd4"/>
+    </linearGradient>
+    <filter id="soft3" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="750" fill="url(#bg3)"/>
+
+  <circle cx="190" cy="220" r="120" fill="#12305f" filter="url(#soft3)" opacity="0.4"/>
+  <circle cx="1000" cy="540" r="160" fill="#11224a" filter="url(#soft3)" opacity="0.35"/>
+
+  <g transform="translate(140,120)">
+    <!-- window frame -->
+    <rect x="0" y="0" rx="16" ry="16" width="920" height="520" fill="#0f1831" stroke="#21315c" stroke-width="2"/>
+    <rect x="0" y="0" rx="16" ry="16" width="920" height="52" fill="#0d152c"/>
+    <g transform="translate(16,20)">
+      <circle r="6" fill="#ff5f56"/>
+      <circle cx="20" r="6" fill="#ffbd2e"/>
+      <circle cx="40" r="6" fill="#27c93f"/>
+    </g>
+
+    <!-- sync cards -->
+    <g transform="translate(36,88)">
+      <rect width="380" height="220" rx="16" fill="#0c142b" stroke="#263a6d"/>
+      <rect x="24" y="24" width="280" height="14" rx="7" fill="#78d1ff"/>
+      <rect x="24" y="48" width="320" height="10" rx="5" fill="#3ea8e6" opacity="0.85"/>
+      <rect x="24" y="66" width="260" height="10" rx="5" fill="#245d9b" opacity="0.8"/>
+
+      <g transform="translate(290,160)">
+        <circle r="26" fill="url(#accent3)"/>
+        <path d="M-10 2h20" stroke="#032235" stroke-width="4" stroke-linecap="round"/>
+      </g>
+    </g>
+
+    <g transform="translate(504,88)">
+      <rect width="380" height="220" rx="16" fill="#0c142b" stroke="#263a6d"/>
+      <rect x="24" y="24" width="300" height="14" rx="7" fill="#78d1ff"/>
+      <rect x="24" y="48" width="320" height="10" rx="5" fill="#3ea8e6" opacity="0.85"/>
+      <rect x="24" y="66" width="240" height="10" rx="5" fill="#245d9b" opacity="0.8"/>
+
+      <g transform="translate(290,160)">
+        <circle r="26" fill="url(#accent3)"/>
+        <path d="M-10 2h20" stroke="#032235" stroke-width="4" stroke-linecap="round"/>
+      </g>
+    </g>
+
+    <!-- sync arrows -->
+    <g transform="translate(140,350)" opacity="0.9">
+      <path d="M0 24h340" stroke="url(#accent3)" stroke-width="6" stroke-linecap="round"/>
+      <path d="M332 12l20 12-20 12" fill="none" stroke="url(#accent3)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g transform="translate(520,394)" opacity="0.9">
+      <path d="M340 0H0" stroke="url(#accent3)" stroke-width="6" stroke-linecap="round"/>
+      <path d="M8 -12l-20 12 20 12" fill="none" stroke="url(#accent3)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <!-- status badge -->
+    <g transform="translate(360,420)">
+      <rect width="200" height="44" rx="8" fill="url(#accent3)"/>
+      <text x="100" y="29" text-anchor="middle" font-family="Inter, Segoe UI, Roboto, Arial" font-size="18" fill="#031225" font-weight="700">Synced • 2 devices</text>
+    </g>
+  </g>
+
+  <g transform="translate(48,54)">
+    <rect width="180" height="48" rx="10" fill="#102044" stroke="#24417e"/>
+    <text x="90" y="31" text-anchor="middle" font-family="Inter, Segoe UI, Roboto, Arial" font-size="20" fill="#78d1ff" font-weight="700">SYNC</text>
+  </g>
+</svg>

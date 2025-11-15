@@ -7,6 +7,10 @@
   --text-color: #e6e6e6;
   --border-color: #2a2a2a;
 
+  --navbar-bg-color: #222;
+
+  --controls-button-box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+
   --table-bg-color: #2a2a2a;
   --table-bg-color-odd: #242424;
   --table-bg-color-even: #1f1f1f;
@@ -15,6 +19,8 @@
   --table-border-color: #333;
   --table-button-bg-color: #2f2f2f;
   --table-button-border-color: #3a3a3a;
+  --table-box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  --table-label-color: #0b1015;
 
   --search-bar-text-color: #e6e6e6;
   --search-bar-secondary-color: #888;
@@ -26,6 +32,9 @@
   --project-item-hover: #26292c;
   --project-button-color: #e6e6e6;
   --project-button-bg: #444;
+
+  --project-toggle-active: #ccc;
+  --project-toggle-in-active: #444;
 
   --app-width: 1080px;
 }
@@ -46,6 +55,10 @@
   --text-color: #777;
   --border-color: #f6f6f6;
 
+  --navbar-bg-color: var(--primary-color);
+
+  --controls-button-box-shadow: 0 2px 1px rgba(0, 0, 0, 0.18);
+
   /* Table palette (light) */
   --table-bg-color: #ffffff;
   --table-bg-color-odd: #fafafa;
@@ -55,6 +68,8 @@
   --table-border-color: #dddddd;
   --table-button-bg-color: #f3f3f3;
   --table-button-border-color: #dcdcdc;
+  --table-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+  --table-label-color: #eee;
 
   /* Search bar (light) */
   --search-bar-text-color: #222;
@@ -67,6 +82,9 @@
   --project-item-hover: #e0e0e0;
   --project-button-color: #444;
   --project-button-bg: #d0d7dd;
+
+  --project-toggle-active: ##444;
+  --project-toggle-in-active: #ccc;
 
   --app-width: 1080px;
 }
@@ -82,9 +100,15 @@ body {
   margin: 0;
   font-family: Arial, sans-serif;
   color: #333;
-  width: 100%;
+  width: 93%;
   overflow-x: hidden;
   background: linear-gradient(180deg, #0b1020, #0b1020);
+}
+
+@media screen and (min-width: 768px) {
+  body {
+    width: 100%
+  }
 }
 
 /* Light theme body background override */
@@ -342,7 +366,7 @@ tr:nth-child(even) {
 .dark-mode tfoot {
   background: #444;
   margin-bottom: 0px;
-  border-top: 2px solid #333;
+  /* border-top: 2px solid #333; */
 }
 
 tfoot td {
@@ -361,7 +385,7 @@ select {
   border: none;
   border-radius: 4px;
   background-color: #6599a6;
-  color: white;
+  color: var(--text-color);
   font-size: 14px;
   transition: background-color 0.3s ease;
   transition: background-color 0.3s ease, transform 0.2s ease;
@@ -441,18 +465,12 @@ button:active {
 /* Dark Mode Toggle */
 .dark-mode {
   background-color: var(--primary-bg-color);
-  color: white;
+  color: var(--text-color);
 }
 
 .dark-mode th {
   background-color: #555;
 }
-
-/* .dark-mode button,
-.dark-mode select {
-  background-color: #555;
-  color: white;
-} */
 
 /* Sidebar */
 /* Sidebar base styles */
@@ -479,9 +497,10 @@ button:active {
   flex-shrink: 0;
   position: sticky;
   top: 0;
-  z-index: 200;
+  margin-bottom: 15px;
   background: var(--secondary-bg-color);
   border-bottom: 1px solid var(--secondary-bg-color);
+  z-index: 200;
 }
 
 .projects-sidebar input {

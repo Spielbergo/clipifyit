@@ -3,7 +3,7 @@
   background: var(--secondary-bg-color);
   border: 1px solid var(--table-bg-color);
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  box-shadow: var(--table-box-shadow);
 }
 
 /* Table base */
@@ -113,3 +113,146 @@
     padding: 12px;
   }
 }
+
+/* === Extracted inline styles from ClipboardList.jsx === */
+
+/* Row containing bulk action buttons */
+.actionsRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+/* Wrapper around the Actions button (for positioning dropdown) */
+.actionsDropdownWrap {
+  position: relative;
+  display: inline-block;
+}
+
+/* Dropdown panel */
+.actionsDropdown {
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  margin-bottom: 8px;
+  z-index: 1000;
+  min-width: 200px;
+  background: #222;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 6px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+
+.actionsDropdown button {
+  display: block;
+  width: 96%;
+  text-align: left;
+  padding: 8px 10px;
+  background: var(--table-button-bg-color);
+  color: var(--text-color);
+  border: 1px solid var(--table-button-border-color);
+  border-radius: 6px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.actionsDropdown button:hover:not(:disabled) {
+  background: var(--table-button-border-color);
+}
+
+.dropdownDeleteButton {
+  color: #ff8a80;
+}
+
+/* Modal headings & paragraphs */
+.modalHeading {
+  margin-bottom: 12px;
+}
+
+.modalParagraph {
+  margin-bottom: 16px;
+}
+
+/* Generic flex rows */
+.flexEndRow {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.flexEndRow.mt16 { margin-top: 16px; }
+
+/* Danger button */
+.dangerButton {
+  background-color: #d32f2f;
+  color: #fff;
+}
+
+/* Move modal form layout */
+.moveForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.formLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formSelect,
+.formInput {
+  background: #1e1e1e;
+  color: #eee;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 10px;
+  font: inherit;
+}
+
+.formError {
+  color: #ff8a80;
+}
+
+.primaryButton {
+  background-color: var(--primary-color);
+  color: #fff;
+}
+
+/* Edit modal form */
+.editTopRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.editTextarea {
+  width: 97%;
+  min-height: 180px;
+  background: #1e1e1e;
+  color: #eee;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 10px;
+  font: inherit;
+}
+
+.editFooterRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.editFooterActions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Toast messages visibility */
+.toastMessage { display: none; }
+.visible { display: block !important; }

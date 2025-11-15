@@ -152,7 +152,7 @@ export default function ClipboardItem({
         // Check for PDF files specifically
         if (/\.pdf(\?|#|$)/i.test(text)) return true;
         
-        // More comprehensive URL pattern that handles:
+        // URL pattern handles:
         // - Query parameters (?param=value)
         // - Fragments (#section)
         // - UTM tracking parameters
@@ -166,12 +166,12 @@ export default function ClipboardItem({
     // Map labelColor keywords to visual styles
     const getLabelVisual = (c) => {
         switch ((c || '').toLowerCase()) {
-            case 'blue':   return { bg: '#0c86f7ff', border: '#274461', text: '#0b1015' };
-            case 'green':  return { bg: '#21b421ff', border: '#2e5939', text: '#0b1015' };
-            case 'purple': return { bg: '#6525bfff', border: '#4b2e83', text: '#0b1015' };
-            case 'orange': return { bg: '#ff8401ff', border: '#8a4b16', text: '#0b1015' };
-            case 'red':    return { bg: '#f40707ff', border: '#7a1f1f', text: '#0b1015' };
-            case 'gray':   return { bg: '#5a5a5a', border: '#6e6e6e', text: '#0b1015' };
+            case 'blue':   return { bg: '#0c86f7ff', border: '#274461', text: 'var(--table-label-color)' };
+            case 'green':  return { bg: '#21b421ff', border: '#21b421ff', text: 'var(--table-label-color)' };
+            case 'purple': return { bg: '#6525bfff', border: '#4b2e83', text: 'var(--table-label-color)' };
+            case 'orange': return { bg: '#ff8401ff', border: '#8a4b16', text: 'var(--table-label-color)' };
+            case 'red':    return { bg: '#f40707ff', border: '#7a1f1f', text: 'var(--table-label-color)' };
+            case 'gray':   return { bg: '#5a5a5a', border: '#6e6e6e', text: 'var(--table-label-color)' };
             default:       return { bg: '#094384ff', border: '#274461', text: '#cfe8ff' };
         }
     };

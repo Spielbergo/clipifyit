@@ -548,7 +548,7 @@ export default function Saved() {
   <div className={`${styles.sidebar} saved_sidebar`}>
         <div className={styles.header_row}>
           <h2 className={styles.title}>Saved Articles</h2>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div className={styles.action_buttons_row}>
             <button onClick={() => setShowManageModal(true)} title="Manage articles">
               Manage
             </button>
@@ -561,14 +561,14 @@ export default function Saved() {
         </div>
         {/* Install tip if not available */}
         {!installAvailable && !isStandalone && (
-          <div style={{ color: '#b00', background: '#fffbe6', border: '1px solid #ffe58f', borderRadius: 6, padding: '8px 12px', margin: '8px 0', fontSize: 15 }}>
+          <div className={styles.install_tip}>
             <b>Install not available?</b><br />
             Make sure you are using Chrome or Edge, not in Incognito, and have visited this page a few times.<br />
             If you already installed, open the app from your home screen.<br />
-            <span style={{ color: '#888', fontSize: 13 }}>Debug: {installDebug}</span>
+            <span className={styles.install_tip_debug}>Debug: {installDebug}</span>
           </div>
         )}
-        <div style={{ padding: '0 0 6px 0' }} className='button_transparent'>
+        <div className={`${styles.search_controls} button_transparent`}>
           <SearchBar value={query} onChange={setQuery} onClear={() => setQuery('')} />
           <SortBar sortMode={sortMode} setSortMode={setSortMode} />
         </div>
@@ -605,7 +605,7 @@ export default function Saved() {
                   </div>
                 </li>
               )) : (
-                <li className={styles.list_item} style={{ justifyContent: 'center', color: '#888' }}>No results.</li>
+                <li className={`${styles.list_item} ${styles.no_results}`}>No results.</li>
               )}
             </ul>
           ) : <div>No saved articles found.</div>
@@ -639,7 +639,7 @@ export default function Saved() {
                 const mins = computeReadTime(text);
                 const savedTs = active?.savedAt ? new Date(active.savedAt).toLocaleString() : null;
                 return (
-                  <div className={styles.item_date} style={{ marginBottom: 6 }}>
+                  <div className={`${styles.item_date} ${styles.item_date_mb6}`}>
                     <span aria-label="Estimated read time">⏱ {mins} min read</span>
                     {savedTs ? <span> • Saved {savedTs}</span> : null}
                   </div>
@@ -681,15 +681,15 @@ export default function Saved() {
           
           {/* Checkbox to also delete from clipboard */}
           {user && (
-            <div style={{ margin: '16px 0', padding: '12px', backgroundColor: '#2a2a2a', borderRadius: '6px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+            <div className={styles.delete_confirm_box}>
+              <label className={styles.delete_confirm_label}>
                 <input
                   type="checkbox"
                   checked={deleteFromClipboard}
                   onChange={(e) => setDeleteFromClipboard(e.target.checked)}
-                  style={{ margin: '0' }}
+                  className={styles.checkbox_no_margin}
                 />
-                <span style={{ fontSize: '14px', color: '#ccc' }}>
+                <span className={styles.delete_confirm_label_text}>
                   Also delete from your clipboard items
                 </span>
               </label>
@@ -700,7 +700,7 @@ export default function Saved() {
             <button onClick={() => { setConfirmDelete(null); setDeleteFromClipboard(false); }}>Cancel</button>
             <button
               onClick={async () => { if (confirmDelete?.url) await handleDelete(confirmDelete.url); setConfirmDelete(null); setDeleteFromClipboard(false); }}
-              style={{ backgroundColor: '#d32f2f', color: '#fff' }}
+              className={styles.danger_button}
             >
               Delete
             </button>
@@ -723,7 +723,7 @@ export default function Saved() {
                   const mins = computeReadTime(text);
                   const savedTs = active?.savedAt ? new Date(active.savedAt).toLocaleString() : null;
                   return (
-                    <div className={styles.item_date} style={{ marginBottom: 6 }}>
+                    <div className={`${styles.item_date} ${styles.item_date_mb6}`}>
                       <span aria-label="Estimated read time">⏱ {mins} min read</span>
                       {savedTs ? <span> • Saved {savedTs}</span> : null}
                     </div>
@@ -757,21 +757,21 @@ export default function Saved() {
       {/* Bulk Management Modal */}
       <Modal open={showManageModal} onClose={() => {setShowManageModal(false); setSelectedArticles(new Set()); setSelectAll(false);}}>
         <div className={styles.manage_modal_container}>
-          <h3 style={{ margin: '0 0 16px 0' }}>Manage Articles</h3>
+          <h3 className={styles.manage_heading}>Manage Articles</h3>
           
           {/* Select All Checkbox */}
-          <div style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #333' }}>
-            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+          <div className={styles.select_all_block}>
+            <label className={styles.select_all_label}>
               <input
                 type="checkbox"
                 checked={selectAll}
                 onChange={handleSelectAll}
-                style={{ marginRight: '8px' }}
+                className={styles.select_all_checkbox}
               />
               <span>Select All ({items.length} articles)</span>
             </label>
             {selectedArticles.size > 0 && (
-              <div style={{ fontSize: '14px', color: '#999', marginTop: '4px' }}>
+              <div className={styles.selected_count}>
                 {selectedArticles.size} selected
               </div>
             )}
@@ -781,18 +781,18 @@ export default function Saved() {
           <div className={styles.manage_articles_list}>
             {items.map(item => (
               <div key={item.url} className={styles.manage_article_item}>
-                <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', width: '100%' }}>
+                <label className={styles.manage_article_label}>
                   <input
                     type="checkbox"
                     checked={selectedArticles.has(item.url)}
                     onChange={() => handleSelectArticle(item.url)}
-                    style={{ marginRight: '12px', flexShrink: 0 }}
+                    className={styles.manage_article_checkbox}
                   />
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className={styles.flex_fill}>
                     <div className={styles.manage_article_title}>
                       {item.title || item.url}
                       {readUrls.has(item.url) && (
-                        <span style={{ color: '#666', fontSize: '12px', marginLeft: '8px' }}>(read)</span>
+                        <span className={styles.read_tag}>(read)</span>
                       )}
                     </div>
                     <div className={styles.manage_article_url}>{item.url}</div>
@@ -842,25 +842,9 @@ export default function Saved() {
 
       {/* Toast notification using existing global style */}
       <div
-        className={`copied-message ${toastIsError ? 'error' : ''}`}
-        style={{ 
-          display: showToast ? 'block' : 'none',
-          alignItems: 'center',
-          gap: '8px'
-        }}
+        className={`copied-message ${toastIsError ? 'error' : ''} ${styles.toast_inline} ${showToast ? styles.visible : ''}`}
       >
-        {isProcessingPaste && (
-          <div style={{
-            display: 'inline-block',
-            width: '16px',
-            height: '16px',
-            border: '2px solid #ffffff40',
-            borderTop: '2px solid white',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            marginRight: '8px'
-          }}></div>
-        )}
+        {isProcessingPaste && (<div className={styles.toast_spinner}></div>)}
         {toastMessage}
       </div>
     </main>

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 import CTASection from '../components/CTASection.component';
 import Testimonials from '../components/Testimonials.component';
@@ -165,7 +166,7 @@ export default function Home() {
         <div className={styles.demoWrap}>
           <div className={styles.demoHeader}>
             <h2>See it in action</h2>
-            <p>Add Real Screenshots Below - Update Text</p>
+            <p>Real screenshots of Clipify It—capture, search, and sync in a clean, fast UI.</p>
           </div>
           <div className={styles.demoStage}>
             <div className={styles.demoWindow}>
@@ -177,7 +178,15 @@ export default function Home() {
               <div className={styles.demoBody}>
                 <div className={styles.demoPlaceholder}>
                   <span className={styles.demoTag}>CAPTURE</span>
-                  Copy text → saved instantly
+                  <Image
+                    src="/screenshots/capture.svg"
+                    alt="Capture text and have it saved instantly in Clipify It"
+                    width={1200}
+                    height={750}
+                    priority
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    style={{ width: '100%', height: 'auto' }}
+                  />
                 </div>
               </div>
             </div>
@@ -191,7 +200,14 @@ export default function Home() {
               <div className={styles.demoBody}>
                 <div className={styles.demoPlaceholder}>
                   <span className={styles.demoTag}>SEARCH</span>
-                  Type to find anything
+                  <Image
+                    src="/screenshots/search.svg"
+                    alt="Search clips across projects and folders"
+                    width={1200}
+                    height={750}
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    style={{ width: '100%', height: 'auto' }}
+                  />
                 </div>
               </div>
             </div>
@@ -205,7 +221,14 @@ export default function Home() {
               <div className={styles.demoBody}>
                 <div className={styles.demoPlaceholder}>
                   <span className={styles.demoTag}>SYNC</span>
-                  Cloud sync across devices
+                  <Image
+                    src="/screenshots/sync.svg"
+                    alt="Sync your clipboard across devices with Clipify It Pro"
+                    width={1200}
+                    height={750}
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    style={{ width: '100%', height: 'auto' }}
+                  />
                 </div>
               </div>
             </div>

@@ -164,6 +164,70 @@
 	color: #fff;
 }
 
+/* === Extracted inline styles from saved.jsx === */
+/* Row of manage/install buttons */
+.action_buttons_row { display: flex; gap: 8px; }
+
+/* Install tip panel */
+.install_tip {
+	color: #b00;
+	background: #fffbe6;
+	border: 1px solid #ffe58f;
+	border-radius: 6px;
+	padding: 8px 12px;
+	margin: 8px 0;
+	font-size: 15px;
+}
+.install_tip_debug { color: #888; font-size: 13px; }
+
+/* Search bar + sort bar wrapper */
+.search_controls { padding: 0 0 6px 0; }
+
+/* No results list item */
+.no_results { justify-content: center; color: #888; }
+
+/* Utility margin for item date */
+.item_date_mb6 { margin-bottom: 6px; }
+
+/* Delete confirmation checkbox block */
+.delete_confirm_box {
+	margin: 16px 0;
+	padding: 12px;
+	background-color: #2a2a2a;
+	border-radius: 6px;
+}
+.delete_confirm_label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.checkbox_no_margin { margin: 0; }
+.delete_confirm_label_text { font-size: 14px; color: #ccc; }
+.danger_button { background-color: #d32f2f; color: #fff; }
+
+/* Bulk manage modal */
+.manage_heading { margin: 0 0 16px 0; }
+.select_all_block { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #333; }
+.select_all_label { display: flex; align-items: center; cursor: pointer; }
+.select_all_checkbox { margin-right: 8px; }
+.selected_count { font-size: 14px; color: #999; margin-top: 4px; }
+
+/* Manage article list label */
+.manage_article_label { display: flex; align-items: center; cursor: pointer; width: 100%; }
+.manage_article_checkbox { margin-right: 12px; flex-shrink: 0; }
+.flex_fill { flex: 1; min-width: 0; }
+.read_tag { color: #666; font-size: 12px; margin-left: 8px; }
+
+/* Toast container & spinner */
+.toast_inline { align-items: center; gap: 8px; }
+.visible { display: block !important; }
+.toast_spinner {
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+	border: 2px solid #ffffff40;
+	border-top: 2px solid white;
+	border-radius: 50%;
+	animation: spin 1s linear infinite;
+	margin-right: 8px;
+}
+
 .article_title {
 	margin-top: 0;
     margin-bottom: 5px;

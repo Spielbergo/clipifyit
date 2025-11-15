@@ -621,7 +621,7 @@ export default function ProApp() {
                             </>
                         )}
                     </h2>
-                    <button onClick={() => router.push('/saved')} title="View saved articles" style={{ alignSelf: 'flex-start' }}>
+                    <button onClick={() => router.push('/saved')} title="View saved articles" style={{ alignSelf: 'flex-start', color: '#fff' }}>
                         Saved Articles
                     </button>
                 </div>
