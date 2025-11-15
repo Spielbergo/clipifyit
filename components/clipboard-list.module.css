@@ -1,7 +1,7 @@
 /* Dark panel wrapper matching sidebar colors */
 .listRoot {
-  background: #222;
-  border: 1px solid #2a2a2a;
+  background: var(--secondary-bg-color);
+  border: 1px solid var(--table-bg-color);
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.25);
 }
@@ -18,8 +18,8 @@
 
 /* Header */
 .table thead th {
-  background: #2a2a2a;
-  color: #eaeaea;
+  background: var(--secondary-bg-color);
+  color: var(--text-color);
   font-weight: 600;
   letter-spacing: 0.2px;
   border-bottom: 1px solid #333;
@@ -46,26 +46,26 @@
 
 /* Row striping & hover */
 .table tbody tr:nth-child(odd) {
-  background: #242424;
+  background: var(--table-bg-color-odd);
 }
-
+  
 .table tbody tr:nth-child(even) {
-  background: #1f1f1f;
+  background: var(--table-bg-color-even);
 }
 
 .table tbody tr:hover {
-  background: #2c2c2c;
+  background: var(--table-bg-color-hover);
 }
 
 /* Footer */
 .table tfoot td {
-  background: #1f1f1f;
-  border-top: 1px solid #333;
+  background: var(--table-bg-color-footer);
+  border-top: 1px solid var(--table-border-color);
 }
 
 /* Make the text column behave nicely on dark bg */
 .table td:nth-child(2) span {
-  color: #e6e6e6;
+  color: var(--text-color);
 }
 
 /* Brand the checkboxes without extra markup */
@@ -73,25 +73,25 @@
   width: 18px;
   height: 18px;
   border-radius: 4px;
-  accent-color: #6599a6; /* brand color */
+  accent-color: var(--primary-color); /* brand color */
 }
 
 /* Buttons row inside cells: tighten spacing a bit on dark */
 .table td button {
-  background: #2f2f2f;
-  color: #f3f3f3;
-  border: 1px solid #3a3a3a;
+  background: var(--table-button-bg-color);
+  color: var(--text-color);
+  border: 1px solid var(--table-button-border-color);
 }
 
 .table td button:hover {
-  background: #3a3a3a;
+  background: var(--table-button-border-color);
 }
 
 /* Notifications override to blend with dark */
 /* .listRoot :global(.copied-message),
 .listRoot :global(.no-selection-message) {
   background: #2f2f2f;
-  color: #f3f3f3;
+  color: var(--text-color);
   border: 1px solid #3a3a3a;
 } */
 

@@ -11,3 +11,247 @@
     margin-bottom: 34%;
   }
 }
+
+/* Sidebar Header */
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  width: 93%;
+  color: var(--text-color);
+}
+
+.sidebarHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.projectsTitle {
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.sidebarHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.collapseAllBtn {
+  background: none;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #ccc;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.closeBtn {
+  font-size: 22px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* New project button */
+.newProjectBtn {
+  width: 90%;
+  margin: 12px 5%;
+  padding: 8px 0;
+  border-radius: 4px;
+  background: var(--primary-color) !important;
+  color: #fff;
+  font-weight: 600;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+}
+
+/* Projects list wrapper <ul> */
+.projectsList {
+  padding: 0 15px;
+  margin: 0;
+}
+
+/* Generic list item spacings */
+.listItemSpacing {
+  margin-bottom: 2px;
+}
+
+/* Search result items */
+.searchResultItem {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 4px;
+  margin-bottom: 2px;
+  cursor: pointer;
+}
+
+.searchResultProject {
+  background: var(--search-bar-bg-color);
+  color: var(--text-color);
+}
+
+.searchResultFolder {
+  background: var(--secondary-bg-color);
+  color: var(--search-results-color);
+}
+
+.noResults {
+  color: #aaa;
+  padding: 12px;
+}
+
+/* Creating new project */
+.creatingProjectItem {
+  display: flex;
+  align-items: center;
+  background: transparent;
+  color: var(--text-color);
+  padding: 6px 12px;
+  border-radius: 4px;
+  margin-bottom: 2px;
+}
+
+.creatingProjectForm {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.creatingProjectInput {
+  flex: 1;
+  margin-right: 6px;
+  border-radius: 4px;
+  border: 1px solid #555;
+  background: #333;
+  padding: 4px;
+}
+
+/* Project list items */
+.projectItem {
+  display: flex;
+  flex-direction: column;
+  color: var(--text-color);
+  padding: 14px 12px;
+  border-radius: 4px;
+  margin-bottom: 2px;
+  background: transparent;
+}
+
+/* .projectItemSelected {
+  background: #333;
+} */
+
+.projectItemHover {
+  background: var(--project-item-hover);
+}
+
+.projectTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.projectTitle {
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.projectToggle {
+  margin-right: 11px;
+  font-size: 12px;
+}
+
+.projectToggleActive {
+  color: #ccc;
+  cursor: pointer;
+}
+
+.projectToggleInactive {
+  color: #444;
+  cursor: default;
+}
+
+.projectTitleText {
+  flex: 1;
+}
+
+.projectActions {
+  visibility: visible;
+  height: 28px;
+  display: flex;
+  align-items: center;
+}
+
+.addFolderBtn {
+  font-size: 13px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--project-button-bg);
+  color: var(--project-button-color);
+  border: none;
+  margin-bottom: 4px;
+  cursor: pointer;
+}
+
+/* Action buttons generic small margin */
+.actionBtnMargin {
+  margin-right: 4px;
+}
+
+/* Folder tree */
+.folderTreeRoot {
+  padding-left: 5px;
+  margin: 0;
+}
+
+.folderTreeChild {
+  padding-left: 18px;
+  margin: 0;
+}
+
+.folderListItem {
+  margin-bottom: 2px;
+}
+
+.folderRenameForm {
+  display: flex;
+  align-items: center;
+}
+
+.folderRenameInput {
+  flex: 1;
+  margin-right: 6px;
+  color: var(--project-button-color);
+  background: var(--project-button-bg);
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  padding: 4px;
+}
+
+.folderName {
+  cursor: pointer;
+  color: var(--search-results-color);
+  flex: 1;
+  font-weight: 400;
+}
+
+.folderNameSelected {
+  font-weight: 700;
+}
+
+.folderIcon {
+  margin-right: 8px;
+  opacity: 0.7;
+  margin-bottom: -2.5px;
+}
+
+/* Small utility */
+.mr4 { margin-right: 4px; }
+.mr6 { margin-right: 6px; }

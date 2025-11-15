@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
-import { FaMoon, FaSun } from 'react-icons/fa'; // Import moon and sun icons
+import { FaMoon, FaSun } from 'react-icons/fa';
+import { initTheme, toggleTheme as toggleThemeUtil } from '../lib/theme';
 
 export default function DarkModeToggle() {
-    const [isDarkMode, setIsDarkMode] = useState(false);
+    const [theme, setTheme] = useState('dark'); // 'dark' | 'light'
 
     useEffect(() => {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        setIsDarkMode(prefersDark);
-        document.body.classList.toggle('dark-mode', prefersDark);
+        // Initialize from localStorage or system preference
+        const applied = initTheme();
+        setTheme(applied);
     }, []);
 
     const toggleDarkMode = () => {
-        setIsDarkMode(!isDarkMode);
-        document.body.classList.toggle('dark-mode', !isDarkMode);
+        const next = toggleThemeUtil(theme);
+        setTheme(next);
     };
 
     return (
@@ -23,11 +24,11 @@ export default function DarkModeToggle() {
                 border: 'none',
                 cursor: 'pointer',
                 fontSize: '1.5rem',
-                color: isDarkMode ? '#FFD700' : '#4A4A4A', // Gold for sun, gray for moon
+                color: theme === 'dark' ? '#FFD700' : '#4A4A4A',
             }}
-            title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
-            {isDarkMode ? <FaMoon /> : <FaSun />}
+            {theme === 'dark' ? <FaMoon /> : <FaSun />}
         </button>
     );
 }

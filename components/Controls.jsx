@@ -232,34 +232,24 @@ export default function Controls({ onAddItem, onClearAll, onRedoClear, onHandleP
             <div className="no-selection-message">{errorMessage}</div>
 
             <Modal open={showCustomModal} onClose={() => setShowCustomModal(false)} onPrimary={handleAddCustom}>
-                <h3 style={{ marginBottom: 12 }}>Paste Custom Text</h3>
+                <h3 className={styles.modalHeading}>Paste Custom Text</h3>
                 <textarea
                     ref={textareaRef}
                     value={customText}
                     onChange={e => setCustomText(e.target.value)}
                     rows={4}
-                    style={{
-                        width: '97%',
-                        borderRadius: 4,
-                        border: '1px solid #555',
-                        padding: 8,
-                        marginBottom: 12,
-                        background: '#333',
-                        color: '#fff'
-                    }}
+                    className={styles.customTextarea}
                     placeholder="Type or paste your text here..."
                     autoFocus
                 />
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ marginBottom: 12 }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#fff' }}>
+                <div className={styles.modalFlexRow}>
+                    <div className={styles.modalSplitLinesWrap}>
+                        <label className={styles.splitLinesLabel}>
                             <input 
                                 type="checkbox" 
                                 checked={splitLines}
                                 onChange={(e) => setSplitLines(e.target.checked)}
-                                style={{
-                                    accentColor: '#4fc3f7'
-                                }}
+                                className={styles.checkboxAccent}
                             />
                             Split lines into separate items
                         </label>
@@ -321,7 +311,7 @@ function ProjectFolderDropdown({ styles, projects, folders, selectedProjectId, s
     };
 
     return (
-        <div style={{ marginRight: 16, display: 'inline-block', position: 'relative' }} ref={wrapRef}>
+    <div className={styles.projectFolderDropdownWrap} ref={wrapRef}>
             <div className={styles.pillWrap} role="combobox" aria-expanded={open} aria-haspopup="listbox">
                 <FaFolderOpen className={styles.pillIcon} aria-hidden="true" />
                 <button

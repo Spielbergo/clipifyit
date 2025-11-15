@@ -23,13 +23,13 @@ function FolderTree({
   parentId 
 }) {
   return (
-    <ul style={{ paddingLeft: parentId ? 18 : 5, margin: 0 }}>
+    <ul className={parentId ? styles.folderTreeChild : styles.folderTreeRoot}>
       {folders
         .filter(folder => folder.parent_id === parentId && folder.project_id === projectId)
         .map(folder => (
           <li
             key={folder.id}
-            style={{ marginBottom: 2 }}
+            className={styles.folderListItem}
             onDragOver={(e) => { try { e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'move'; } catch {} }}
             onDrop={(e) => {
               try {
@@ -46,7 +46,7 @@ function FolderTree({
           >
             {activeRenamingFolderId === folder.id ? (
               <form
-                style={{ display: 'flex', alignItems: 'center' }}
+                className={styles.folderRenameForm}
                 onSubmit={e => {
                   e.preventDefault();
                   if (renameFolderValue.trim()) {
@@ -59,28 +59,16 @@ function FolderTree({
                   value={renameFolderValue}
                   onChange={e => setRenameFolderValue(e.target.value)}
                   autoFocus
-                  style={{
-                    flex: 1,
-                    marginRight: 6,
-                    background: '#333',
-                    borderRadius: 4,
-                    border: '1px solid #ccc',
-                    padding: 4,
-                  }}
+                  className={styles.folderRenameInput}
                 />
-                <button type="submit" style={{ marginRight: 4 }}>
+                <button type="submit" className={styles.mr4}>
                   Save
                 </button>
               </form>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div className={styles.folderRenameForm}>
                 <span
-                  style={{
-                    cursor: 'pointer',
-                    fontWeight: folder.id === selectedFolderId ? 700 : 400,
-                    color: '#b3e5fc',
-                    flex: 1,
-                  }}
+                  className={`${styles.folderName} ${folder.id === selectedFolderId ? styles.folderNameSelected : ''}`}
                   onClick={() => {
                     if (onSelect) onSelect(folder.project_id); // Switch project
                     onSelectFolder(folder.id);                  // Select folder
@@ -92,7 +80,7 @@ function FolderTree({
                     height="16"
                     viewBox="0 0 20 20"
                     fill="none"
-                    style={{ marginRight: 8, opacity: 0.7, marginBottom: "-2.5px" }}
+                    className={styles.folderIcon}
                   >
                     <path
                       d="M2 5a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5z"
@@ -105,7 +93,7 @@ function FolderTree({
                 </span>
                 <button
                   title="Rename folder"
-                  style={{ marginRight: 4 }}
+                  className={styles.mr4}
                   onClick={() => {
                     setRenamingFolderId(folder.id);
                     setRenameFolderValue(folder.name);
@@ -329,26 +317,27 @@ export default function ProjectsSidebar({
     <>
       <aside className={`projects-sidebar${expanded ? ' expanded' : ''}`}>
         <div className='sidebar-header--container'>
-          <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, width: '93%' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontWeight: 600, fontSize: 18 }}>Projects</span>
+          <div className={styles.sidebarHeader}>
+            <div className={styles.sidebarHeaderLeft}>
+              <span className={styles.projectsTitle}>Projects</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div className={styles.sidebarHeaderRight}>
               <button
                 onClick={toggleAllProjects}
                 title={anyCollapsed ? 'Expand all projects' : 'Collapse all projects'}
                 aria-label={anyCollapsed ? 'Expand all projects' : 'Collapse all projects'}
-                style={{ background: 'none', border: '1px solid #444', borderRadius: 4, color: '#ccc', cursor: 'pointer', padding: '4px 8px' }}
+                className={styles.collapseAllBtn}
               >
                 {anyCollapsed ? <FiChevronsDown size={16} /> : <FiChevronsUp size={16} />}
               </button>
               {onClose && (
-                <button className="close-btn" onClick={onClose} style={{ fontSize: 22, background: 'none', border: 'none', cursor: 'pointer' }}>
+                <button className={`close-btn ${styles.closeBtn}`} onClick={onClose}>
                   ×
                 </button>
               )}
             </div>
           </div>
+          
           {/* Sort Toggle */}
           <SortBar sortMode={sortMode} setSortMode={setSortMode} />
   
@@ -362,56 +351,36 @@ export default function ProjectsSidebar({
           {/* New Project Button */}
           <button
             onClick={onCreate}
-            style={{
-              width: '90%',
-              margin: '12px 5%',
-              padding: '8px 0',
-              borderRadius: 4,
-              background: 'var(--primary-color)',
-              color: '#fff',
-              fontWeight: 600,
-              fontSize: 16,
-              border: 'none',
-              cursor: 'pointer',
-            }}
+            className={styles.newProjectBtn}
             disabled={creatingProject}
           >
             + New Project
           </button>
         </div>
         <div className={styles.projects_list__scroll}>
-          <ul style={{ padding: '0 15px', margin: 0 }}>
+          <ul className={styles.projectsList}>
             {search ? (
               flatSearchResults.length === 0 ? (
-                <li style={{ color: '#aaa', padding: 12 }}>No results</li>
+                <li className={styles.noResults}>No results</li>
               ) : (
                 flatSearchResults.map(result =>
                   result.type === 'project' ? (
                     <li
                       key={`project-${result.item.id}`}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        background: '#333',
-                        color: '#eee',
-                        padding: '10px 12px',
-                        borderRadius: 4,
-                        marginBottom: 2,
-                        cursor: 'pointer',
-                      }}
+                      className={`${styles.searchResultItem} ${styles.searchResultProject}`}
                       onClick={() => {
                         setSearch('');
                         onSelect && onSelect(result.item.id);
                       }}
                     >
-                      <span style={{ fontWeight: 600, marginRight: 8 }}>
+                      <span className={styles.projectsTitle} style={{ fontSize: 16, marginRight: 8 }}>
                         {/* Folder ICon */}
                         <svg
                           width="16"
                           height="16"
                           viewBox="0 0 20 20"
                           fill="none"
-                          style={{ marginRight: 8, opacity: 0.7, marginBottom: "-2.5px" }}
+                          className={styles.folderIcon}
                         >
                           <path
                             d="M2 5a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5z"
@@ -427,30 +396,21 @@ export default function ProjectsSidebar({
                   ) : (
                     <li
                       key={`folder-${result.item.id}`}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        background: '#222',
-                        color: '#b3e5fc',
-                        padding: '10px 12px',
-                        borderRadius: 4,
-                        marginBottom: 2,
-                        cursor: 'pointer',
-                      }}
+                      className={`${styles.searchResultItem} ${styles.searchResultFolder}`}
                       onClick={() => {
                         setSearch('');
                         onSelect && onSelect(result.item.project_id);
                         onSelectFolder && onSelectFolder(result.item.id);
                       }}
                     >
-                      <span style={{ fontWeight: 600, marginRight: 8 }}>
+                      <span className={styles.projectsTitle} style={{ fontSize: 16, marginRight: 8 }}>
                         {/* Folder Icon */}
                         <svg
                           width="16"
                           height="16"
                           viewBox="0 0 20 20"
                           fill="none"
-                          style={{ marginRight: 8, opacity: 0.7, marginBottom: "-2.5px" }}
+                          className={styles.folderIcon}
                         >
                           <path
                             d="M2 5a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5z"
@@ -471,17 +431,9 @@ export default function ProjectsSidebar({
             ) : (
             <>
             {creatingProject && (
-              <li style={{
-                display: 'flex',
-                alignItems: 'center',
-                background: 'transparant',
-                color: '#eee',
-                padding: '6px 12px',
-                borderRadius: 4,
-                marginBottom: 2,
-              }}>
+              <li className={styles.creatingProjectItem}>
                 <form
-                  style={{ flex: 1, display: 'flex', alignItems: 'center' }}
+                  className={styles.creatingProjectForm}
                   onSubmit={e => {
                     e.preventDefault();
                     onSaveNewProject(newProjectName);
@@ -492,7 +444,7 @@ export default function ProjectsSidebar({
                     value={newProjectName}
                     onChange={e => setNewProjectName(e.target.value)}
                     autoFocus
-                    style={{ flex: 1, marginRight: 6, borderRadius: 4, border: '1px solid #555', background: '#333', padding: 4 }}
+                    className={styles.creatingProjectInput}
                     placeholder="Project name"
                     onBlur={() => {
                       if (newProjectName.trim()) {
@@ -503,28 +455,18 @@ export default function ProjectsSidebar({
                       setNewProjectName('');
                     }}
                   />
-                  <button type="submit" style={{ marginRight: 4 }}>Save</button>
+                  <button type="submit" className={styles.mr4}>Save</button>
                 </form>
               </li>
             )}
             {filteredProjects.map(project => (
                 <li
                   key={project.id}
-                  className={project.id === selectedProjectId ? styles.selected : ''}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    background:
-                      project.id === selectedProjectId
-                        ? '#333'
-                        : hoveredProjectId === project.id
-                        ? '#26292c' // Slightly darker on hover
-                        : 'transparent',
-                    color: '#eee',
-                    padding: '14px 12px',
-                    borderRadius: 4,
-                    marginBottom: 2,
-                  }}
+                  className={[
+                    styles.projectItem,
+                    project.id === selectedProjectId ? styles.projectItemSelected : '',
+                    hoveredProjectId === project.id && project.id !== selectedProjectId ? styles.projectItemHover : ''
+                  ].join(' ').trim()}
                   onMouseEnter={() => setHoveredProjectId(project.id)}
                   onMouseLeave={() => setHoveredProjectId(null)}
                 
@@ -542,10 +484,10 @@ export default function ProjectsSidebar({
                   } catch {}
                 }}
                 >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div className={styles.projectTopRow}>
                   {renamingId === project.id ? (
                     <form
-                      style={{ flex: 1, display: 'flex', alignItems: 'center' }}
+                      className={styles.creatingProjectForm}
                       onSubmit={e => {
                         e.preventDefault();
                         if (renameValue.trim()) {
@@ -558,26 +500,20 @@ export default function ProjectsSidebar({
                         value={renameValue}
                         onChange={e => setRenameValue(e.target.value)}
                         autoFocus
-                        style={{ flex: 1, marginRight: 6, borderRadius: 4, border: '1px solid #ccc', padding: 4 }}
+                        className={styles.folderRenameInput}
                         onBlur={() => setRenamingId(null)}
                       />
-                      <button type="submit" style={{ marginRight: 4 }}>Save</button>
+                      <button type="submit" className={styles.mr4}>Save</button>
                     </form>
                   ) : (
                     <>
                       <span
-                        className="project-title"
                         title={project.name}
-                        style={{ cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center' }}
+                        className={`project-title ${styles.projectTitle}`}
                       >
                         {/* Arrow: toggles folders */}
                         <span
-                          style={{
-                            marginRight: 11,
-                            fontSize: 12,
-                            color: (projectFolderCounts[project.id] || 0) > 0 ? '#ccc' : '#444', // Dim if no folders
-                            cursor: (projectFolderCounts[project.id] || 0) > 0 ? 'pointer' : 'default'
-                          }}
+                          className={`${styles.projectToggle} ${(projectFolderCounts[project.id] || 0) > 0 ? styles.projectToggleActive : styles.projectToggleInactive}`}
                           onClick={e => {
                             if (!((projectFolderCounts[project.id] || 0) > 0)) return; // Only toggle if folders exist
                             e.stopPropagation();
@@ -596,29 +532,15 @@ export default function ProjectsSidebar({
                         {/* Project name: selects project and shows clipboard */}
                         <span
                           onClick={() => onSelect && onSelect(project.id)}
-                          style={{ flex: 1 }}
+                          className={styles.projectTitleText}
                         >
                           {project.name}
                         </span>
                       </span>
                       {(hoveredProjectId === project.id || project.id === selectedProjectId) && (
-                        <div style={{
-                          visibility: (hoveredProjectId === project.id || project.id === selectedProjectId) ? 'visible' : 'hidden',
-                          height: 28,
-                          display: 'flex',
-                          alignItems: 'center'
-                        }}>
+                        <div className={styles.projectActions} style={{ visibility: (hoveredProjectId === project.id || project.id === selectedProjectId) ? 'visible' : 'hidden' }}>
                           <button
-                            style={{
-                              fontSize: 13,
-                              padding: '2px 8px',
-                              borderRadius: 4,
-                              background: '#444',
-                              color: '#fff',
-                              border: 'none',
-                              marginBottom: 4,
-                              cursor: 'pointer'
-                            }}
+                            className={styles.addFolderBtn}
                           onClick={e => {
                             // Expand folders for this project if collapsed
                             if (collapsedProjects[project.id]) {
@@ -632,7 +554,7 @@ export default function ProjectsSidebar({
                           </button>
                           <button
                             title="Rename"
-                            style={{ marginRight: 4 }}
+                            className={styles.mr4}
                             onClick={() => {
                               setRenamingId(project.id);
                               setRenameValue(project.name);

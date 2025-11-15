@@ -1,0 +1,19 @@
+/* Sort bar layout */
+.sortBar {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 0 8px;
+	margin: 0 0 8px 0;
+    
+}
+
+/* Base button appearance inherits global button styling; we only adjust font weight */
+.sortButton {
+	font-weight: 400;
+    color: var(--text-color);
+}
+
+.sortButtonActive {
+	font-weight: 700;
+}

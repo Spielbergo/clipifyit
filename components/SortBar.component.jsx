@@ -1,22 +1,23 @@
 import React from 'react';
+import styles from './sort-bar.module.css';
 
 export default function SortBar({ sortMode, setSortMode }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, padding: '0 8px', margin: '0 0 8px 0' }}>
+    <div className={styles.sortBar}>
       <button
-        style={{ fontWeight: sortMode === 'alpha' || sortMode === 'descAlpha' ? 700 : 400 }}
+        className={`${styles.sortButton} ${(sortMode === 'alpha' || sortMode === 'descAlpha') ? styles.sortButtonActive : ''}`}
         onClick={() => setSortMode(sortMode === 'alpha' ? 'descAlpha' : 'alpha')}
-        title={sortMode === 'alpha' ? "Sort Z-A" : "Sort A-Z"}
+        title={sortMode === 'alpha' ? 'Sort Z-A' : 'Sort A-Z'}
       >
         {sortMode === 'alpha' ? 'A-Z' : 'Z-A'}
       </button>
       <button
-        style={{ fontWeight: sortMode === 'oldest' ? 700 : 400 }}
+        className={`${styles.sortButton} ${sortMode === 'oldest' ? styles.sortButtonActive : ''}`}
         onClick={() => setSortMode('oldest')}
         title="Sort by oldest"
       >Oldest</button>
       <button
-        style={{ fontWeight: sortMode === 'latest' ? 700 : 400 }}
+        className={`${styles.sortButton} ${sortMode === 'latest' ? styles.sortButtonActive : ''}`}
         onClick={() => setSortMode('latest')}
         title="Sort by latest"
       >Latest</button>

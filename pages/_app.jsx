@@ -27,11 +27,36 @@ export default function App({ Component, pageProps }) {
     return (
         <AuthProvider>
             <Head>
+                {/* Language and charset */}
+                <meta charSet="utf-8" />
+                <meta httpEquiv="Content-Language" content="en" />
+                {/* Viewport and mobile */}
+                <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+                {/* SEO basics */}
+                <title>ClipifyIt – Clipboard Manager & Pro Productivity</title>
+                <meta name="description" content="ClipifyIt: Effortless clipboard management, cloud sync, folders, and more. Upgrade to Pro for advanced features!" />
+                <meta name="keywords" content="clipboard, productivity, cloud sync, folders, pro, ClipifyIt" />
+                <meta name="author" content="ClipifyIt Team" />
+                {/* Social sharing (Open Graph & Twitter) */}
+                <meta property="og:type" content="website" />
+                <meta property="og:title" content="ClipifyIt – Clipboard Manager & Pro Productivity" />
+                <meta property="og:description" content="Effortless clipboard management, cloud sync, folders, and more. Upgrade to Pro for advanced features!" />
+                <meta property="og:image" content="/screenshots/clipifyit-screenshot.jpg" />
+                <meta property="og:url" content="https://clipifyit.com/" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="ClipifyIt – Clipboard Manager & Pro Productivity" />
+                <meta name="twitter:description" content="Effortless clipboard management, cloud sync, folders, and more. Upgrade to Pro for advanced features!" />
+                <meta name="twitter:image" content="/screenshots/clipifyit-screenshot.jpg" />
+                {/* PWA & theme */}
                 <link rel="manifest" href="/manifest.webmanifest" />
                 <meta name="theme-color" content="#0b0b0b" />
                 <meta name="apple-mobile-web-app-capable" content="yes" />
                 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
                 <link rel="apple-touch-icon" href="/logos/logo-light-text.png" />
+                {/* Favicon */}
+                <link rel="icon" href="/favicon.ico" />
+                {/* Canonical URL */}
+                <link rel="canonical" href="https://clipifyit.com/" />
             </Head>
             {router.pathname !== '/popout' && (
                 <>
