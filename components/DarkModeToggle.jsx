@@ -23,12 +23,11 @@ export default function DarkModeToggle() {
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                fontSize: '1.5rem',
-                color: theme === 'dark' ? '#FFD700' : '#4A4A4A',
+                color: theme === 'dark' ? '#222' : '#4A4A4A',
             }}
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
-            {theme === 'dark' ? <FaMoon /> : <FaSun />}
+            {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
         </button>
     );
 }

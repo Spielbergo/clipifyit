@@ -48,12 +48,17 @@ export default function App({ Component, pageProps }) {
                 <meta name="twitter:description" content="Effortless clipboard management, cloud sync, folders, and more. Upgrade to Pro for advanced features!" />
                 <meta name="twitter:image" content="/screenshots/clipifyit-screenshot.jpg" />
                 {/* PWA & theme */}
-                <link rel="manifest" href="/manifest.webmanifest" />
+                <link rel="manifest" href="/logos/favicons/site.webmanifest" />
                 <meta name="theme-color" content="#0b0b0b" />
                 <meta name="apple-mobile-web-app-capable" content="yes" />
                 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-                <link rel="apple-touch-icon" href="/logos/logo-light-text.png" />
-                {/* Favicon */}
+                {/* App icons & favicons */}
+                <link rel="apple-touch-icon" sizes="180x180" href="/logos/favicons/apple-touch-icon.png" />
+                <link rel="icon" type="image/png" sizes="32x32" href="/logos/favicons/favicon-32x32.png" />
+                <link rel="icon" type="image/png" sizes="16x16" href="/logos/favicons/favicon-16x16.png" />
+                <link rel="icon" type="image/png" sizes="192x192" href="/logos/favicons/android-chrome-192x192.png" />
+                <link rel="icon" type="image/png" sizes="512x512" href="/logos/favicons/android-chrome-512x512.png" />
+                {/* Fallback favicon */}
                 <link rel="icon" href="/favicon.ico" />
                 {/* Canonical URL */}
                 <link rel="canonical" href="https://clipifyit.com/" />

@@ -152,14 +152,7 @@ const Navigation = () => {
                 <Link href={socials.link} target="_blank" rel="noopener nofollow noreferrer" title={socials.title} aria-label={socials.title} className={styles.main_nav__social_icons_false}><socials.icon /></Link>
               </li>
             ))} */}
-            <li>
-              {/* <Button
-                variant="get_a_quote"
-                onClick={() => openModal('getAQuote')}>
-                Get a Quote
-              </Button> */}
-              <DarkModeToggle />
-            </li>
+            
             {mounted && user && (
               <li className={styles.userMenuContainer} ref={dropdownRef}>
                 <button
@@ -180,6 +173,9 @@ const Navigation = () => {
                       >
                         Dashboard
                       </a>
+                    </li>
+                    <li>
+                      <DarkModeToggle />
                     </li>
                     <li>
                       <ManageBillingButton className={styles.userMenuItem} />
