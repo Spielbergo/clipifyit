@@ -125,12 +125,22 @@ const Navigation = () => {
                 onMouseOver={nav.id === 'services' ? handleMouseOver : null}
                 onMouseLeave={nav.id === 'services' ? handleMouseLeave : null}
               >
-                <Link
-                  href={nav.link}
-                  className={`${router.pathname === nav.link || (nav.id === 'services' && isActiveService) || (nav.id === 'blog' && isActiveBlog) ? styles.active : ''}`}
-                >
-                  {nav.anchor}
-                </Link>
+                {nav.id === 'login' ? (
+                  <a
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); try { window.dispatchEvent(new CustomEvent('open-login-modal')); } catch {} }}
+                    className={`${router.pathname === nav.link ? styles.active : ''}`}
+                  >
+                    {nav.anchor}
+                  </a>
+                ) : (
+                  <Link
+                    href={nav.link}
+                    className={`${router.pathname === nav.link || (nav.id === 'services' && isActiveService) || (nav.id === 'blog' && isActiveBlog) ? styles.active : ''}`}
+                  >
+                    {nav.anchor}
+                  </Link>
+                )}
                 {/* {nav.id === 'services' && (
                   <ul className={`${styles.main_nav__subLinks} ${submenuVisible ? styles.main_nav__sublinks_visible : ''}`}>
                     {servicesNavItem.subLinks.map(subLink => (

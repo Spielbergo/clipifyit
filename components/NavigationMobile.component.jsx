@@ -99,8 +99,24 @@ const Navigation = () => {
           <div>
             <ul className={`${styles.main_nav__navLinks} ${mobileToggleOpen ? styles.main_nav__navLinks_visible : ''}`}>              
                 {navItems.map((nav) => (
-                  <li key={nav.id} >                  
-                      <Link href={nav.link} className={isActiveLink(nav.link) ? styles.active : ''} onClick={handleCloseMobileNav}>{nav.anchor}</Link>                    
+                  <li key={nav.id}>
+                    {nav.id === 'login' ? (
+                      <a
+                        href="#"
+                        className={isActiveLink(nav.link) ? styles.active : ''}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          try { window.dispatchEvent(new CustomEvent('open-login-modal')); } catch {}
+                          handleCloseMobileNav();
+                        }}
+                      >
+                        {nav.anchor}
+                      </a>
+                    ) : (
+                      <Link href={nav.link} className={isActiveLink(nav.link) ? styles.active : ''} onClick={handleCloseMobileNav}>
+                        {nav.anchor}
+                      </Link>
+                    )}
                   </li>
                 ))
                }

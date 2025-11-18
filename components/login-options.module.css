@@ -15,7 +15,7 @@
 .container {
   max-width: 340px;
   margin: 0 auto;
-  margin-bottom: 100px;
+  /* margin-bottom: 100px; */
   text-align: center;
   background: #23272f;
   border-radius: 18px;

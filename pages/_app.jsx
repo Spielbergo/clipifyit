@@ -1,14 +1,16 @@
 import '../styles/globals.css';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { AuthProvider } from '../contexts/AuthContext';
 
 import Navigation from '../components/Navigation.component';
 import NavigationMobile from '../components/NavigationMobile.component';
 import { useRouter } from 'next/router';
+import LoginModal from '../components/LoginModal';
 
 export default function App({ Component, pageProps }) {
     const router = useRouter();
+    const [loginOpen, setLoginOpen] = useState(false);
 
     useEffect(() => {
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -22,6 +24,13 @@ export default function App({ Component, pageProps }) {
         }
         // Ask for persistent storage on supported browsers (helps avoid eviction)
         navigator.storage?.persist?.().catch(() => {});
+
+        // Listen for login modal open requests
+        const onOpenLogin = () => setLoginOpen(true);
+        window.addEventListener('open-login-modal', onOpenLogin);
+        return () => {
+            window.removeEventListener('open-login-modal', onOpenLogin);
+        };
     }, []);
 
     return (
@@ -74,6 +83,7 @@ export default function App({ Component, pageProps }) {
                 </>
             )}
             <Component {...pageProps} />
+            <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
         </AuthProvider>
     );
 }

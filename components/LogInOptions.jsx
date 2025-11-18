@@ -236,7 +236,7 @@ export default function LogInOptions() {
           </form>
         )}
         {notification && (
-          <div className={styles.notification}>
+          <div className={styles.notification} aria-live="polite">
             {notification}
           </div>
         )}
@@ -246,7 +246,7 @@ export default function LogInOptions() {
         >
           {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
         </button>
-        {error && <div className={styles.error}>{error}</div>}
+        {error && <div className={styles.error} role="alert">{error}</div>}
       </div>
     </div>
   );
