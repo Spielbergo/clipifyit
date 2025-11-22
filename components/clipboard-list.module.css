@@ -4,6 +4,7 @@
   border: 1px solid var(--table-bg-color);
   border-radius: 12px;
   box-shadow: var(--table-box-shadow);
+  margin-bottom: 75px;
 }
 
 /* Table base */
@@ -22,7 +23,7 @@
   color: var(--text-color);
   font-weight: 600;
   letter-spacing: 0.2px;
-  border-bottom: 1px solid #333;
+  /* border-bottom: 1px solid #333; */
 }
 
 /* Align the select column */

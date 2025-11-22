@@ -100,22 +100,22 @@ export default function Home() {
           <div className={styles.card}>
             <div className={styles.cardIcon}>📋</div>
             <h3>Instant Capture</h3>
-            <p>Save any text with one click or paste. Zero friction, all speed.</p>
+            <p>Copy any text and paste into ClipifyIt. Zero friction, all speed.</p>
           </div>
           <div className={styles.card}>
-            <div className={styles.cardIcon}>🔎</div>
-            <h3>Blazing Search</h3>
-            <p>Type to find anything across projects and folders.</p>
-          </div>
-          <div className={styles.card}>
-            <div className={styles.cardIcon}>🗂️</div>
-            <h3>Project Folders</h3>
-            <p>Group clips by project and keep your workspace tidy.</p>
+            <div className={styles.cardIcon}>🔒</div>
+            <h3>Privacy First</h3>
+            <p>Your data, your control. Local‑first with optional cloud sync in Pro.</p>
           </div>
           <div className={styles.card}>
             <div className={styles.cardIcon}>✨</div>
-            <h3>Smart Cleanup</h3>
-            <p>Auto‑dedupe and keep your best version front and center.</p>
+            <h3>Offline Viewing <span className={styles.badgePro}>Pro</span></h3>
+            <p>Read saved artiles on the go wherever you are offline</p>
+          </div>
+          <div className={styles.card}>
+            <div className={styles.cardIcon}>🗂️</div>
+            <h3>Project Folders <span className={styles.badgePro}>Pro</span></h3>
+            <p>Group clips by project and keep your workspace tidy.</p>
           </div>
           <div className={styles.card}>
             <div className={styles.cardIcon}>☁️</div>
@@ -123,9 +123,9 @@ export default function Home() {
             <p>Access your clips anywhere with secure, low‑latency sync.</p>
           </div>
           <div className={styles.card}>
-            <div className={styles.cardIcon}>🔒</div>
-            <h3>Privacy First</h3>
-            <p>Your data, your control. Local‑first with optional sync.</p>
+            <div className={styles.cardIcon}>🔎</div>
+            <h3>Blazing Search <span className={styles.badgePro}>Pro</span></h3>
+            <p>Type to find anything across projects and folders.</p>
           </div>
         </div>
       </section>
@@ -137,23 +137,28 @@ export default function Home() {
         <div className={styles.hiwWrap}>
           <div className={styles.hiwHeader}>
             <h2>How it works</h2>
-            <p>Three simple steps to keep your flow unbroken.</p>
+            <p>Simple steps to keep your flow unbroken.</p>
           </div>
           <div className={styles.hiwGrid}>
             <div className={styles.hiwCard}>
               <div className={styles.hiwIcon}>📋</div>
               <h3>Capture</h3>
-              <p>Copy anything. It’s automatically saved and organized.</p>
+              <p>Copy any text. Paste it into ClipifyIt.</p>
             </div>
             <div className={styles.hiwCard}>
               <div className={styles.hiwIcon}>🔎</div>
               <h3>Find</h3>
-              <p>Search across projects and folders in milliseconds.</p>
+              <p>Search across projects and folders (pro).</p>
             </div>
             <div className={styles.hiwCard}>
               <div className={styles.hiwIcon}>☁️</div>
               <h3>Sync</h3>
               <p>Upgrade to Pro for encrypted cloud sync across devices.</p>
+            </div>
+            <div className={styles.hiwCard}>
+              <div className={styles.hiwIcon}>☁️</div>
+              <h3>Process</h3>
+              <p>URLs are processed and can be saved for offline article reading.</p>
             </div>
           </div>
         </div>
@@ -179,7 +184,7 @@ export default function Home() {
                 <div className={styles.demoPlaceholder}>
                   <span className={styles.demoTag}>CAPTURE</span>
                   <Image
-                    src="/screenshots/capture.svg"
+                    src="/screenshots/clipifyit-screenshot.jpg"
                     alt="Capture text and have it saved instantly in Clipify It"
                     width={1200}
                     height={750}
@@ -201,7 +206,7 @@ export default function Home() {
                 <div className={styles.demoPlaceholder}>
                   <span className={styles.demoTag}>SEARCH</span>
                   <Image
-                    src="/screenshots/search.svg"
+                    src="/screenshots/clipifyit-screenshot.jpg"
                     alt="Search clips across projects and folders"
                     width={1200}
                     height={750}

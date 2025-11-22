@@ -1,6 +1,6 @@
 :root {
   --primary-color: #6599a6;
-  --primary-color-hover: #4fc3f7;
+  --primary-color-hover: #2f9acc;
   --secondary-color: #f1f0f0;  
   --primary-bg-color: #2a2929;
   --secondary-bg-color: #222;
@@ -10,6 +10,9 @@
   --navbar-bg-color: #222;
 
   --controls-button-box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+
+  --freesidebar-item-bg: rgba(255, 255, 255, 0.03);  
+	--freesidebar-item-border: 1px solid rgba(255,255,255,0.06);
 
   --table-bg-color: #2a2a2a;
   --table-bg-color-odd: #242424;
@@ -36,12 +39,19 @@
   --project-toggle-active: #ccc;
   --project-toggle-in-active: #444;
 
+  --saved-articles-bg: linear-gradient(180deg, #0b1020, #0b1020);
+
   --app-width: 1080px;
 }
 
 /* Hint browsers for built-in form controls, scrollbars, etc. */
-:root { color-scheme: dark; }
-:root[data-theme="light"] { color-scheme: light; }
+:root { 
+  color-scheme: dark; 
+}
+
+/* :root[data-theme="light"] { 
+  color-scheme: light; 
+} */
 
 :root[data-theme="light"] {
   /* Brand */
@@ -52,12 +62,16 @@
   --secondary-color: #f5f7fb;    /* general light surface */
   --primary-bg-color: #ffffff;   /* main app bg when referenced */
   --secondary-bg-color: #f6f6f6; /* sidebar/cards */
-  --text-color: #777;
+  /* --text-color: #777; */
+  --text-color: #333;
   --border-color: #f6f6f6;
 
-  --navbar-bg-color: var(--primary-color);
+  --navbar-bg-color: #193f48;
 
   --controls-button-box-shadow: 0 2px 1px rgba(0, 0, 0, 0.18);
+
+  --freesidebar-item-bg: #ddd;  
+	--freesidebar-item-border: 1px solid red;
 
   /* Table palette (light) */
   --table-bg-color: #ffffff;
@@ -86,6 +100,8 @@
   --project-toggle-active: ##444;
   --project-toggle-in-active: #ccc;
 
+  --saved-articles-bg: #f1f1f1;
+
   --app-width: 1080px;
 }
 
@@ -99,16 +115,10 @@ body {
   box-sizing: border-box;
   margin: 0;
   font-family: Arial, sans-serif;
-  color: #333;
-  width: 93%;
+  /* color: #333; */
+  /* width: 93%; */
   overflow-x: hidden;
   /* background: linear-gradient(180deg, #0b1020, #0b1020); */
-}
-
-@media screen and (min-width: 1280px) {
-  body {
-    width: 100%
-  }
 }
 
 /* Light theme body background override */
@@ -179,11 +189,11 @@ input[type="password"] {
   color: #fff;
 }
 
-.dark-mode textarea {
+/* .dark-mode textarea {
   background: #444;
   color: #eee;
   border-color: #555;
-}
+} */
 
 textarea:focus {
   border-color: #007BFF;
@@ -194,14 +204,15 @@ textarea:focus {
 .app-main {
   display: flex;
   flex-direction: row;
+  /* width: 108%; */
   /* min-height: 100vh; */
-  background-color: var(--secondary-color);
-  width: 108%;
+  background-color: var(--primary-bg-color);
+  color: var(--text-color);
 }
 
-.dark-mode .app-main {
+/* .dark-mode .app-main {
   background-color: var(--primary-bg-color);
-}
+} */
 
 .app-wrapper {
   display: flex;
@@ -285,6 +296,7 @@ table {
   font-size: 2rem;
   font-weight: bold;
   line-height: 1.1;
+  background-color: var(--secondary-bg-color);
 }
 
 th, td {
@@ -385,7 +397,7 @@ select {
   border: none;
   border-radius: 4px;
   background-color: #6599a6;
-  color: var(--text-color);
+  color: #f1f1f1;
   font-size: 14px;
   transition: background-color 0.3s ease;
   transition: background-color 0.3s ease, transform 0.2s ease;
@@ -463,14 +475,14 @@ button:active {
 }
 
 /* Dark Mode Toggle */
-.dark-mode {
+/* .dark-mode {
   background-color: var(--primary-bg-color);
   color: var(--text-color);
-}
+} */
 
-.dark-mode th {
+/* .dark-mode th {
   background-color: #555;
-}
+} */
 
 /* Sidebar */
 /* Sidebar base styles */

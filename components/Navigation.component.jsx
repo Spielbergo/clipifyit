@@ -154,6 +154,7 @@ const Navigation = () => {
                 )} */}
               </li>
             ))}
+            <li><DarkModeToggle /></li>
           </ul>
 
           <ul className={styles.rightUtilities} suppressHydrationWarning>

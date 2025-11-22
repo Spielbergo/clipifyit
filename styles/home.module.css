@@ -13,12 +13,13 @@
 
 /* --- Modern Hero --- */
 .heroModern {
+  display: grid;
+  place-items: center;
   position: relative;
   padding: 0 40px;
   min-height: 88vh;
-  display: grid;
-  place-items: center;
-  overflow: visible; /* allow background to bleed full-width */
+  background-color: #000;  
+  overflow: visible;
 }
 .heroBg {
   position: absolute;
@@ -99,26 +100,38 @@
 
 .brandRow {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 0;
   margin-bottom: 10px;
 }
+
+@media screen and (min-width: 900px) {
+  .brandRow {
+    flex-direction: row;
+    gap: 14px;
+  }
+}
+
 .logoMark {
   width: 42px;
   height: 42px;
   flex: 0 0 auto;
 }
+
 .brandText {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
+
 .brandTitle {
   font-weight: 900;
   letter-spacing: -0.02em;
   font-size: 1.25rem;
   color: #e6eefc;
 }
+
 .brandTag {
   font-size: 0.95rem;
   color: #a6b3d1;
@@ -208,6 +221,7 @@
 .previewOuter {
   perspective: 1200px;
 }
+
 .previewCard {
   width: min(540px, 86vw);
   background: linear-gradient(180deg, #101932, #0b1226);
@@ -221,23 +235,27 @@
   will-change: transform;
   animation: heroTilt 8s linear infinite;
 }
+
 .windowBar {
   display: flex;
   gap: 8px;
   padding: 12px;
   border-bottom: 1px solid #243456;
 }
+
 .windowBar span {
   width: 10px;
   height: 10px;
   border-radius: 50%;
   background: #2a3f6f;
 }
+
 .previewBody {
   padding: 18px;
   display: grid;
   gap: 10px;
 }
+
 .item {
   display: flex;
   align-items: center;
@@ -247,6 +265,7 @@
   border: 1px solid #223c6a;
   border-radius: 12px;
 }
+
 .itemBadge {
   font-size: 0.75rem;
   color: #0b1020;
@@ -255,6 +274,7 @@
   padding: 4px 10px;
   font-weight: 800;
 }
+
 .itemText {
   color: #d5e7ff;
   opacity: 0.95;
@@ -269,6 +289,7 @@
   background: linear-gradient(180deg, #0e1428, #0b1020);
   position: relative;
 }
+
 .cardsSection::before {
   content: "";
   position: absolute;
@@ -280,38 +301,55 @@
   background: inherit; /* reuse section background */
   z-index: 0;
 }
+
 .sectionHeader {
   position: relative;
-  margin: 0 auto 24px auto;
+  padding: 0 15px;
+  margin: 0 auto 60px auto;
+  width: 90%;
   max-width: 800px;
   text-align: center;
-  z-index: 100;
+  z-index: 10;
 }
+
 .sectionHeader h2 {
+  margin-top: 0;
+  margin-bottom: 0;
   font-size: clamp(1.6rem, 2.4vw, 2.6rem);
   font-weight: 900;
   letter-spacing: -0.02em;
   color: #e8f2ff;
 }
+
 .sectionHeader p {
   color: #a6b3d1;
   margin-top: 8px;
 }
 
 .cardsGrid {
-  position: relative;
-  z-index: 100;
-  width: min(1200px, 92vw);
-  margin: 28px auto 0 auto;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
+  position: relative;
+  z-index: 10;
+  width: 90%;
+  padding: 0 15px;
+  margin: 28px auto 0 auto;
 }
+
+@media screen and (min-width: 769px) {
+  .cardsGrid {
+    grid-template-columns:  repeat(3, minmax(0, 1fr));
+    width: min(1200px, 92vw);
+  }
+}
+
 .card {
   background: linear-gradient(180deg, #0f1b35, #0d162c);
   border: 1px solid #1d2e53;
   border-radius: 16px;
   padding: 22px 18px 20px 18px;
+  /* width: 100%; */
   box-shadow: 0 12px 60px #0006, inset 0 1px 0 #4365a533;
   transition: transform .15s ease, box-shadow .15s ease, border-color .2s ease;
 }
@@ -330,6 +368,7 @@
   margin: 4px 0 6px;
 }
 .card p {
+  margin-top: 10px;
   color: #99a9c9;
   font-size: 0.95rem;
 }
@@ -463,12 +502,17 @@
 }
 
 @media (max-width: 900px) {
+  .heroTitle {
+    font-size: 3.2rem;
+  }
+
   .heroFull {
     flex-direction: column;
     justify-content: flex-start;
     padding-top: 60px;
     min-height: 90vh;
   }
+
   .heroContent {
     margin-left: 0;
     align-items: center;
@@ -641,7 +685,7 @@
 }
 .hiwWrap {
   position: relative;
-  width: min(1100px, 92vw);
+  width: min(900px, 92vw);
   margin: 0 auto;
   z-index: 1;
 }
@@ -650,20 +694,27 @@
   margin-bottom: 24px;
 }
 .hiwHeader h2 {
+  margin-top: 25px;
+  margin-bottom: 10px;
   font-size: clamp(1.6rem, 2.4vw, 2.4rem);
   font-weight: 900;
   letter-spacing: -0.02em;
   color: #e8f2ff;
 }
+
 .hiwHeader p {
   color: #a6b3d1;
   margin-top: 8px;
+  margin-bottom: 75px;
 }
+
 .hiwGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* grid-template-columns: repeat(3, minmax(0, 1fr)); */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
 }
+
 .hiwCard {
   background: linear-gradient(180deg, #0f1b35, #0d162c);
   border: 1px solid #1d2e53;
@@ -673,11 +724,13 @@
   transition: transform .15s ease, box-shadow .15s ease, border-color .2s ease;
   text-align: left;
 }
+
 .hiwCard:hover {
   transform: translateY(-4px);
   box-shadow: 0 16px 80px #0008;
   border-color: #315496;
 }
+
 .hiwIcon {
   width: 36px;
   height: 36px;
@@ -691,15 +744,18 @@
   box-shadow: inset 0 1px 0 #4365a533;
   margin-bottom: 10px;
 }
+
 .hiwCard h3 {
   font-size: 1.08rem;
   color: #dfeaff;
   margin: 4px 0 6px;
 }
+
 .hiwCard p {
   color: #99a9c9;
   font-size: 0.95rem;
 }
+
 /* Decorative blobs for HIW */
 .hiwBlobA {
   position: absolute;
@@ -714,6 +770,7 @@
   transform: rotate(10deg);
   z-index: 1;
 }
+
 .hiwBlobB {
   position: absolute;
   bottom: -120px;
@@ -735,15 +792,18 @@
     padding-top: 60px;
     min-height: 90vh;
   }
-  .heroContent {
-    margin-left: 0;
+
+  .heroContent {    
     align-items: center;
-    text-align: center;
+    padding-bottom: 75px;
+    margin-left: 0;
     max-width: 95vw;
+    text-align: center;
   }
-  .hiwGrid {
+
+  /* .hiwGrid {
     grid-template-columns: 1fr;
-  }
+  } */
 }
 
 /* Section: Testimonials */
@@ -926,6 +986,7 @@
   transform-origin: left center;
   animation: rowFadeIn 1.2s ease-in;
 }
+
 .clipRow2 { animation-delay: 0.3s; }
 .clipRow3 { animation-delay: 0.6s; }
 
@@ -939,6 +1000,7 @@
   opacity: 0;
   animation: clipFlyInLoop 3.6s linear infinite;
 }
+
 .clipAnim1 { animation-delay: 0s; }
 .clipAnim2 { animation-delay: 1.2s; }
 .clipAnim3 { animation-delay: 2.4s; }
@@ -976,6 +1038,7 @@
   padding: 72px 0 80px 0;
   background: linear-gradient(180deg, #0e1428, #0b1020);
 }
+
 .demoSection::before {
   content: "";
   position: absolute;
@@ -987,31 +1050,37 @@
   background: inherit;
   z-index: 0;
 }
+
 .demoWrap {
   position: relative;
   width: min(1100px, 92vw);
   margin: 0 auto;
   z-index: 1;
 }
+
 .demoHeader {
   text-align: center;
   margin-bottom: 18px;
 }
+
 .demoHeader h2 {
   font-size: clamp(1.6rem, 2.4vw, 2.4rem);
   font-weight: 900;
   letter-spacing: -0.02em;
   color: #e8f2ff;
 }
+
 .demoHeader p {
   color: #a6b3d1;
   margin-top: 6px;
 }
+
 .demoStage {
   position: relative;
   height: 520px;
   margin-top: 12px;
 }
+
 .demoWindow {
   position: absolute;
   left: 50%;
@@ -1026,15 +1095,19 @@
   overflow: hidden;
   animation: demoCycle 9s linear infinite;
 }
+
 .demoWindow:nth-child(1) {
   animation-delay: 0s;
 }
+
 .demoWindow:nth-child(2) {
   animation-delay: 3s;
 }
+
 .demoWindow:nth-child(3) {
   animation-delay: 6s;
 }
+
 .demoBar {
   display: flex;
   gap: 8px;
@@ -1042,12 +1115,14 @@
   border-bottom: 1px solid #243456;
   background: #0e1833;
 }
+
 .demoBar span {
   width: 10px;
   height: 10px;
   border-radius: 50%;
   background: #2a3f6f;
 }
+
 .demoBody {
   display: grid;
   place-items: center;
@@ -1055,8 +1130,10 @@
   height: calc(100% - 44px);
   background: radial-gradient(600px 400px at 50% 40%, #0f244b 0%, transparent 70%);
 }
+
 .demoPlaceholder {
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
@@ -1066,6 +1143,7 @@
   color: #d5e7ff;
   box-shadow: inset 0 1px 0 #4365a533;
 }
+
 .demoTag {
   font-size: 0.75rem;
   color: #0b1020;
@@ -1074,6 +1152,7 @@
   padding: 4px 10px;
   font-weight: 800;
 }
+
 @keyframes demoCycle {
   0% {
     opacity: 0;
@@ -1100,6 +1179,7 @@
     transform: translateX(-50%) translateY(-80px) scale(0.96);
   }
 }
+
 /* Decorative blobs for demo section */
 .demoBlobA {
   position: absolute;
@@ -1114,6 +1194,7 @@
   transform: rotate(10deg);
   z-index: 0;
 }
+
 .demoBlobB {
   position: absolute;
   bottom: -120px;
@@ -1133,6 +1214,7 @@
     height: 360px;
   }
 }
+
 @media (max-width: 600px) {
   .demoStage {
     height: 280px;
@@ -1161,8 +1243,9 @@
 @media screen and (max-width: 640px) {
   /* Slightly reduce hero padding but preserve layout */
   .heroModern {
-    padding-left: 16px;
+    padding-top: 100px;
     padding-right: 16px;
+    padding-left: 16px;
     min-height: auto;
   }
 

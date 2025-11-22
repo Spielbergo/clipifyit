@@ -1,7 +1,7 @@
 .faqSection {
   position: relative;
   background: linear-gradient(180deg, #0e1428, #0b1020);
-  padding: 72px 0 60px 0;
+  padding: 10px 0 72px 0;
   text-align: center;
 }
 
@@ -61,7 +61,7 @@
 .faqList {
   position: relative;
   max-width: 700px;
-  margin: 40px auto 0 auto;
+  margin: 10px auto 0 auto;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -211,6 +211,6 @@
     padding: 18px 16px 18px 16px;
   }
   .faqAnswer {
-    padding: 0 16px 16px 44px;
+    padding: 0 16px 0 44px;
   }
 }

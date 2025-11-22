@@ -12,18 +12,17 @@
 
 .modal_content {
   position: relative;
+  bottom: 15%;
   top: -25px;
-  background: #222;
-  /* padding: 24px 24px 16px 24px; */
-  padding: 24px 0 16px 0;
+  color: var(--text-color);
+  background: var(--secondary-bg-color);
+  padding: 24px 24px 16px 24px;
+  /* padding: 24px 0 16px 0; */
   border-radius: 8px;
   min-width: 320px;
   max-width: 768px;
   width: 100%;
   box-shadow: 0 2px 16px #0008;
-  position: relative;
-  bottom: 15%;
-  color: #fff;
   opacity: 0;
   transform: translateY(10px) scale(.96);
   animation: modalContentIn 260ms cubic-bezier(.16,.8,.3,1) forwards;
@@ -33,9 +32,9 @@
   position: absolute;
   top: 12px;
   right: 12px;
-  background: #333;
+  background: var(--secondary-bg-color);
   border: 1px solid #555;
-  color: #ccc;
+  color: var(--text-color);
   border-radius: 4px;
   width: 32px;
   height: 32px;

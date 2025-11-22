@@ -5,7 +5,7 @@
   align-items: center;
   justify-content: center;
   background: linear-gradient(180deg, #0e1428, #0b1020);
-  padding: 72px 1rem;
+  padding: 10px 1rem 72px;
   position: relative;
 }
 
@@ -68,7 +68,7 @@
   box-shadow: 0 12px 60px #0006, inset 0 1px 0 #4365a533;
   padding: 2.2rem 1.6rem 1.6rem 1.6rem;
   max-width: 100%;
-  width: 90%;
+  /* width: 90%; */
   border: 1px solid #203257;
   animation: fadeInUp 0.7s cubic-bezier(.23,1.01,.32,1) both;
   transition: box-shadow 0.25s, border 0.25s;
@@ -98,9 +98,12 @@
 }
 
 .supportText {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 8px 0;
   color: #b9c9e6;
   font-size: 0.98rem;
-  margin: 0 0 8px 0;
 }
 
 .socialList {
@@ -145,7 +148,7 @@
   color: #c7d7f3;
 }
 .emailLink {
-  color: #78d1ff;
+  color: #eee;
 }
 
 /* Headings and text in form card */
@@ -192,7 +195,7 @@
 
 .inputGroup label {
   font-weight: 600;
-  color: #78d1ff;
+  color: #eee;
   letter-spacing: 0.01em;
 }
 
@@ -225,7 +228,6 @@
 
 .submitButton {
   background: linear-gradient(90deg, #4fc3f7, #1976d2);
-  color: #0b1020;
   border: 1px solid #23406e;
   border-radius: 12px;
   padding: 1em 2.2em;

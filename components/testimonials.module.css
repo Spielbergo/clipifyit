@@ -5,6 +5,7 @@
 }
 
 .testimonials .sectionTitle {
+  position: relative;
   color: #e8f2ff;
 }
 
@@ -124,8 +125,8 @@
     align-items: center;
     gap: 24px;
   }
-  /* .testimonialCard {
-    width: 95vw;
-    max-width: 98vw;
-  } */
+
+  .testimonialCard {
+    width: 75%;
+  }
 }

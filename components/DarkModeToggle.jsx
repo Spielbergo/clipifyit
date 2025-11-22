@@ -23,7 +23,7 @@ export default function DarkModeToggle() {
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                color: theme === 'dark' ? '#222' : '#4A4A4A',
+                color: theme === 'dark' ? '#f1f1f1' : '#f1f1f1',
             }}
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >

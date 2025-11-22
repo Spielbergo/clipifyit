@@ -5,13 +5,10 @@ import styles from './free-sidebar.module.css';
 // Pro features
 const proFeatures = [
 	{ key: 'cloud-sync', label: 'Cloud sync across all devices', emoji: '☁️' },
-	{ key: 'folders', label: 'Unlimited folders & subfolders', emoji: '🗂️' },
+	{ key: 'folders', label: 'Unlimited folders', emoji: '🗂️' },
 	{ key: 'search', label: 'Advanced search & filters', emoji: '🔍' },
 	{ key: 'offline', label: 'Offline mode with auto sync', emoji: '📡' },
-	{ key: 'backup', label: 'Daily encrypted backups', emoji: '🔐' },
-	{ key: 'share', label: 'Share lists & collaborate', emoji: '🤝' },
-	{ key: 'speed', label: 'Faster priority infrastructure', emoji: '🚀' },
-	{ key: 'support', label: 'Priority support', emoji: '💬' },
+	{ key: 'ad-free', label: '100% Ad Free', emoji: '📡' },
 ];
 
 export default function FreeSidebar() {
@@ -52,7 +49,7 @@ export default function FreeSidebar() {
 			</div>
 
 			<div className={styles.adPlaceholder} aria-label="Future advertisement space" role="complementary">
-				<div className={styles.adInner}>Ad space (Coming Soon)</div>
+				<div className={styles.adInner}>Ad Space</div>
 			</div>
 		</aside>
 	);

@@ -1,7 +1,7 @@
 /* Modern dark section wrapper */
 .pricing_page__section {
   position: relative;
-  padding: 72px 0;
+  padding: 10px 0;
   background: linear-gradient(180deg, #0e1428, #0b1020);
   overflow: hidden;
 }

@@ -76,7 +76,7 @@ const Prices = () => {
         <div className={`${styles.blob} ${styles.blobA}`}></div>
         <div className={`${styles.blob} ${styles.blobB}`}></div>
         <div className={styles.pricingPage}>
-          <h1 className={styles.heading}>Choose Your Plan</h1>
+          {/* <h1 className={styles.heading}>Choose Your Plan</h1> */}
 
           <div className={styles.termToggle}>
             <button

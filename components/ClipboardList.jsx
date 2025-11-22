@@ -5,6 +5,7 @@ import { saveArticle, getArticle } from '../lib/offlineDB';
 
 import ClipboardItem from './ClipboardItem';
 import styles from './clipboard-list.module.css';
+// import SelectAllActionBtn from './SelectAllActionBtn.component';
 import Modal from './Modal.component';
 
 export default function ClipboardList({
@@ -873,10 +874,9 @@ export default function ClipboardList({
                     <tr>
                         <th>Select</th>
                         <th>Text</th>
-                        <th>Edit</th>
+                        {/* <th>Edit</th>
                         <th>Copy</th>
-                        <th>Clear</th>
-                        {/* <th>Move</th> */}
+                        <th>Clear</th> */}
                     </tr>
                 </thead>
                 <tbody>
